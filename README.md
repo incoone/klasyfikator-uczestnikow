@@ -22,7 +22,7 @@ Uwzględnia imiona odnotowane łącznie co najmniej 100 razy. Próg automatyczne
 
 Repozytorium zawiera również dane źródłowe oraz skrypt pozwalający samodzielnie odtworzyć i aktualizować słownik imion.
 
-Szczegółowe zasady działania i ograniczenia algorytmu opisano w sekcji [Jak działa klasyfikacja uczestników?](pomoc.html).
+Szczegółowe zasady działania i ograniczenia algorytmu opisano w sekcji [Jak działa klasyfikacja uczestników?](https://incoone.github.io/klasyfikator-uczestnikow/pomoc.html).
 
 ## Licencja
 
