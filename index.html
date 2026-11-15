@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <title>Klasyfikator uczestników</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./script.js" defer></script>
+  <script src="./interfejs.js" defer></script>
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <div>
+        <h1>Klasyfikator uczestników</h1>
+        <p class="subtitle">Klasyfikacja na podstawie imion i opcjonalnego numeru PESEL</p>
+      </div>
+      <a class="help-link help-link-long" href="./pomoc.html">Jak działa klasyfikacja uczestników?</a>
+    </header>
+
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">Lista uczestników</h2>
+      <p class="hint" id="input-help">Jedna osoba w wierszu. Kolejność imion, nazwiska i numeru PESEL jest dowolna.</p>
+      <form id="analysis-form">
+        <label class="sr-only" for="participants">Wklej listę uczestników</label>
+        <textarea id="participants" rows="9" spellcheck="false" autocomplete="off"
+          autocapitalize="off" aria-describedby="input-help"
+          placeholder="Anna Kowalska&#10;Nowak Jan&#10;Piotr Wiśniewski 30840899038"></textarea>
+        <div class="sample-controls" role="group" aria-label="Przykładowe dane uczestników">
+          <span>Chcesz przetestować aplikację? Wstaw przykładowe dane: </span>
+          <button id="sample-valid" class="sample-link" type="button">Poprawne</button>
+          <span aria-hidden="true">·</span>
+          <button id="sample-errors" class="sample-link" type="button">Z błędami</button>
+        </div>
+        <div class="actions">
+          <button id="analyze-button" class="button button-primary" type="submit" disabled>Analizuj listę</button>
+          <button id="clear-button" class="button button-secondary" type="button">Wyczyść</button>
+        </div>
+      </form>
+      <p id="status" class="status" role="status" aria-live="polite">Wczytywanie słownika imion...</p>
+    </section>
+
+    <section id="results" class="panel" aria-labelledby="results-title" hidden>
+      <h2 id="results-title">Wyniki analizy</h2>
+      <div class="counters" role="group" aria-label="Filtruj wyniki według kategorii">
+        <button class="counter" type="button" data-tab="Kobieta" aria-pressed="false">
+          <span id="count-women" class="counter-number">0</span>
+          <span class="counter-label">Kobiety</span>
+        </button>
+        <button class="counter" type="button" data-tab="Mężczyzna" aria-pressed="false">
+          <span id="count-men" class="counter-number">0</span>
+          <span class="counter-label">Mężczyźni</span>
+        </button>
+        <button class="counter" type="button" data-tab="Do weryfikacji" aria-pressed="true">
+          <span id="count-review" class="counter-number">0</span>
+          <span class="counter-label">Do weryfikacji</span>
+        </button>
+      </div>
+      <p id="total" class="total">Łącznie uczestników: 0</p>
+      <div class="result-heading">
+        <h3 id="list-title">Do weryfikacji</h3>
+        <span id="list-count" class="list-count"></span>
+      </div>
+      <div id="result-list" aria-live="off"></div>
+    </section>
+
+    <footer class="footer">Wpisane dane są przetwarzane wyłącznie w przeglądarce. Nie są wysyłane ani zapisywane przez aplikację.</footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Jak działa klasyfikacja uczestników? Instrukcja użytkowania, rozpoznawanie imion, PESEL, weryfikacja wyników i prywatność.">
+  <title>Jak działa klasyfikacja uczestników?</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="container help-page">
+    <header class="page-header">
+      <div><h1>Jak działa klasyfikacja uczestników?</h1></div>
+      <a class="help-link" href="./index.html">← Wróć do aplikacji</a>
+    </header>
+
+    <section class="panel help-intro" aria-label="Wprowadzenie">
+<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników. Wykorzystuje statystyki imion pochodzące z polskiego rejestru PESEL oraz opcjonalne numery PESEL.</p>
+<p>Osoby, których dane pozwalają na automatyczną klasyfikację, są przypisywane do odpowiedniej grupy. Pozostałe wpisy trafiają do ręcznej weryfikacji.</p>
+<p>Cała analiza odbywa się lokalnie w przeglądarce użytkownika.</p>
+    </section>
+
+    <nav class="panel help-toc" aria-labelledby="spis-tresci">
+      <h2 id="spis-tresci">Spis treści</h2>
+      <ol class="help-toc-list">
+        <li><a href="#sekcja-1">Jak korzystać z programu?</a></li>
+        <li><a href="#sekcja-2">Jak program rozpoznaje imiona?</a></li>
+        <li><a href="#sekcja-3">Skąd pochodzą dane o imionach?</a></li>
+        <li><a href="#sekcja-4">Dlaczego przyjęliśmy próg 99,98%?</a></li>
+        <li><a href="#sekcja-5">Jak działa numer PESEL?</a></li>
+        <li><a href="#sekcja-6">Jak program łączy informacje z imion i numeru PESEL?</a></li>
+        <li><a href="#sekcja-7">Jak traktujemy dodatkowe liczby w danych?</a></li>
+        <li><a href="#sekcja-8">Dlaczego niektóre wpisy wymagają weryfikacji?</a></li>
+        <li><a href="#sekcja-9">Jak sprawdzać i poprawiać wyniki?</a></li>
+        <li><a href="#sekcja-10">Prywatność</a></li>
+        <li><a href="#sekcja-11">Ograniczenia programu</a></li>
+        <li><a href="#sekcja-12">Źródła danych i informacje techniczne</a></li>
+      </ol>
+    </nav>
+
+    <section class="panel help-section" id="sekcja-1" aria-labelledby="naglowek-1">
+<h2 id="naglowek-1">1. Jak korzystać z programu?</h2>
+<p>Zalecany format danych to:</p>
+<p><strong>Imię Nazwisko PESEL</strong></p>
+<p>Numer PESEL jest opcjonalny, ale jego podanie zwiększa możliwości prawidłowej klasyfikacji.</p>
+<p>Przykładowa lista:</p>
+<pre><code class="language-text">Jan Kowalski 40831499013
+Anna Nowak 45892299026
+Piotr Wiśniewski
+Maria Zielińska
+</code></pre>
+<p>Każdy uczestnik powinien znajdować się w osobnym wierszu.</p>
+<h3 id="a-jesli-dane-nie-sa-uporzadkowane">A jeśli dane nie są uporządkowane?</h3>
+<p>Zdajemy sobie sprawę, że organizator nie zawsze otrzymuje idealnie przygotowaną listę. Dane mogą pochodzić z formularzy, arkuszy kalkulacyjnych lub różnych systemów informatycznych.</p>
+<p>Dlatego program zaprojektowano tak, aby radził sobie również z mniej uporządkowanymi zapisami.</p>
+<p>Obsługiwane są między innymi:</p>
+<ul>
+<li>Imię i nazwisko w dowolnej kolejności.</li>
+<li>Dwa imiona.</li>
+<li>PESEL umieszczony w dowolnym miejscu wiersza.</li>
+<li>Numeracja listy, np. <code>1. Jan Kowalski</code>.</li>
+<li>Dodatkowe spacje i różna wielkość liter.</li>
+</ul>
+<p>Program stara się wyodrębnić potrzebne informacje, ignorując elementy, których nie wykorzystuje do klasyfikacji.</p>
+<p class="help-note"><strong>Ważne:</strong> numer PESEL należy podawać jako 11 kolejnych cyfr, bez spacji i myślników.</p>
+<h3 id="uruchomienie-analizy">Uruchomienie analizy</h3>
+<p>Po wklejeniu listy kliknij <strong>„Analizuj listę”</strong>.</p>
+<p>Program podzieli uczestników na trzy grupy:</p>
+<ul>
+<li><strong>Kobiety</strong> - uczestnicy zakwalifikowani jako kobiety.</li>
+<li><strong>Mężczyźni</strong> - uczestnicy zakwalifikowani jako mężczyźni.</li>
+<li><strong>Do weryfikacji</strong> - uczestnicy wymagający dodatkowego sprawdzenia.</li>
+</ul>
+<p>Kliknięcie jednego z trzech liczników wyświetla listę osób należących do danej kategorii.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-2" aria-labelledby="naglowek-2">
+<h2 id="naglowek-2">2. Jak program rozpoznaje imiona?</h2>
+<p>Program wykorzystuje słownik imion zawierający statystyki ich występowania wśród kobiet i mężczyzn.</p>
+<p>Każdy wiersz jest analizowany niezależnie. Program dzieli go na poszczególne człony i sprawdza, które z nich występują w słowniku.</p>
+<p>Nie zakłada, że pierwsze słowo jest imieniem, a drugie nazwiskiem.</p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Wpis</th>
+<th scope="col">Wynik</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jan Kowalski</td>
+<td>Mężczyzna</td>
+</tr>
+<tr>
+<td>Kowalski Jan</td>
+<td>Mężczyzna</td>
+</tr>
+<tr>
+<td>Anna Nowak</td>
+<td>Kobieta</td>
+</tr>
+<tr>
+<td>Nowak Anna</td>
+<td>Kobieta</td>
+</tr>
+<tr>
+<td>Jan Piotr Kowalski</td>
+<td>Mężczyzna</td>
+</tr>
+<tr>
+<td>Anna Maria Kowalska</td>
+<td>Kobieta</td>
+</tr>
+<tr>
+<td>Jan Maria Rokita</td>
+<td>Do weryfikacji</td>
+</tr>
+<tr>
+<td>Magda Marek</td>
+<td>Do weryfikacji</td>
+</tr>
+</tbody>
+</table></div>
+<p>Jeżeli wszystkie rozpoznane imiona jednoznacznie wskazują tę samą płeć, uczestnik zostaje automatycznie zakwalifikowany.</p>
+<p>Jeżeli rozpoznane imiona wskazują różne płcie, wpis wymaga weryfikacji.</p>
+<h3 id="dlaczego-rozpoznawanie-imion-nie-zawsze-jest-proste">Dlaczego rozpoznawanie imion nie zawsze jest proste?</h3>
+<p>Nie każde dane są tak oczywiste jak <code>Jan Kowalski</code>.</p>
+<p>W Polsce występują nazwiska brzmiące dokładnie tak samo jak popularne imiona.</p>
+<p>Przykładem jest <strong>Marek</strong>, które jest zarówno popularnym imieniem męskim, jak i nazwiskiem noszonym przez kobiety i mężczyzn.</p>
+<p>Według danych ze stycznia 2026 r. nazwisko Marek nosi w Polsce <strong>17 799 osób</strong>.</p>
+<p>Innymi przykładami nazwisk będących również imionami są Adam i Urban.</p>
+<p>Wyobraźmy sobie wpis:</p>
+<p><strong>Magda Marek</strong></p>
+<p>Program rozpoznaje dwa imiona:</p>
+<ul>
+<li>Magda - imię żeńskie.</li>
+<li>Marek - imię męskie.</li>
+</ul>
+<p>Nie wie, które słowo jest nazwiskiem. Widzi jedynie dwa rozpoznane imiona wskazujące różne płcie.</p>
+<p>Moglibyśmy założyć, że pierwsze słowo jest imieniem, a drugie nazwiskiem. Jednak dane często pochodzą z formularzy i różnych systemów, w których kolejność może być odwrócona lub pola mogły zostać błędnie wypełnione.</p>
+<p>Dlatego <strong>wolimy skierować taki wpis do ręcznej weryfikacji, zamiast zgadywać i ryzykować błędne automatyczne przypisanie płci</strong>.</p>
+<p>Program ma swoje ograniczenia, ale jego zasady zostały opracowane tak, aby możliwie ograniczać ryzyko błędnej klasyfikacji. W sytuacjach niejednoznacznych decyzję pozostawiamy użytkownikowi.</p>
+<p>Program nie analizuje pozostałych uczestników w poszukiwaniu wskazówek i nie wykorzystuje sztucznej inteligencji do klasyfikacji.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-3" aria-labelledby="naglowek-3">
+<h2 id="naglowek-3">3. Skąd pochodzą dane o imionach?</h2>
+<p>Słownik został przygotowany na podstawie oficjalnych danych Ministerstwa Cyfryzacji udostępnionych w serwisie dane.gov.pl.</p>
+<p><strong>Źródło:</strong> <a href="https://dane.gov.pl/dataset/1667">Lista imion występujących w rejestrze PESEL</a></p>
+<p><strong>Stan danych:</strong> 20 stycznia 2026 r.</p>
+<p>Wykorzystano dwa zestawienia dotyczące osób żyjących:</p>
+<ul>
+<li>Pierwsze imiona żeńskie.</li>
+<li>Pierwsze imiona męskie.</li>
+</ul>
+<p>Dla każdego imienia połączono liczbę wystąpień w obu zestawieniach.</p>
+<h3 id="dlaczego-nie-wykorzystujemy-wszystkich-imion">Dlaczego nie wykorzystujemy wszystkich imion?</h3>
+<p>W oficjalnej bazie występuje wiele tysięcy imion, w tym bardzo rzadkich, nietypowych lub pochodzących z różnych języków.</p>
+<p>Aby ograniczyć wielkość słownika, przyjęliśmy warunek <strong>co najmniej 100 łącznych wystąpień imienia</strong> u kobiet i mężczyzn.</p>
+<p>Przykładowo imię występujące 70 razy u kobiet i 40 razy u mężczyzn spełnia ten warunek, ponieważ łącznie ma 110 wystąpień.</p>
+<p>Rzadkie imiona mogą zatem nie zostać rozpoznane. <strong>Jeżeli program nie znajdzie również innych danych pozwalających na klasyfikację, taki wpis trafi do ręcznej weryfikacji.</strong></p>
+<h3 id="ograniczenie-danych-zrodowych">Ograniczenie danych źródłowych</h3>
+<p>Ministerstwo Cyfryzacji nie publikuje pojedynczych wystąpień imion w tych zestawieniach.</p>
+<p>Jeżeli imię występuje w wykazie męskim, ale nie występuje w żeńskim, nie mamy całkowitej pewności, że nie nosi go ani jedna kobieta.</p>
+<p>W obliczeniach wykorzystujemy wyłącznie opublikowane liczby.</p>
+<p>Słownik jest generowany z oryginalnych plików CSV za pomocą skryptu Pythona <code>buduj_slownik_imion.py</code>, dostępnego w repozytorium tego projektu na GitHubie. Pozwala to każdemu zainteresowanemu odtworzyć proces budowania słownika i przygotować jego nową wersję, gdy Ministerstwo Cyfryzacji udostępni zaktualizowane dane.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-4" aria-labelledby="naglowek-4">
+<h2 id="naglowek-4">4. Dlaczego przyjęliśmy próg 99,98%?</h2>
+<p>Wbrew pozorom nie wszystkie popularne polskie imiona występują wyłącznie u jednej płci.</p>
+<p>Według danych Ministerstwa Cyfryzacji ze stycznia 2026 r.:</p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Imię</th>
+<th scope="col">Nietypowe wystąpienia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anna</td>
+<td>12 mężczyzn</td>
+</tr>
+<tr>
+<td>Piotr</td>
+<td>3 kobiety</td>
+</tr>
+<tr>
+<td>Tomasz</td>
+<td>6 kobiet</td>
+</tr>
+</tbody>
+</table></div>
+<p>To rzeczywiste dane z rejestru PESEL.</p>
+<p>Gdybyśmy wymagali, aby imię występowało w 100% u jednej płci, nawet Anna, Piotr czy Tomasz mogliby wymagać ręcznej weryfikacji.</p>
+<p>Dlatego przyjęliśmy <strong>próg automatycznej klasyfikacji wynoszący 99,98%</strong>.</p>
+<p>Oznacza to, że co najmniej 99,98% opublikowanych wystąpień danego imienia musi przypadać na jedną płeć.</p>
+<h3 id="przykad-obliczenia">Przykład obliczenia</h3>
+<p>Załóżmy, że pewne imię występuje:</p>
+<ul>
+<li>9999 razy u kobiet.</li>
+<li>1 raz u mężczyzn.</li>
+</ul>
+<p>Udział kobiet wynosi 99,99%.</p>
+<p>Program automatycznie uzna takie imię za żeńskie, ponieważ przekracza ustalony próg.</p>
+<p>Jeżeli natomiast imię występuje:</p>
+<ul>
+<li>600 razy u kobiet.</li>
+<li>400 razy u mężczyzn,</li>
+</ul>
+<p>udział kobiet wynosi 60%.</p>
+<p>Takie imię jest statystycznie niejednoznaczne i wymaga weryfikacji.</p>
+<h3 id="przykad-z-polskiego-rejestru-pesel-nikola">Przykład z polskiego rejestru PESEL - Nikola</h3>
+<p>Imię <strong>Nikola</strong> jest dobrze znane w Polsce i kojarzone przede wszystkim z kobietami. W rejestrze PESEL występuje jednak u obu płci.</p>
+<p>Według danych z 20 stycznia 2026 r.:</p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table class="help-wide-table">
+<thead>
+<tr>
+<th scope="col">Płeć</th>
+<th scope="col" style="text-align:right">Liczba osób</th>
+<th scope="col" style="text-align:right">Udział</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kobiety</td>
+<td style="text-align:right">79 041</td>
+<td style="text-align:right">99,48%</td>
+</tr>
+<tr>
+<td>Mężczyźni</td>
+<td style="text-align:right">412</td>
+<td style="text-align:right">0,52%</td>
+</tr>
+</tbody>
+</table></div>
+<p>Chociaż zdecydowana większość osób o tym imieniu to kobiety, udział 99,48% nie osiąga przyjętego progu 99,98%.</p>
+<p>Dlatego uczestnik o imieniu Nikola, bez dodatkowych rozstrzygających danych, trafi do weryfikacji.</p>
+<p>Program może zasugerować klasyfikację jako kobietę, ale nie przypisze jej automatycznie.</p>
+<h3 id="czy-program-moze-sie-pomylic">Czy program może się pomylić?</h3>
+<p>Tak.</p>
+<p>Jeżeli na liście znajdzie się mężczyzna o imieniu Anna, a nie zostanie podany PESEL ani inne dane wskazujące na niejednoznaczność, program automatycznie zakwalifikuje go jako kobietę.</p>
+<p>Podobnie kobieta o imieniu Piotr lub Tomasz może zostać przypisana do mężczyzn.</p>
+<p>Warto podkreślić, że <strong>na podstawie samego imienia również człowiek nie byłby w stanie jednoznacznie rozstrzygnąć takiego przypadku</strong>.</p>
+<p>To ograniczenie samych danych, a nie wyłącznie algorytmu.</p>
+<p>Przyjęty próg 99,98% jest kompromisem między skutecznością automatycznej klasyfikacji a ograniczaniem ryzyka pomyłek.</p>
+<p><strong>99,98% nie oznacza, że program gwarantuje poprawną klasyfikację 99,98% uczestników.</strong> Jest to kryterium oceny statystycznej jednoznaczności imienia.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-5" aria-labelledby="naglowek-5">
+<h2 id="naglowek-5">5. Jak działa numer PESEL?</h2>
+<p>Numer PESEL składa się z 11 cyfr. Zawiera informacje o dacie urodzenia, oznaczeniu płci oraz cyfrę kontrolną.</p>
+<p>Jego strukturę można przedstawić następująco:</p>
+<p><strong>RRMMDDPPPPK</strong></p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Część</th>
+<th scope="col">Znaczenie</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RR</td>
+<td>Dwie ostatnie cyfry roku urodzenia</td>
+</tr>
+<tr>
+<td>MM</td>
+<td>Zakodowany miesiąc urodzenia</td>
+</tr>
+<tr>
+<td>DD</td>
+<td>Dzień urodzenia</td>
+</tr>
+<tr>
+<td>PPPP</td>
+<td>Numer porządkowy zawierający oznaczenie płci</td>
+</tr>
+<tr>
+<td>K</td>
+<td>Cyfra kontrolna</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="ktora-cyfra-okresla-pec">Która cyfra określa płeć?</h3>
+<p>Oznaczenie płci znajduje się w <strong>dziesiątej cyfrze całego numeru PESEL</strong>.</p>
+<ul>
+<li>Parzysta (0, 2, 4, 6, 8) - kobieta.</li>
+<li>Nieparzysta (1, 3, 5, 7, 9) - mężczyzna.</li>
+</ul>
+<p>Program odczytuje tę informację wyłącznie wtedy, gdy cały numer PESEL przeszedł kontrolę poprawności.</p>
+<h3 id="jak-program-sprawdza-poprawnosc-pesel-u">Jak program sprawdza poprawność PESEL-u?</h3>
+<p>Weryfikowane są trzy elementy:</p>
+<p><strong>1. Długość numeru</strong></p>
+<p>PESEL musi zawierać dokładnie 11 cyfr.</p>
+<p><strong>2. Data urodzenia</strong></p>
+<p>Program sprawdza, czy pierwsze sześć cyfr zawiera prawidłowo zakodowaną datę, uwzględniając również stulecie oraz lata przestępne.</p>
+<p>Przykładowo nie zaakceptuje daty oznaczającej 30 lutego.</p>
+<p><strong>3. Cyfra kontrolna</strong></p>
+<p>Ostatnia cyfra pozwala sprawdzić matematyczną poprawność numeru.</p>
+<p>Program wykonuje obliczenia na podstawie pierwszych dziesięciu cyfr, wykorzystując następujące wagi:</p>
+<p><code>1, 3, 7, 9, 1, 3, 7, 9, 1, 3</code></p>
+<p>Każda cyfra jest mnożona przez odpowiednią wagę. Wyniki są sumowane, a na podstawie otrzymanej sumy wyliczana jest cyfra kontrolna.</p>
+<p>Jeżeli obliczona cyfra różni się od ostatniej cyfry numeru PESEL, numer zostaje uznany za nieprawidłowy.</p>
+<h3 id="czy-poprawny-pesel-gwarantuje-prawidowe-dane">Czy poprawny PESEL gwarantuje prawidłowe dane?</h3>
+<p>Nie.</p>
+<p>Program sprawdza jedynie strukturę numeru, poprawność daty i cyfrę kontrolną.</p>
+<p>Nie może potwierdzić, czy numer został rzeczywiście nadany ani czy należy do wskazanej osoby.</p>
+<p>Źródło: <a href="https://www.gov.pl/web/gov/czym-jest-numer-pesel">Gov.pl - Czym jest numer PESEL</a></p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-6" aria-labelledby="naglowek-6">
+<h2 id="naglowek-6">6. Jak program łączy informacje z imion i numeru PESEL?</h2>
+<p>Jeżeli uczestnik nie ma podanego numeru PESEL, program podejmuje decyzję na podstawie rozpoznanych imion.</p>
+<p>Jeżeli podano poprawny PESEL, jego oznaczenie płci jest porównywane ze wskazaniami imion.</p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Sytuacja</th>
+<th scope="col">Działanie</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Brak PESEL, jednoznaczne imię</td>
+<td>Klasyfikacja według imienia</td>
+</tr>
+<tr>
+<td>Poprawny PESEL, zgodne imię</td>
+<td>Klasyfikacja na podstawie PESEL</td>
+</tr>
+<tr>
+<td>Poprawny PESEL, imię niejednoznaczne</td>
+<td>Klasyfikacja według PESEL, jeśli nie ma sprzecznych jednoznacznych imion</td>
+</tr>
+<tr>
+<td>Poprawny PESEL, brak rozpoznanych imion</td>
+<td>Klasyfikacja na podstawie PESEL</td>
+</tr>
+<tr>
+<td>Poprawny PESEL sprzeczny z jednoznacznym imieniem</td>
+<td>Do weryfikacji</td>
+</tr>
+<tr>
+<td>Nieprawidłowy PESEL</td>
+<td>Do weryfikacji</td>
+</tr>
+<tr>
+<td>Kilka potencjalnych numerów PESEL</td>
+<td>Do weryfikacji</td>
+</tr>
+</tbody>
+</table></div>
+<p>Przykładowo, jeśli uczestnik ma imię typowo męskie, ale poprawny PESEL wskazuje kobietę, program nie podejmuje automatycznej decyzji.</p>
+<p>W takich przypadkach decyzję pozostawiamy użytkownikowi.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-7" aria-labelledby="naglowek-7">
+<h2 id="naglowek-7">7. Jak traktujemy dodatkowe liczby w danych?</h2>
+<p>Zdajemy sobie sprawę, że organizator może otrzymać listę zawierającą dodatkowe informacje, takie jak numery porządkowe, identyfikatory lub inne dane pochodzące z systemu, z którego została skopiowana.</p>
+<p>Nie zawsze jest sens ręcznie usuwać takie informacje przed wklejeniem listy do programu.</p>
+<p>Jednocześnie chcemy wychwytywać najbardziej prawdopodobne błędy w numerach PESEL, np. brakującą lub dodatkową cyfrę.</p>
+<p>Dlatego przyjęliśmy prostą zasadę: <strong>jako potencjalny PESEL traktujemy wyłącznie samodzielne ciągi zawierające od 10 do 12 cyfr.</strong></p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Długość ciągu cyfr</th>
+<th scope="col">Działanie programu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-9 cyfr</td>
+<td>Ignorowany przy analizie PESEL</td>
+</tr>
+<tr>
+<td>10 cyfr</td>
+<td>Potencjalnie błędny PESEL - do weryfikacji</td>
+</tr>
+<tr>
+<td>11 cyfr</td>
+<td>Pełna kontrola poprawności PESEL</td>
+</tr>
+<tr>
+<td>12 cyfr</td>
+<td>Potencjalnie błędny PESEL - do weryfikacji</td>
+</tr>
+<tr>
+<td>13 i więcej cyfr</td>
+<td>Ignorowany przy analizie PESEL</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="dlaczego-akurat-10-12-cyfr">Dlaczego akurat 10-12 cyfr?</h3>
+<p>Dziewięciocyfrowy ciąg to często zwykły numer telefonu, który mógł zostać skopiowany razem z danymi uczestnika.</p>
+<p>Nie chcemy, aby takie dodatkowe informacje niepotrzebnie powodowały konieczność ręcznej weryfikacji.</p>
+<p>Jednocześnie 10- i 12-cyfrowe ciągi mogą oznaczać PESEL, w którym przypadkowo pominięto lub dodano jedną cyfrę.</p>
+<p>To kompromis między wykrywaniem błędów a tolerowaniem dodatkowych danych.</p>
+<p>Jeżeli ciąg cyfr zostanie zignorowany, program nadal przeprowadza normalną klasyfikację na podstawie rozpoznanych imion.</p>
+<h3 id="przykady">Przykłady</h3>
+<p><code>1. Jan Kowalski</code></p>
+<p>Numer porządkowy zostaje zignorowany, a Jan może zostać zakwalifikowany jako mężczyzna.</p>
+<p><code>Jan Kowalski 25</code></p>
+<p>Dwucyfrowa liczba nie przeszkadza w rozpoznaniu imienia.</p>
+<p><code>Jan Kowalski 123456789</code></p>
+<p>Dziewięciocyfrowy ciąg zostaje pominięty przy analizie PESEL, a klasyfikacja odbywa się na podstawie imienia Jan.</p>
+<p><code>Jan Kowalski 1234567890</code></p>
+<p>Program wykryje 10-cyfrowy ciąg i skieruje wpis do weryfikacji z informacją o nieprawidłowym formacie PESEL.</p>
+<p><code>Jan Kowalski 123456789012</code></p>
+<p>Dwunastocyfrowy ciąg również spowoduje skierowanie wpisu do weryfikacji.</p>
+<p>Program nie rozpoznaje osobno numerów telefonów, NIP-ów czy innych identyfikatorów. Stosuje wyłącznie opisaną zasadę długości ciągu cyfr.</p>
+<p>Warto pamiętać, że nawet zignorowany, błędnie zapisany PESEL nie blokuje możliwości klasyfikacji uczestnika na podstawie imienia.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-8" aria-labelledby="naglowek-8">
+<h2 id="naglowek-8">8. Dlaczego niektóre wpisy wymagają weryfikacji?</h2>
+<p>Program nie próbuje zgadywać płci za wszelką cenę.</p>
+<p>Gdy dane są sprzeczne, niejednoznaczne lub zawierają potencjalny błąd, wpis trafia do ręcznego sprawdzenia.</p>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Przykład</th>
+<th scope="col">Powód weryfikacji</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jan Maria Rokita</td>
+<td>Rozpoznano imiona wskazujące różne płcie</td>
+</tr>
+<tr>
+<td>Magda Marek</td>
+<td>Rozpoznano imiona wskazujące różne płcie</td>
+</tr>
+<tr>
+<td>Anna Marek</td>
+<td>Rozpoznano imiona wskazujące różne płcie</td>
+</tr>
+<tr>
+<td>Nikola Nowak</td>
+<td>Imię niejednoznaczne statystycznie</td>
+</tr>
+<tr>
+<td>Krzysztfo Kowalski</td>
+<td>Nie rozpoznano imienia w tej pisowni</td>
+</tr>
+<tr>
+<td>Jan Kowalski + nieprawidłowy PESEL</td>
+<td>Niepowodzenie walidacji numeru</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="dlaczego-nie-poprawiamy-automatycznie-literowek">Dlaczego nie poprawiamy automatycznie literówek?</h3>
+<p>Automatyczne poprawianie błędów mogłoby prowadzić do kolejnych pomyłek.</p>
+<p>Dlatego program nie korzysta z mechanizmów automatycznej korekty imion.</p>
+<p>Nie zamienia również samodzielnie zapisów bez polskich znaków, np. <code>Lukasz</code>, na <code>Łukasz</code>.</p>
+<p>Oba zapisy są traktowane jako odrębne ciągi znaków, a wynik zależy od tego, czy występują w słowniku.</p>
+<p>Jeżeli imię jest nieznane, a w wierszu nie ma innych danych pozwalających na klasyfikację, wpis trafi do weryfikacji.</p>
+<p>Należy jednak pamiętać, że <strong>nie każda literówka zostanie wykryta</strong>.</p>
+<p>Jeżeli w wierszu występuje inne prawidłowo rozpoznane imię, program może zakwalifikować uczestnika mimo błędu w pozostałych członach.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-9" aria-labelledby="naglowek-9">
+<h2 id="naglowek-9">9. Jak sprawdzać i poprawiać wyniki?</h2>
+<p>Po zakończeniu analizy program wyświetla trzy liczniki:</p>
+<p><strong>Kobiety, Mężczyźni i Do weryfikacji.</strong></p>
+<p>Kliknięcie dowolnego licznika otwiera odpowiednią listę uczestników.</p>
+<h3 id="osoby-wymagajace-weryfikacji">Osoby wymagające weryfikacji</h3>
+<p>W kategorii „Do weryfikacji” każdy wpis zawiera informację o przyczynie problemu.</p>
+<p>W niektórych sytuacjach wyświetlana jest również sugestia klasyfikacji.</p>
+<p>Przycisk <strong>„Edytuj / przypisz płeć”</strong> otwiera formularz, w którym można poprawić treść wpisu albo ręcznie zmienić przypisanie.</p>
+<h3 id="reczna-zmiana-klasyfikacji">Ręczna zmiana klasyfikacji</h3>
+<p>W edytorze dostępne są cztery możliwości:</p>
+<ul>
+<li>Automatycznie - program sam ustala kategorię.</li>
+<li>Kobieta - ręczne przypisanie do kobiet.</li>
+<li>Mężczyzna - ręczne przypisanie do mężczyzn.</li>
+<li>Do weryfikacji - pozostawienie wpisu do dalszego sprawdzenia.</li>
+</ul>
+<p>Można edytować także uczestników, którzy zostali już automatycznie zakwalifikowani jako kobiety lub mężczyźni.</p>
+<p>Po zapisaniu zmiany liczniki aktualizują się automatycznie.</p>
+<p>Zmiana treści pojedynczego wpisu uruchamia jego ponowną klasyfikację i usuwa wcześniejszą decyzję ręczną, chyba że użytkownik wybierze nowe ręczne przypisanie.</p>
+<h3 id="ponowna-analiza-caej-listy">Ponowna analiza całej listy</h3>
+<p>Po zmianie zawartości głównego pola tekstowego należy ponownie uruchomić analizę.</p>
+<p class="help-note"><strong>Uwaga:</strong> ponowna analiza całej listy usuwa wcześniej wprowadzone ręczne przypisania płci. Jeżeli takie przypisania istnieją, program wyświetli ostrzeżenie i poprosi o potwierdzenie.</p>
+<h3 id="przykadowe-dane">Przykładowe dane</h3>
+<p>Na stronie głównej dostępne są dwa zestawy testowe:</p>
+<ul>
+<li>Poprawne - 40 przykładowych uczestników.</li>
+<li>Z błędami - 40 wpisów zawierających również niejednoznaczności i nieprawidłowe dane.</li>
+</ul>
+<p>Można je wykorzystać do zapoznania się z działaniem programu bez przygotowywania własnej listy.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-10" aria-labelledby="naglowek-10">
+<h2 id="naglowek-10">10. Prywatność</h2>
+<p>Dane uczestników są analizowane wyłącznie w przeglądarce użytkownika.</p>
+<p>Program korzysta z wcześniej przygotowanego pliku zawierającego statystyki imion.</p>
+<p>Wpisane listy uczestników:</p>
+<ul>
+<li>Nie są wysyłane na serwer przez aplikację.</li>
+<li>Nie są zapisywane w bazie danych.</li>
+<li>Nie są przechowywane przez aplikację w pamięci trwałej przeglądarki.</li>
+</ul>
+<p>Wyniki i ręczne decyzje pozostają w pamięci aktualnie otwartej strony.</p>
+<p>Po zamknięciu lub odświeżeniu strony aplikacja nie odtwarza wcześniejszych wyników.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-11" aria-labelledby="naglowek-11">
+<h2 id="naglowek-11">11. Ograniczenia programu</h2>
+<p>Aplikacja jest narzędziem pomocniczym, a nie urzędowym systemem ustalania płci lub tożsamości.</p>
+<p>Należy pamiętać, że:</p>
+<ul>
+<li>Statystyki imion nie dają stuprocentowej pewności co do płci konkretnej osoby.</li>
+<li>Niektóre nazwiska są identyczne z popularnymi imionami.</li>
+<li>Słownik nie obejmuje wszystkich istniejących imion.</li>
+<li>Niektóre literówki mogą pozostać niezauważone.</li>
+<li>Poprawny matematycznie PESEL nie gwarantuje, że należy do wskazanej osoby.</li>
+<li>Oznaczenie płci w PESEL nie musi odpowiadać tożsamości płciowej danej osoby.</li>
+</ul>
+<p>Zadaniem programu jest możliwie szybka i przewidywalna klasyfikacja uczestników, z możliwością ręcznego rozstrzygnięcia przypadków niejednoznacznych.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-12" aria-labelledby="naglowek-12">
+<h2 id="naglowek-12">12. Źródła danych i informacje techniczne</h2>
+<p><strong>Oficjalne źródła:</strong></p>
+<ul>
+<li><a href="https://dane.gov.pl/dataset/1667">Ministerstwo Cyfryzacji - imiona występujące w rejestrze PESEL</a></li>
+<li><a href="https://www.gov.pl/web/gov/czym-jest-numer-pesel">Gov.pl - czym jest numer PESEL</a></li>
+</ul>
+<p><strong>Dodatkowe źródło ciekawostki o nazwiskach:</strong></p>
+<ul>
+<li><a href="https://polskienazwiska.pl/n/MAREK">Nazwisko Marek - statystyki występowania w 2026 r.</a></li>
+</ul>
+<div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Parametr</th>
+<th scope="col">Wartość</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Źródło imion</td>
+<td>Rejestr PESEL</td>
+</tr>
+<tr>
+<td>Stan danych</td>
+<td>20 stycznia 2026 r.</td>
+</tr>
+<tr>
+<td>Minimalna łączna liczba wystąpień imienia</td>
+<td>100</td>
+</tr>
+<tr>
+<td>Próg automatycznej klasyfikacji</td>
+<td>99,98%</td>
+</tr>
+<tr>
+<td>Metoda analizy</td>
+<td>Słownik imion i opcjonalny PESEL</td>
+</tr>
+<tr>
+<td>Przetwarzanie listy</td>
+<td>Lokalnie w przeglądarce</td>
+</tr>
+<tr>
+<td>Technologie</td>
+<td>HTML, CSS, JavaScript</td>
+</tr>
+<tr>
+<td>Sztuczna inteligencja podczas analizy</td>
+<td>Niewykorzystywana</td>
+</tr>
+</tbody>
+</table></div>
+<p>Słownik może być aktualizowany na podstawie kolejnych danych publikowanych przez Ministerstwo Cyfryzacji.</p>
+    </section>
+
+    <footer class="footer"><a href="./index.html">Wróć do klasyfikatora uczestników</a></footer>
+  </main>
+</body>
+</html>
