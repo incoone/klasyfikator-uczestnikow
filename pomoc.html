@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="referrer" content="no-referrer">
-  <meta name="description" content="Jak działa klasyfikacja uczestników? Instrukcja użytkowania, rozpoznawanie imion, PESEL, weryfikacja wyników i prywatność.">
+  <meta name="description" content="Jak działa klasyfikacja uczestników? Instrukcja użytkowania, rozpoznawanie imion, PESEL, daty urodzenia, statystyki wiekowe, weryfikacja wyników i prywatność.">
   <title>Jak działa klasyfikacja uczestników?</title>
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=1.1.2">
 </head>
 <body>
   <main class="container help-page">
@@ -17,8 +17,8 @@
     </header>
 
     <section class="panel help-intro" aria-label="Wprowadzenie">
-<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników. Wykorzystuje statystyki imion pochodzące z polskiego rejestru PESEL oraz opcjonalne numery PESEL.</p>
-<p>Osoby, których dane pozwalają na automatyczną klasyfikację, są przypisywane do odpowiedniej grupy. Pozostałe wpisy trafiają do ręcznej weryfikacji.</p>
+<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. Wykorzystuje statystyki imion pochodzące z polskiego rejestru PESEL, opcjonalne daty urodzenia i numery PESEL.</p>
+<p>Klasyfikacja płci i ustalanie wieku odbywają się niezależnie. Program wskazuje problemy wymagające ręcznego sprawdzenia oraz dodatkowe uwagi informacyjne.</p>
 <p>Cała analiza odbywa się lokalnie w przeglądarce użytkownika.</p>
     </section>
 
@@ -28,11 +28,13 @@
         <li><a href="#sekcja-1">Jak korzystać z programu?</a></li>
         <li><a href="#sekcja-2">Jak program rozpoznaje imiona?</a></li>
         <li><a href="#sekcja-3">Skąd pochodzą dane o imionach?</a></li>
-        <li><a href="#sekcja-4">Dlaczego przyjęliśmy próg 99,98%?</a></li>
+        <li><a href="#sekcja-4">Dlaczego przyjęliśmy próg 99,90%?</a></li>
         <li><a href="#sekcja-5">Jak działa numer PESEL?</a></li>
         <li><a href="#sekcja-6">Jak program łączy informacje z imion i numeru PESEL?</a></li>
         <li><a href="#sekcja-7">Jak traktujemy dodatkowe liczby w danych?</a></li>
+        <li><a href="#sekcja-wiek">Jak ustalamy wiek i statystyki wiekowe?</a></li>
         <li><a href="#sekcja-8">Dlaczego niektóre wpisy wymagają weryfikacji?</a></li>
+        <li><a href="#sekcja-uwagi">Co oznaczają uwagi informacyjne?</a></li>
         <li><a href="#sekcja-9">Jak sprawdzać i poprawiać wyniki?</a></li>
         <li><a href="#sekcja-10">Prywatność</a></li>
         <li><a href="#sekcja-11">Ograniczenia programu</a></li>
@@ -43,15 +45,16 @@
     <section class="panel help-section" id="sekcja-1" aria-labelledby="naglowek-1">
 <h2 id="naglowek-1">1. Jak korzystać z programu?</h2>
 <p>Zalecany format danych to:</p>
-<p><strong>Imię Nazwisko PESEL</strong></p>
-<p>Numer PESEL jest opcjonalny, ale jego podanie zwiększa możliwości prawidłowej klasyfikacji.</p>
+<p><strong>Imię Nazwisko Data urodzenia PESEL</strong></p>
+<p>Data urodzenia i numer PESEL są opcjonalne. Do ustalenia wieku wystarczy prawidłowa data urodzenia lub jeden numer PESEL, który przeszedł walidację, o ile dane nie są sprzeczne.</p>
 <p>Przykładowa lista:</p>
 <pre><code class="language-text">Jan Kowalski 40831499013
 Anna Nowak 45892299026
-Piotr Wiśniewski
-Maria Zielińska
+Piotr Wiśniewski 12.05.2008
+Maria Zielińska 2010-09-17
+Zofia Nowak
 </code></pre>
-<p>Każdy uczestnik powinien znajdować się w osobnym wierszu.</p>
+<p>Każdy uczestnik powinien znajdować się w osobnym wierszu. Powyższe numery PESEL to dane testowe, kodujące daty z XIX wieku.</p>
 <h3 id="a-jesli-dane-nie-sa-uporzadkowane">A jeśli dane nie są uporządkowane?</h3>
 <p>Zdajemy sobie sprawę, że organizator nie zawsze otrzymuje idealnie przygotowaną listę. Dane mogą pochodzić z formularzy, arkuszy kalkulacyjnych lub różnych systemów informatycznych.</p>
 <p>Dlatego program zaprojektowano tak, aby radził sobie również z mniej uporządkowanymi zapisami.</p>
@@ -60,6 +63,7 @@ Maria Zielińska
 <li>Imię i nazwisko w dowolnej kolejności.</li>
 <li>Dwa imiona.</li>
 <li>PESEL umieszczony w dowolnym miejscu wiersza.</li>
+<li>Data urodzenia przed imieniem, po nazwisku lub w innym miejscu wiersza.</li>
 <li>Numeracja listy, np. <code>1. Jan Kowalski</code>.</li>
 <li>Dodatkowe spacje i różna wielkość liter.</li>
 </ul>
@@ -67,13 +71,15 @@ Maria Zielińska
 <p class="help-note"><strong>Ważne:</strong> numer PESEL należy podawać jako 11 kolejnych cyfr, bez spacji i myślników.</p>
 <h3 id="uruchomienie-analizy">Uruchomienie analizy</h3>
 <p>Po wklejeniu listy kliknij <strong>„Analizuj listę”</strong>.</p>
-<p>Program podzieli uczestników na trzy grupy:</p>
+<p>Program podzieli uczestników według ustalonej płci na trzy grupy:</p>
 <ul>
 <li><strong>Kobiety</strong> - uczestnicy zakwalifikowani jako kobiety.</li>
 <li><strong>Mężczyźni</strong> - uczestnicy zakwalifikowani jako mężczyźni.</li>
-<li><strong>Do weryfikacji</strong> - uczestnicy wymagający dodatkowego sprawdzenia.</li>
+<li><strong>Płeć do weryfikacji</strong> - uczestnicy, których płeć wymaga ręcznej decyzji.</li>
 </ul>
 <p>Kliknięcie jednego z trzech liczników wyświetla listę osób należących do danej kategorii.</p>
+<p>Przed analizą możesz ustawić <strong>datę wydarzenia</strong> oraz włączyć statystyki dla progów wiekowych. Domyślnie data wydarzenia to dzisiejszy dzień.</p>
+<p>Dodatkowe filtry pozwalają wyświetlić wszystkie wpisy wymagające sprawdzenia oraz osoby o nieustalonym wieku. <a href="#sekcja-wiek">Więcej o ustalaniu wieku</a>.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-2" aria-labelledby="naglowek-2">
@@ -123,8 +129,8 @@ Maria Zielińska
 </tr>
 </tbody>
 </table></div>
-<p>Jeżeli wszystkie rozpoznane imiona jednoznacznie wskazują tę samą płeć, uczestnik zostaje automatycznie zakwalifikowany.</p>
-<p>Jeżeli rozpoznane imiona wskazują różne płcie, wpis wymaga weryfikacji.</p>
+<p>Bez numeru PESEL automatyczna klasyfikacja jest możliwa, gdy co najmniej jedno rozpoznane imię osiąga próg 99,90%, a wszystkie rozpoznane imiona mają przewagę tej samej płci. Słabsze wskazanie zgodne z jednoznacznym imieniem nie blokuje wyniku, ale może wygenerować uwagę informacyjną.</p>
+<p>Jeżeli rozpoznane imiona wskazują różne płcie, występuje remis 50/50 lub żadne imię nie osiąga progu, sama analiza imion nie wystarcza do klasyfikacji.</p>
 <h3 id="dlaczego-rozpoznawanie-imion-nie-zawsze-jest-proste">Dlaczego rozpoznawanie imion nie zawsze jest proste?</h3>
 <p>Nie każde dane są tak oczywiste jak <code>Jan Kowalski</code>.</p>
 <p>W Polsce występują nazwiska brzmiące dokładnie tak samo jak popularne imiona.</p>
@@ -169,7 +175,7 @@ Maria Zielińska
     </section>
 
     <section class="panel help-section" id="sekcja-4" aria-labelledby="naglowek-4">
-<h2 id="naglowek-4">4. Dlaczego przyjęliśmy próg 99,98%?</h2>
+<h2 id="naglowek-4">4. Dlaczego przyjęliśmy próg 99,90%?</h2>
 <p>Wbrew pozorom nie wszystkie popularne polskie imiona występują wyłącznie u jednej płci.</p>
 <p>Według danych Ministerstwa Cyfryzacji ze stycznia 2026 r.:</p>
 <div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
@@ -196,8 +202,15 @@ Maria Zielińska
 </table></div>
 <p>To rzeczywiste dane z rejestru PESEL.</p>
 <p>Gdybyśmy wymagali, aby imię występowało w 100% u jednej płci, nawet Anna, Piotr czy Tomasz mogliby wymagać ręcznej weryfikacji.</p>
-<p>Dlatego przyjęliśmy <strong>próg automatycznej klasyfikacji wynoszący 99,98%</strong>.</p>
-<p>Oznacza to, że co najmniej 99,98% opublikowanych wystąpień danego imienia musi przypadać na jedną płeć.</p>
+<p>Dlatego przyjęliśmy <strong>próg jednoznaczności imienia wynoszący 99,90%</strong>. Imię, którego udział dla jednej płci osiąga ten próg, może służyć do automatycznej klasyfikacji, o ile pozostałe dane na to pozwalają.</p>
+<div aria-label="Progi jednoznaczności imion" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead><tr><th scope="col">Udział dominującej płci</th><th scope="col">Znaczenie</th></tr></thead>
+<tbody>
+<tr><td>Co najmniej 99,98%</td><td>Imię jednoznaczne, bez dodatkowej uwagi dotyczącej progu.</td></tr>
+<tr><td>Od 99,90% włącznie do poniżej 99,98%</td><td>Imię jednoznaczne, z uwagą informacyjną o niskiej ważności.</td></tr>
+<tr><td>Poniżej 99,90%</td><td>Imię niejednoznaczne. Samo nie wystarcza do automatycznej klasyfikacji.</td></tr>
+</tbody></table></div>
+<p>Obie granice sprawdzane są na podstawie dokładnych liczebności, przed zaokrągleniem procentów wyświetlanych na ekranie.</p>
 <h3 id="przykad-obliczenia">Przykład obliczenia</h3>
 <p>Załóżmy, że pewne imię występuje:</p>
 <ul>
@@ -205,14 +218,16 @@ Maria Zielińska
 <li>1 raz u mężczyzn.</li>
 </ul>
 <p>Udział kobiet wynosi 99,99%.</p>
-<p>Program automatycznie uzna takie imię za żeńskie, ponieważ przekracza ustalony próg.</p>
+<p>Program uzna takie imię za jednoznacznie żeńskie, ponieważ osiąga ustalony próg.</p>
 <p>Jeżeli natomiast imię występuje:</p>
 <ul>
 <li>600 razy u kobiet.</li>
 <li>400 razy u mężczyzn,</li>
 </ul>
 <p>udział kobiet wynosi 60%.</p>
-<p>Takie imię jest statystycznie niejednoznaczne i wymaga weryfikacji.</p>
+<p>Takie imię jest statystycznie niejednoznaczne. Bez innych rozstrzygających danych wpis wymaga weryfikacji.</p>
+<h3 id="przyklad-artem">Przykład z przedziału progowego - Artem</h3>
+<p>Przy 19 wystąpieniach imienia Artem wśród kobiet i 37 563 wśród mężczyzn udział mężczyzn wynosi 99,9494%. To wystarcza do uznania imienia za jednoznaczne. Jeżeli pozostałe dane są zgodne, program zakwalifikuje uczestnika jako mężczyznę, a w uwagach informacyjnych pokaże liczebności i udział procentowy.</p>
 <h3 id="przykad-z-polskiego-rejestru-pesel-nikola">Przykład z polskiego rejestru PESEL - Nikola</h3>
 <p>Imię <strong>Nikola</strong> jest dobrze znane w Polsce i kojarzone przede wszystkim z kobietami. W rejestrze PESEL występuje jednak u obu płci.</p>
 <p>Według danych z 20 stycznia 2026 r.:</p>
@@ -237,7 +252,7 @@ Maria Zielińska
 </tr>
 </tbody>
 </table></div>
-<p>Chociaż zdecydowana większość osób o tym imieniu to kobiety, udział 99,48% nie osiąga przyjętego progu 99,98%.</p>
+<p>Chociaż zdecydowana większość osób o tym imieniu to kobiety, udział 99,48% nie osiąga przyjętego progu 99,90%.</p>
 <p>Dlatego uczestnik o imieniu Nikola, bez dodatkowych rozstrzygających danych, trafi do weryfikacji.</p>
 <p>Program może zasugerować klasyfikację jako kobietę, ale nie przypisze jej automatycznie.</p>
 <h3 id="czy-program-moze-sie-pomylic">Czy program może się pomylić?</h3>
@@ -246,8 +261,8 @@ Maria Zielińska
 <p>Podobnie kobieta o imieniu Piotr lub Tomasz może zostać przypisana do mężczyzn.</p>
 <p>Warto podkreślić, że <strong>na podstawie samego imienia również człowiek nie byłby w stanie jednoznacznie rozstrzygnąć takiego przypadku</strong>.</p>
 <p>To ograniczenie samych danych, a nie wyłącznie algorytmu.</p>
-<p>Przyjęty próg 99,98% jest kompromisem między skutecznością automatycznej klasyfikacji a ograniczaniem ryzyka pomyłek.</p>
-<p><strong>99,98% nie oznacza, że program gwarantuje poprawną klasyfikację 99,98% uczestników.</strong> Jest to kryterium oceny statystycznej jednoznaczności imienia.</p>
+<p>Przyjęty próg 99,90% jest kompromisem między skutecznością automatycznej klasyfikacji a ograniczaniem ryzyka pomyłek. Przedział ostrzegawczy pozwala zwrócić uwagę na imiona bliższe granicy.</p>
+<p><strong>99,90% nie oznacza gwarancji poprawnej klasyfikacji 99,90% uczestników.</strong> Procenty i liczebności dotyczą opublikowanych danych rejestru PESEL, a nie prawdopodobieństwa płci konkretnej osoby. Zero oznacza brak opublikowanych wystąpień.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-5" aria-labelledby="naglowek-5">
@@ -305,7 +320,7 @@ Maria Zielińska
 <p><code>1, 3, 7, 9, 1, 3, 7, 9, 1, 3</code></p>
 <p>Każda cyfra jest mnożona przez odpowiednią wagę. Wyniki są sumowane, a na podstawie otrzymanej sumy wyliczana jest cyfra kontrolna.</p>
 <p>Jeżeli obliczona cyfra różni się od ostatniej cyfry numeru PESEL, numer zostaje uznany za nieprawidłowy.</p>
-<h3 id="czy-poprawny-pesel-gwarantuje-prawidowe-dane">Czy poprawny PESEL gwarantuje prawidłowe dane?</h3>
+<h3 id="czy-poprawny-pesel-gwarantuje-prawidowe-dane">Czy PESEL po poprawnej walidacji gwarantuje prawidłowe dane?</h3>
 <p>Nie.</p>
 <p>Program sprawdza jedynie strukturę numeru, poprawność daty i cyfrę kontrolną.</p>
 <p>Nie może potwierdzić, czy numer został rzeczywiście nadany ani czy należy do wskazanej osoby.</p>
@@ -315,7 +330,7 @@ Maria Zielińska
     <section class="panel help-section" id="sekcja-6" aria-labelledby="naglowek-6">
 <h2 id="naglowek-6">6. Jak program łączy informacje z imion i numeru PESEL?</h2>
 <p>Jeżeli uczestnik nie ma podanego numeru PESEL, program podejmuje decyzję na podstawie rozpoznanych imion.</p>
-<p>Jeżeli podano poprawny PESEL, jego oznaczenie płci jest porównywane ze wskazaniami imion.</p>
+<p>Jeżeli numer PESEL przeszedł walidację, jego oznaczenie płci jest porównywane ze wskazaniami imion.</p>
 <div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
 <thead>
 <tr>
@@ -325,24 +340,28 @@ Maria Zielińska
 </thead>
 <tbody>
 <tr>
-<td>Brak PESEL, jednoznaczne imię</td>
-<td>Klasyfikacja według imienia</td>
+<td>Brak PESEL, przynajmniej jedno imię osiąga próg i wszystkie rozpoznane imiona wskazują tę samą płeć</td>
+<td>Klasyfikacja według imion; zgodne słabsze wskazania i imiona z przedziału progowego mogą generować uwagi informacyjne</td>
 </tr>
 <tr>
-<td>Poprawny PESEL, zgodne imię</td>
+<td>Brak PESEL, sprzeczność imion, remis lub brak imienia osiągającego próg</td>
+<td>Płeć do weryfikacji</td>
+</tr>
+<tr>
+<td>PESEL po walidacji, zgodne imię</td>
 <td>Klasyfikacja na podstawie PESEL</td>
 </tr>
 <tr>
-<td>Poprawny PESEL, imię niejednoznaczne</td>
-<td>Klasyfikacja według PESEL, jeśli nie ma sprzecznych jednoznacznych imion</td>
+<td>PESEL po walidacji, imię niejednoznaczne</td>
+<td>Klasyfikacja według PESEL, jeśli nie ma sprzecznych jednoznacznych imion; uwaga informacyjna również przy przeciwnym słabszym wskazaniu lub remisie</td>
 </tr>
 <tr>
-<td>Poprawny PESEL, brak rozpoznanych imion</td>
-<td>Klasyfikacja na podstawie PESEL</td>
+<td>PESEL po walidacji, brak rozpoznanych imion</td>
+<td>Klasyfikacja na podstawie PESEL z uwagą informacyjną o braku rozpoznanych imion</td>
 </tr>
 <tr>
-<td>Poprawny PESEL sprzeczny z jednoznacznym imieniem</td>
-<td>Do weryfikacji</td>
+<td>PESEL po walidacji sprzeczny z jednoznacznym imieniem</td>
+<td>Płeć do weryfikacji</td>
 </tr>
 <tr>
 <td>Nieprawidłowy PESEL</td>
@@ -354,8 +373,9 @@ Maria Zielińska
 </tr>
 </tbody>
 </table></div>
-<p>Przykładowo, jeśli uczestnik ma imię typowo męskie, ale poprawny PESEL wskazuje kobietę, program nie podejmuje automatycznej decyzji.</p>
-<p>W takich przypadkach decyzję pozostawiamy użytkownikowi.</p>
+<p>Przykładowo, jeśli uczestnik ma jednoznaczne imię męskie, ale PESEL po walidacji wskazuje kobietę, program nie podejmuje automatycznej decyzji.</p>
+<p>W takich przypadkach decyzję pozostawiamy użytkownikowi. Poprawna walidacja PESEL oznacza wyłącznie zgodność struktury numeru, a nie potwierdzenie tożsamości.</p>
+<p>Konflikt dotyczący płci nie blokuje obliczenia wieku, jeżeli data urodzenia jest jednoznaczna. Podobnie konflikt dat urodzenia nie musi blokować ustalenia płci.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-7" aria-labelledby="naglowek-7">
@@ -411,14 +431,49 @@ Maria Zielińska
 <p>Program wykryje 10-cyfrowy ciąg i skieruje wpis do weryfikacji z informacją o nieprawidłowym formacie PESEL.</p>
 <p><code>Jan Kowalski 123456789012</code></p>
 <p>Dwunastocyfrowy ciąg również spowoduje skierowanie wpisu do weryfikacji.</p>
-<p>Program nie rozpoznaje osobno numerów telefonów, NIP-ów czy innych identyfikatorów. Stosuje wyłącznie opisaną zasadę długości ciągu cyfr.</p>
+<p>W przypadku identyfikatorów program nie rozpoznaje osobno numerów telefonów, NIP-ów czy innych numerów. Stosuje opisaną zasadę długości samodzielnego ciągu cyfr. Daty urodzenia rozpoznaje niezależnie, na podstawie ich formatu.</p>
 <p>Warto pamiętać, że nawet zignorowany, błędnie zapisany PESEL nie blokuje możliwości klasyfikacji uczestnika na podstawie imienia.</p>
     </section>
 
+    <section class="panel help-section" id="sekcja-wiek" aria-labelledby="naglowek-wiek">
+<h2 id="naglowek-wiek">8. Jak ustalamy wiek i statystyki wiekowe?</h2>
+<p>Wiek uczestnika podawany jest w ukończonych latach na wybrany dzień wydarzenia, a nie według samej różnicy lat kalendarzowych. Domyślnie data wydarzenia to dzisiaj. Możesz wskazać np. dzień rozpoczęcia wycieczki.</p>
+<h3>Obsługiwane daty urodzenia</h3>
+<p>Datę można wpisać w formacie dzień-miesiąc-rok lub rok-miesiąc-dzień, używając kropki, myślnika albo ukośnika. Rok musi mieć cztery cyfry, dzień i miesiąc jedną lub dwie. W jednej dacie należy używać tego samego separatora.</p>
+<pre><code>Anna Kowalska 12.05.2008
+Jan Nowak 2008-05-12
+Piotr Wiśniewski 12/5/2008
+2010.9.17 Maria Zielińska</code></pre>
+<p>Daty bez pełnego roku, takie jak <code>12.05.08</code>, nie są rozpoznawane jako daty urodzenia. Program nie zgaduje ich znaczenia. Samodzielna liczba, np. <code>25</code>, nie zostanie odczytana jako wiek. Program sprawdza także, czy data istnieje w kalendarzu, w tym poprawność 29 lutego.</p>
+<h3>Co się dzieje, gdy podano PESEL i datę urodzenia?</h3>
+<div aria-label="Ustalanie daty urodzenia" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead><tr><th scope="col">Sytuacja</th><th scope="col">Wynik dla wieku</th></tr></thead>
+<tbody>
+<tr><td>Jedna prawidłowa data, brak PESEL</td><td>Wiek z wpisanej daty.</td></tr>
+<tr><td>Jeden PESEL po walidacji, brak daty</td><td>Wiek z daty zakodowanej w PESEL.</td></tr>
+<tr><td>Wpisana data zgodna z datą z PESEL</td><td>Wiek obliczony z daty, na którą wskazują oba zapisy.</td></tr>
+<tr><td>Prawidłowa wpisana data różni się od daty z PESEL lub podano kilka różnych prawidłowych dat</td><td>Wiek nieustalony; wpis wymaga sprawdzenia.</td></tr>
+<tr><td>Błędna data, ale jeden PESEL po walidacji</td><td>Wiek z PESEL, z uwagą informacyjną o błędnej dacie.</td></tr>
+<tr><td>Błędny PESEL lub kilka potencjalnych numerów, ale jedna jednoznaczna prawidłowa wpisana data</td><td>Wiek z wpisanej daty, z uwagą informacyjną; płeć nadal może wymagać weryfikacji.</td></tr>
+<tr><td>Brak daty i PESEL</td><td>Wiek nieustalony, bez ostrzeżenia z powodu samego braku danych.</td></tr>
+</tbody></table></div>
+<p>Jeżeli prawidłowa data została powtórzona w różnych formatach, traktowana jest jako jedna data. Gdy data urodzenia jest późniejsza niż dzień wydarzenia, wiek pozostaje nieustalony i powstaje uwaga wymagająca sprawdzenia. Wyczyszczenie daty wydarzenia powoduje, że wiek wszystkich uczestników jest nieustalony.</p>
+<p>W przypadku osoby urodzonej 29 lutego program w roku nieprzestępnym dolicza kolejny rok życia 1 marca.</p>
+<h3>Progi wiekowe</h3>
+<p>Zaznacz opcję <strong>„Oblicz liczebność uczestników dla progów wiekowych”</strong>, aby wyświetlić dodatkową tabelę.</p>
+<ul>
+<li><strong>Typowe progi dla branży turystycznej:</strong> 10, 12, 14, 16, 18, 25 i 60 lat.</li>
+<li><strong>Własne progi:</strong> np. <code>10, 12, 69</code>. Można oddzielić liczby przecinkami, spacjami lub innymi separatorami. Program akceptuje całkowite wartości nieujemne, usuwa powtórzenia i porządkuje wartości rosnąco. Przykładowo <code>10.12</code> oznacza dwa progi, 10 i 12 lat, a nie ułamek.</li>
+</ul>
+<p>Dla każdego progu tabela pokazuje liczbę osób <strong>poniżej</strong> danego wieku oraz liczbę osób mających <strong>co najmniej</strong> tyle lat. Przykładowo uczestnik, który kończy 12 lat w dniu wydarzenia, trafia do kolumny „Co najmniej” dla progu 12 lat.</p>
+<p>Osoby o nieustalonym wieku nie są wliczane do żadnej z dwóch kolumn. Ich wspólna liczba jest podana pod tabelą. Każdy próg jest analizowany niezależnie, więc nie należy sumować wszystkich wierszy tabeli.</p>
+<p>Zmiana daty wydarzenia lub progów po analizie aktualizuje wiek i statystyki bez utraty ręcznie przypisanej płci. Wyłączenie statystyk ukrywa tabelę, ale nie wyłącza ustalania wieku pojedynczych uczestników.</p>
+    </section>
+
     <section class="panel help-section" id="sekcja-8" aria-labelledby="naglowek-8">
-<h2 id="naglowek-8">8. Dlaczego niektóre wpisy wymagają weryfikacji?</h2>
+<h2 id="naglowek-8">9. Dlaczego niektóre wpisy wymagają weryfikacji?</h2>
 <p>Program nie próbuje zgadywać płci za wszelką cenę.</p>
-<p>Gdy dane są sprzeczne, niejednoznaczne lub zawierają potencjalny błąd, wpis trafia do ręcznego sprawdzenia.</p>
+<p>Wpis trafia do ręcznego sprawdzenia, gdy występuje problem wymagający decyzji dotyczącej płci lub wieku. Nie każda rozbieżność blokuje wynik - jeśli można ustalić wynik na podstawie innych danych, problem może zostać wskazany jako uwaga informacyjna.</p>
 <div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
 <thead>
 <tr>
@@ -451,6 +506,10 @@ Maria Zielińska
 <td>Jan Kowalski + nieprawidłowy PESEL</td>
 <td>Niepowodzenie walidacji numeru</td>
 </tr>
+<tr>
+<td>Anna Nowak 12.05.2008 17.09.2008</td>
+<td>Dwie różne daty urodzenia: wiek wymaga sprawdzenia, nawet jeśli płeć jest ustalona</td>
+</tr>
 </tbody>
 </table></div>
 <h3 id="dlaczego-nie-poprawiamy-automatycznie-literowek">Dlaczego nie poprawiamy automatycznie literówek?</h3>
@@ -461,15 +520,35 @@ Maria Zielińska
 <p>Jeżeli imię jest nieznane, a w wierszu nie ma innych danych pozwalających na klasyfikację, wpis trafi do weryfikacji.</p>
 <p>Należy jednak pamiętać, że <strong>nie każda literówka zostanie wykryta</strong>.</p>
 <p>Jeżeli w wierszu występuje inne prawidłowo rozpoznane imię, program może zakwalifikować uczestnika mimo błędu w pozostałych członach.</p>
+<p>Program nie rozwija samodzielnie zdrobnień do pełnych form imion. Rozpoznaje je tylko wtedy, gdy dany zapis występuje w słowniku, i korzysta z jego własnych statystyk. Nie potwierdza, czy podane imię jest zgodne z dokumentem tożsamości.</p>
+    </section>
+
+    <section class="panel help-section" id="sekcja-uwagi" aria-labelledby="naglowek-uwagi">
+<h2 id="naglowek-uwagi">10. Co oznaczają uwagi informacyjne?</h2>
+<p>Na dole wyników znajduje się zwijana sekcja <strong>„Uwagi informacyjne (X)”</strong>, widoczna tylko wtedy, gdy program ma dodatkowe informacje do przekazania. Licznik X oznacza liczbę uwag, a nie liczbę uczestników. Jeden wpis może zawierać kilka uwag.</p>
+<p>Uwagi mają trzy poziomy ważności:</p>
+<div class="info-notes-list" style="margin-bottom: 14px" aria-label="Poziomy ważności uwag informacyjnych">
+<div class="info-item info-level-1"><strong>Niska ważność - szaroniebieski</strong><p class="reason">Np. jednoznaczne imię z udziałem od 99,90% do poniżej 99,98% lub słabsze imię zgodne z jednoznacznym wskazaniem.</p></div>
+<div class="info-item info-level-2"><strong>Średnia ważność - żółty</strong><p class="reason">Np. płeć ustalono dzięki PESEL mimo nierozpoznanego imienia, remisu, sprzecznego słabszego wskazania lub braku imienia osiągającego próg.</p></div>
+<div class="info-item info-level-3"><strong>Wysoka ważność - pomarańczowy</strong><p class="reason">Np. wpisano nieprawidłową datę urodzenia, ale do obliczenia wieku wykorzystano datę z PESEL, który przeszedł walidację.</p></div>
+</div>
+<p>Rekordy wyświetlane są od najwyższej do najniższej ważności. Jeżeli jeden uczestnik ma kilka uwag, kolor jego rekordu odpowiada najważniejszej z nich.</p>
+<p class="help-note"><strong>Ważne:</strong> kolor i ważność uwagi nie oznaczają konieczności ręcznej klasyfikacji. Decyzja o tym, czy wpis wymaga sprawdzenia, jest niezależna. Ten sam uczestnik może występować zarówno w sekcji uwag informacyjnych, jak i wśród wpisów do sprawdzenia.</p>
+<p>Uwagi warto przeczytać przed wykorzystaniem danych, szczególnie przy przygotowywaniu dokumentów ubezpieczeniowych. Nawet brak uwag nie potwierdza rzeczywistej tożsamości uczestnika.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-9" aria-labelledby="naglowek-9">
-<h2 id="naglowek-9">9. Jak sprawdzać i poprawiać wyniki?</h2>
+<h2 id="naglowek-9">11. Jak sprawdzać i poprawiać wyniki?</h2>
 <p>Po zakończeniu analizy program wyświetla trzy liczniki:</p>
-<p><strong>Kobiety, Mężczyźni i Do weryfikacji.</strong></p>
+<p><strong>Kobiety, Mężczyźni i Płeć do weryfikacji.</strong></p>
 <p>Kliknięcie dowolnego licznika otwiera odpowiednią listę uczestników.</p>
+<p>Dodatkowo dostępne są dwa niezależne filtry:</p>
+<ul>
+<li><strong>Wpisy wymagające sprawdzenia</strong> - uczestnicy z problemami wymagającymi decyzji dotyczącej płci lub wieku; jeden rekord liczony jest tylko raz.</li>
+<li><strong>Nieustalony wiek</strong> - uczestnicy, których wieku nie udało się obliczyć, także osoby bez danych o urodzeniu.</li>
+</ul>
 <h3 id="osoby-wymagajace-weryfikacji">Osoby wymagające weryfikacji</h3>
-<p>W kategorii „Do weryfikacji” każdy wpis zawiera informację o przyczynie problemu.</p>
+<p>W listach „Płeć do weryfikacji” i „Wpisy wymagające sprawdzenia” każdy wpis zawiera informację o przyczynie problemu. Widoczne są również szczegóły daty urodzenia, wieku oraz rozpoznane imiona z liczebnościami, udziałami procentowymi i statusem progu.</p>
 <p>W niektórych sytuacjach wyświetlana jest również sugestia klasyfikacji.</p>
 <p>Przycisk <strong>„Edytuj / przypisz płeć”</strong> otwiera formularz, w którym można poprawić treść wpisu albo ręcznie zmienić przypisanie.</p>
 <h3 id="reczna-zmiana-klasyfikacji">Ręczna zmiana klasyfikacji</h3>
@@ -480,11 +559,12 @@ Maria Zielińska
 <li>Mężczyzna - ręczne przypisanie do mężczyzn.</li>
 <li>Do weryfikacji - pozostawienie wpisu do dalszego sprawdzenia.</li>
 </ul>
-<p>Można edytować także uczestników, którzy zostali już automatycznie zakwalifikowani jako kobiety lub mężczyźni.</p>
-<p>Po zapisaniu zmiany liczniki aktualizują się automatycznie.</p>
+<p>Można edytować również uczestników, którzy zostali już automatycznie zakwalifikowani jako kobiety lub mężczyźni, klikając ich wpis na liście.</p>
+<p>Po zapisaniu zmiany liczniki, wiek, statystyki i komunikaty aktualizują się automatycznie. Ręczne przypisanie płci nie rozwiązuje problemów związanych z datą urodzenia.</p>
 <p>Zmiana treści pojedynczego wpisu uruchamia jego ponowną klasyfikację i usuwa wcześniejszą decyzję ręczną, chyba że użytkownik wybierze nowe ręczne przypisanie.</p>
 <h3 id="ponowna-analiza-caej-listy">Ponowna analiza całej listy</h3>
 <p>Po zmianie zawartości głównego pola tekstowego należy ponownie uruchomić analizę.</p>
+<p>Przycisk „Wyczyść” usuwa listę i wyniki po potwierdzeniu.</p>
 <p class="help-note"><strong>Uwaga:</strong> ponowna analiza całej listy usuwa wcześniej wprowadzone ręczne przypisania płci. Jeżeli takie przypisania istnieją, program wyświetli ostrzeżenie i poprosi o potwierdzenie.</p>
 <h3 id="przykadowe-dane">Przykładowe dane</h3>
 <p>Na stronie głównej dostępne są dwa zestawy testowe:</p>
@@ -496,7 +576,7 @@ Maria Zielińska
     </section>
 
     <section class="panel help-section" id="sekcja-10" aria-labelledby="naglowek-10">
-<h2 id="naglowek-10">10. Prywatność</h2>
+<h2 id="naglowek-10">12. Prywatność</h2>
 <p>Dane uczestników są analizowane wyłącznie w przeglądarce użytkownika.</p>
 <p>Program korzysta z wcześniej przygotowanego pliku zawierającego statystyki imion.</p>
 <p>Wpisane listy uczestników:</p>
@@ -510,7 +590,7 @@ Maria Zielińska
     </section>
 
     <section class="panel help-section" id="sekcja-11" aria-labelledby="naglowek-11">
-<h2 id="naglowek-11">11. Ograniczenia programu</h2>
+<h2 id="naglowek-11">13. Ograniczenia programu</h2>
 <p>Aplikacja jest narzędziem pomocniczym, a nie urzędowym systemem ustalania płci lub tożsamości.</p>
 <p>Należy pamiętać, że:</p>
 <ul>
@@ -519,13 +599,14 @@ Maria Zielińska
 <li>Słownik nie obejmuje wszystkich istniejących imion.</li>
 <li>Niektóre literówki mogą pozostać niezauważone.</li>
 <li>Poprawny matematycznie PESEL nie gwarantuje, że należy do wskazanej osoby.</li>
+<li>Wiek jest obliczany z dostarczonych danych, których zgodności z rzeczywistą datą urodzenia program nie może potwierdzić.</li>
 <li>Oznaczenie płci w PESEL nie musi odpowiadać tożsamości płciowej danej osoby.</li>
 </ul>
 <p>Zadaniem programu jest możliwie szybka i przewidywalna klasyfikacja uczestników, z możliwością ręcznego rozstrzygnięcia przypadków niejednoznacznych.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-12" aria-labelledby="naglowek-12">
-<h2 id="naglowek-12">12. Źródła danych i informacje techniczne</h2>
+<h2 id="naglowek-12">14. Źródła danych i informacje techniczne</h2>
 <p><strong>Oficjalne źródła:</strong></p>
 <ul>
 <li><a href="https://dane.gov.pl/dataset/1667">Ministerstwo Cyfryzacji - imiona występujące w rejestrze PESEL</a></li>
@@ -557,11 +638,19 @@ Maria Zielińska
 </tr>
 <tr>
 <td>Próg automatycznej klasyfikacji</td>
-<td>99,98%</td>
+<td>99,90%</td>
+</tr>
+<tr>
+<td>Zakres generujący niską uwagę progową</td>
+<td>Od 99,90% włącznie do poniżej 99,98%</td>
 </tr>
 <tr>
 <td>Metoda analizy</td>
-<td>Słownik imion i opcjonalny PESEL</td>
+<td>Słownik imion, opcjonalny PESEL i data urodzenia</td>
+</tr>
+<tr>
+<td>Domyślne progi wiekowe (tryb turystyczny)</td>
+<td>10, 12, 14, 16, 18, 25, 60 lat</td>
 </tr>
 <tr>
 <td>Przetwarzanie listy</td>

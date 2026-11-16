@@ -6,33 +6,53 @@
   <meta name="color-scheme" content="light">
   <meta name="referrer" content="no-referrer">
   <title>Klasyfikator uczestników</title>
-  <link rel="stylesheet" href="./style.css">
-  <script src="./script.js" defer></script>
-  <script src="./interfejs.js" defer></script>
+  <link rel="stylesheet" href="./style.css?v=1.1.2">
+  <script src="./script.js?v=1.1.2" defer></script>
+  <script src="./interfejs.js?v=1.1.2" defer></script>
 </head>
 <body>
   <main class="container">
     <header class="page-header">
       <div>
         <h1>Klasyfikator uczestników</h1>
-        <p class="subtitle">Klasyfikacja na podstawie imion i opcjonalnego numeru PESEL</p>
+        <p class="subtitle">Klasyfikacja płci i wieku uczestników</p>
       </div>
       <a class="help-link help-link-long" href="./pomoc.html">Jak działa klasyfikacja uczestników?</a>
     </header>
 
     <section class="panel" aria-labelledby="input-title">
       <h2 id="input-title">Lista uczestników</h2>
-      <p class="hint" id="input-help">Jedna osoba w wierszu. Kolejność imion, nazwiska i numeru PESEL jest dowolna.</p>
+      <p class="hint" id="input-help">Jedna osoba w wierszu. Kolejność imion, nazwiska, opcjonalnej daty urodzenia i numeru PESEL jest dowolna.</p>
       <form id="analysis-form">
         <label class="sr-only" for="participants">Wklej listę uczestników</label>
         <textarea id="participants" rows="9" spellcheck="false" autocomplete="off"
           autocapitalize="off" aria-describedby="input-help"
-          placeholder="Anna Kowalska&#10;Nowak Jan&#10;Piotr Wiśniewski 30840899038"></textarea>
+          placeholder="Anna Kowalska 12.05.2008&#10;Nowak Jan&#10;Piotr Wiśniewski 30840899038"></textarea>
         <div class="sample-controls" role="group" aria-label="Przykładowe dane uczestników">
           <span>Chcesz przetestować aplikację? Wstaw przykładowe dane: </span>
           <button id="sample-valid" class="sample-link" type="button">Poprawne</button>
           <span aria-hidden="true">·</span>
           <button id="sample-errors" class="sample-link" type="button">Z błędami</button>
+        </div>
+        <div class="age-settings">
+          <div class="date-setting">
+            <label for="event-date">Data wydarzenia</label>
+            <input id="event-date" type="date" min="0001-01-01" max="9999-12-31" autocomplete="off" aria-describedby="event-date-hint">
+            <span id="event-date-hint" class="hint">Wiek na ten dzień.</span>
+          </div>
+          <label class="option-label" for="age-enabled"><input id="age-enabled" type="checkbox" autocomplete="off" aria-controls="age-options"> Oblicz liczebność uczestników dla progów wiekowych</label>
+          <fieldset id="age-options" class="age-options" hidden>
+            <legend class="sr-only">Wybór progów wiekowych</legend>
+            <label class="option-label"><input type="radio" name="age-mode" value="tourism" checked> Użyj typowych progów dla branży turystycznej</label>
+            <p id="tourism-thresholds" class="threshold-hint"></p>
+            <label class="option-label"><input type="radio" name="age-mode" value="custom"> Wprowadź własne progi wiekowe</label>
+            <div id="custom-options" class="field threshold-field" hidden>
+              <label for="custom-thresholds" class="sr-only">Własne progi wiekowe</label>
+              <input id="custom-thresholds" type="text" autocomplete="off" placeholder="np. 10, 12, 69" aria-describedby="threshold-preview">
+              <p id="threshold-preview" class="threshold-hint" role="status"></p>
+            </div>
+          </fieldset>
+          <p id="event-error" class="editor-error" role="alert" hidden></p>
         </div>
         <div class="actions">
           <button id="analyze-button" class="button button-primary" type="submit" disabled>Analizuj listę</button>
@@ -55,15 +75,37 @@
         </button>
         <button class="counter" type="button" data-tab="Do weryfikacji" aria-pressed="true">
           <span id="count-review" class="counter-number">0</span>
-          <span class="counter-label">Do weryfikacji</span>
+          <span class="counter-label">Płeć do weryfikacji</span>
         </button>
       </div>
       <p id="total" class="total">Łącznie uczestników: 0</p>
+      <div class="result-filters">
+        <button id="show-notes" class="sample-link filter-link" type="button" data-tab="uwagi" aria-pressed="false">Wpisy wymagające sprawdzenia (0)</button>
+        <button id="show-unknown-age" class="sample-link filter-link" type="button" data-tab="wiek" aria-pressed="false">Nieustalony wiek (0)</button>
+      </div>
+      <section id="age-stats" class="age-stats" aria-labelledby="age-stats-title" hidden>
+        <h3 id="age-stats-title">Statystyki wiekowe</h3>
+        <p id="age-stats-date" class="hint"></p>
+        <p id="age-stats-empty" class="hint" hidden>Wprowadź co najmniej jeden próg wiekowy.</p>
+        <div id="age-table-wrap" class="table-wrap">
+          <table class="results-table age-table">
+            <thead><tr><th scope="col">Próg wiekowy</th><th scope="col">Poniżej</th><th scope="col">Co najmniej</th></tr></thead>
+            <tbody id="age-stats-rows"></tbody>
+          </table>
+        </div>
+        <p class="age-unknown-total" id="age-stats-unknown"></p>
+      </section>
       <div class="result-heading">
-        <h3 id="list-title">Do weryfikacji</h3>
+        <h3 id="list-title">Płeć do weryfikacji</h3>
         <span id="list-count" class="list-count"></span>
       </div>
       <div id="result-list" aria-live="off"></div>
+      <details id="info-notes" class="info-notes" hidden>
+        <summary id="info-notes-title">Uwagi informacyjne (0)</summary>
+        <p class="hint">Dodatkowe informacje o wyniku analizy. Same w sobie nie wymagają ręcznej decyzji.</p>
+        <div id="info-notes-list" class="info-notes-list"></div>
+        <p class="hint pesel-disclaimer">Walidacja numeru PESEL nie potwierdza jego przypisania do konkretnej osoby.</p>
+      </details>
     </section>
 
     <footer class="footer">Wpisane dane są przetwarzane wyłącznie w przeglądarce. Nie są wysyłane ani zapisywane przez aplikację.</footer>
