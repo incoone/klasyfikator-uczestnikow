@@ -1,0 +1,3713 @@
+{
+  "meta": {
+    "wersja": "0.1",
+    "rodzaj": "słownik redakcyjny form potocznych i zdrobnień",
+    "zakres": "200 najpopularniejszych imion kobiet + 200 mężczyzn z imiona.json oraz dodatkowe popularne formy i odpowiedniki",
+    "zastosowanie": "Generowanie uwag dotyczących zdrobnień oraz automatyczna klasyfikacja płci na podstawie jednoznacznych zdrobnień, jeżeli spełnione są warunki określone w logice aplikacji. Słownik nie zastępuje imienia.",
+    "uwaga": "Nie jest to wykaz statystyczny ani wyczerpujący słownik językoznawczy. Przypisania opracowano redakcyjnie, a źródła pomocnicze nie dokumentują każdego wpisu osobno. Samodzielne imiona mogą być równocześnie formami potocznymi innych imion. Imienia nie należy automatycznie rozwijać.",
+    "stan_bazy_imion": "2026-01-20",
+    "zrodla_pomocnicze": [
+      "https://onomastica.ijp.pan.pl/index.php/ONOM/article/download/182/122/",
+      "https://onomastica.ijp.pan.pl/index.php/ONOM/article/download/498/670",
+      "https://vilsd.wdbk.org/"
+    ]
+  },
+  "zdrobnienia": {
+    "ADA": [
+      "ADRIANA",
+      "ADRIANNA"
+    ],
+    "ADASIEK": [
+      "ADAM"
+    ],
+    "ADAŚ": [
+      "ADAM",
+      "ADRIAN"
+    ],
+    "ADELKA": [
+      "ADELA"
+    ],
+    "ADI": [
+      "ADRIAN"
+    ],
+    "ADKA": [
+      "ADRIANA",
+      "ADRIANNA"
+    ],
+    "ADRIANEK": [
+      "ADRIAN"
+    ],
+    "ADRIANKA": [
+      "ADRIANA",
+      "ADRIANNA"
+    ],
+    "ADUSIA": [
+      "ADRIANA",
+      "ADRIANNA"
+    ],
+    "AGA": [
+      "AGATA",
+      "AGNIESZKA"
+    ],
+    "AGATKA": [
+      "AGATA"
+    ],
+    "AGNIECHA": [
+      "AGNIESZKA"
+    ],
+    "AGNIESIA": [
+      "AGNIESZKA"
+    ],
+    "AGNIEŚKA": [
+      "AGNIESZKA"
+    ],
+    "AGUSIA": [
+      "AGATA",
+      "AGNIESZKA"
+    ],
+    "AL": [
+      "ALBERT",
+      "ALFRED"
+    ],
+    "ALA": [
+      "ALICJA",
+      "ALINA"
+    ],
+    "ALBERCIK": [
+      "ALBERT"
+    ],
+    "ALBI": [
+      "ALBERT"
+    ],
+    "ALCIA": [
+      "ALICJA"
+    ],
+    "ALDONKA": [
+      "ALDONA"
+    ],
+    "ALEK": [
+      "ALEKSANDER"
+    ],
+    "ALEKS": [
+      "ALEKSANDER",
+      "ALEKSANDRA"
+    ],
+    "ALEKSANDEREK": [
+      "ALEKSANDER"
+    ],
+    "ALEX": [
+      "ALEKSANDER",
+      "ALEKSANDRA",
+      "ALEXANDER",
+      "ALEXANDRA",
+      "ALEXEI",
+      "ALEXEY",
+      "ALEXIA",
+      "ALEXIS",
+      "OLEKSANDR",
+      "OLEKSANDRA",
+      "OLEKSII"
+    ],
+    "ALI": [
+      "ALICE",
+      "ALICJA",
+      "ALISON",
+      "ALLISON"
+    ],
+    "ALINKA": [
+      "ALINA"
+    ],
+    "ALKA": [
+      "ALICJA",
+      "ALINA"
+    ],
+    "ALLIE": [
+      "ALEXANDRA",
+      "ALICE",
+      "ALICJA",
+      "ALISON",
+      "ALLISON"
+    ],
+    "ALLOCHKA": [
+      "ALLA"
+    ],
+    "ALONKA": [
+      "ALONA"
+    ],
+    "ALOSHA": [
+      "ALIAKSEI",
+      "OLEKSII"
+    ],
+    "ALUNIA": [
+      "ALICJA"
+    ],
+    "ALUSIA": [
+      "ALICJA",
+      "ALINA"
+    ],
+    "ALYONA": [
+      "ALONA"
+    ],
+    "AMELCIA": [
+      "AMELIA"
+    ],
+    "AMELKA": [
+      "AMELIA"
+    ],
+    "AMELUNIA": [
+      "AMELIA"
+    ],
+    "AMELUSIA": [
+      "AMELIA"
+    ],
+    "ANASTAZKA": [
+      "ANASTAZJA"
+    ],
+    "ANDRIUSHA": [
+      "ANDREI",
+      "ANDRII"
+    ],
+    "ANDRIUSZA": [
+      "ANDREI",
+      "ANDRII"
+    ],
+    "ANDRYUSHA": [
+      "ANDREI",
+      "ANDRII"
+    ],
+    "ANDRZEJEK": [
+      "ANDRZEJ"
+    ],
+    "ANDY": [
+      "ANDREAS",
+      "ANDREW"
+    ],
+    "ANDZIA": [
+      "ANDŻELIKA",
+      "ANGELIKA"
+    ],
+    "ANDŻELA": [
+      "ANDŻELIKA",
+      "ANGELIKA"
+    ],
+    "ANECIA": [
+      "ANETA"
+    ],
+    "ANECZKA": [
+      "ANNA"
+    ],
+    "ANETKA": [
+      "ANETA"
+    ],
+    "ANGELA": [
+      "ANDŻELIKA",
+      "ANGELIKA"
+    ],
+    "ANGELICZKA": [
+      "ANDŻELIKA",
+      "ANGELIKA"
+    ],
+    "ANGI": [
+      "ANDŻELIKA",
+      "ANGELIKA"
+    ],
+    "ANHELA": [
+      "ANHELINA"
+    ],
+    "ANIA": [
+      "ANNA"
+    ],
+    "ANIELCIA": [
+      "ANIELA"
+    ],
+    "ANIELKA": [
+      "ANIELA"
+    ],
+    "ANITKA": [
+      "ANITA"
+    ],
+    "ANKA": [
+      "ANNA"
+    ],
+    "ANTEK": [
+      "ANTONI"
+    ],
+    "ANTOSHA": [
+      "ANTON"
+    ],
+    "ANTOSIA": [
+      "ANTONINA"
+    ],
+    "ANTOSIEK": [
+      "ANTONI"
+    ],
+    "ANTOSIEŃKA": [
+      "ANTONINA"
+    ],
+    "ANTOSZA": [
+      "ANTON"
+    ],
+    "ANTOŚ": [
+      "ANTONI"
+    ],
+    "ANULKA": [
+      "ANNA"
+    ],
+    "ANUSIA": [
+      "ANNA"
+    ],
+    "AREK": [
+      "ARKADIUSZ"
+    ],
+    "ARLETKA": [
+      "ARLETA"
+    ],
+    "ARTUREK": [
+      "ARTUR"
+    ],
+    "ARTUŚ": [
+      "ARTUR"
+    ],
+    "ARUŚ": [
+      "ARKADIUSZ"
+    ],
+    "ASIA": [
+      "JOANNA"
+    ],
+    "ASIEŃKA": [
+      "JOANNA"
+    ],
+    "ASIULA": [
+      "JOANNA"
+    ],
+    "ASIULKA": [
+      "JOANNA"
+    ],
+    "AURCIA": [
+      "AURELIA"
+    ],
+    "AURELKA": [
+      "AURELIA"
+    ],
+    "AŚKA": [
+      "JOANNA"
+    ],
+    "BACHA": [
+      "BARBARA"
+    ],
+    "BART": [
+      "BARTŁOMIEJ"
+    ],
+    "BARTEK": [
+      "BARTOSZ",
+      "BARTŁOMIEJ"
+    ],
+    "BARTOSZEK": [
+      "BARTOSZ"
+    ],
+    "BARTUŚ": [
+      "BARTOSZ",
+      "BARTŁOMIEJ"
+    ],
+    "BASIA": [
+      "BARBARA"
+    ],
+    "BASIEŃKA": [
+      "BARBARA"
+    ],
+    "BASIUNIA": [
+      "BARBARA"
+    ],
+    "BAŚKA": [
+      "BARBARA"
+    ],
+    "BEACIA": [
+      "BEATA"
+    ],
+    "BEATKA": [
+      "BEATA"
+    ],
+    "BECCA": [
+      "REBECCA"
+    ],
+    "BECKY": [
+      "REBECCA"
+    ],
+    "BELLA": [
+      "ISABEL",
+      "ISABELLA",
+      "ISABELLE"
+    ],
+    "BEN": [
+      "BENEDICT",
+      "BENEDYKT",
+      "BENJAMIN"
+    ],
+    "BERNADETKA": [
+      "BERNADETA"
+    ],
+    "BERNEK": [
+      "BERNARD"
+    ],
+    "BERNI": [
+      "BERNARD"
+    ],
+    "BETH": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "BETKA": [
+      "BEATA"
+    ],
+    "BETSY": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "BETTY": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "BILL": [
+      "WILLIAM"
+    ],
+    "BILLY": [
+      "WILLIAM"
+    ],
+    "BOB": [
+      "ROBERT"
+    ],
+    "BOBBY": [
+      "ROBERT"
+    ],
+    "BODZIO": [
+      "BOGDAN",
+      "BOHDAN"
+    ],
+    "BOGDANEK": [
+      "BOGDAN"
+    ],
+    "BOGUMIŁEK": [
+      "BOGUMIŁ"
+    ],
+    "BOGUMIŁKA": [
+      "BOGUMIŁA"
+    ],
+    "BOGUSIA": [
+      "BOGUMIŁA",
+      "BOGUSŁAWA"
+    ],
+    "BOGUSZEK": [
+      "BOGUSŁAW"
+    ],
+    "BOGUŚ": [
+      "BOGDAN",
+      "BOGUMIŁ",
+      "BOGUSŁAW"
+    ],
+    "BOLEK": [
+      "BOLESŁAW"
+    ],
+    "BOLKO": [
+      "BOLESŁAW"
+    ],
+    "BOLUŚ": [
+      "BOLESŁAW"
+    ],
+    "BORYSEK": [
+      "BORYS"
+    ],
+    "BOŻENKA": [
+      "BOŻENA",
+      "BOŻENNA"
+    ],
+    "BRONEK": [
+      "BRONISŁAW"
+    ],
+    "BRONIA": [
+      "BRONISŁAWA"
+    ],
+    "BRONIO": [
+      "BRONISŁAW"
+    ],
+    "BROŃKA": [
+      "BRONISŁAWA"
+    ],
+    "BRUNEK": [
+      "BRUNO"
+    ],
+    "BRUNIO": [
+      "BRUNO"
+    ],
+    "BRYGIDKA": [
+      "BRYGIDA"
+    ],
+    "BŁAŻEJEK": [
+      "BŁAŻEJ"
+    ],
+    "CELCIA": [
+      "CELINA"
+    ],
+    "CELINKA": [
+      "CELINA"
+    ],
+    "CESIA": [
+      "CECYLIA"
+    ],
+    "CHARLIE": [
+      "CHARLES",
+      "CHARLOTTE"
+    ],
+    "CHRIS": [
+      "CHRISTIAN",
+      "CHRISTINA",
+      "CHRISTINE",
+      "CHRISTOPHER"
+    ],
+    "CHRISSY": [
+      "CHRISTINA",
+      "CHRISTINE"
+    ],
+    "CHUCK": [
+      "CHARLES"
+    ],
+    "CZAREK": [
+      "CEZARY"
+    ],
+    "CZARUŚ": [
+      "CEZARY"
+    ],
+    "CZESIA": [
+      "CZESŁAWA"
+    ],
+    "CZESIEK": [
+      "CZESŁAW"
+    ],
+    "CZESIO": [
+      "CZESŁAW"
+    ],
+    "DAGA": [
+      "DAGMARA"
+    ],
+    "DAGMARKA": [
+      "DAGMARA"
+    ],
+    "DAGUSIA": [
+      "DAGMARA"
+    ],
+    "DAMI": [
+      "DAMIAN"
+    ],
+    "DAMIANEK": [
+      "DAMIAN"
+    ],
+    "DAN": [
+      "DANIEL"
+    ],
+    "DANI": [
+      "DANIEL",
+      "DANIELA",
+      "DANIELLE"
+    ],
+    "DANIA": [
+      "DANIELA",
+      "DANIIL",
+      "DANYLO"
+    ],
+    "DANIELEK": [
+      "DANIEL"
+    ],
+    "DANILKA": [
+      "DANIIL",
+      "DANYLO"
+    ],
+    "DANKA": [
+      "DANIELA",
+      "DANUTA"
+    ],
+    "DANNY": [
+      "DANIEL",
+      "DANIELA",
+      "DANIELLE"
+    ],
+    "DANUSIA": [
+      "DANIELA",
+      "DANUTA"
+    ],
+    "DANUTKA": [
+      "DANUTA"
+    ],
+    "DANY": [
+      "DANIEL"
+    ],
+    "DANYA": [
+      "DANIIL",
+      "DANYLO"
+    ],
+    "DAREK": [
+      "DARIUSZ"
+    ],
+    "DARINKA": [
+      "DARYNA"
+    ],
+    "DARUSIA": [
+      "DARIA"
+    ],
+    "DARUŚ": [
+      "DARIUSZ"
+    ],
+    "DASHA": [
+      "DARIA",
+      "DARYNA"
+    ],
+    "DASZA": [
+      "DARIA"
+    ],
+    "DAVE": [
+      "DAVID",
+      "DAWID"
+    ],
+    "DAVY": [
+      "DAVID",
+      "DAWID"
+    ],
+    "DAWIDEK": [
+      "DAVID",
+      "DAWID"
+    ],
+    "DAWIDUŚ": [
+      "DAVID",
+      "DAWID"
+    ],
+    "DEB": [
+      "DEBORAH"
+    ],
+    "DEBBIE": [
+      "DEBORAH"
+    ],
+    "DEN": [
+      "DENIS",
+      "DENYS"
+    ],
+    "DENISKA": [
+      "DENIS",
+      "DENYS"
+    ],
+    "DIANKA": [
+      "DIANA"
+    ],
+    "DICK": [
+      "RICHARD"
+    ],
+    "DIMA": [
+      "DMITRII",
+      "DMITRO",
+      "DMITRY",
+      "DMYTRO",
+      "DZMITRY"
+    ],
+    "DIMKA": [
+      "DMYTRO",
+      "DZMITRY"
+    ],
+    "DMYTRYK": [
+      "DMYTRO"
+    ],
+    "DOLLY": [
+      "DOROTHY"
+    ],
+    "DOMI": [
+      "DOMINIK",
+      "DOMINIKA"
+    ],
+    "DOMINICZEK": [
+      "DOMINIK"
+    ],
+    "DOMINICZKA": [
+      "DOMINIKA"
+    ],
+    "DOMKA": [
+      "DOMINIKA"
+    ],
+    "DORCIA": [
+      "DOROTA"
+    ],
+    "DORKA": [
+      "DOROTA"
+    ],
+    "DOROCIA": [
+      "DOROTA"
+    ],
+    "DOROTKA": [
+      "DOROTA"
+    ],
+    "DOT": [
+      "DOROTHY"
+    ],
+    "DOTI": [
+      "DOROTA"
+    ],
+    "DOTTIE": [
+      "DOROTHY"
+    ],
+    "DREW": [
+      "ANDREW"
+    ],
+    "ED": [
+      "EDMUND",
+      "EDWARD"
+    ],
+    "EDDIE": [
+      "EDMUND",
+      "EDWARD"
+    ],
+    "EDEK": [
+      "EDMUND",
+      "EDWARD"
+    ],
+    "EDI": [
+      "EDWARD",
+      "EDYTA"
+    ],
+    "EDYTKA": [
+      "EDYTA"
+    ],
+    "EDZIA": [
+      "EDYTA"
+    ],
+    "EDZIO": [
+      "EDMUND",
+      "EDWARD"
+    ],
+    "ELA": [
+      "ELŻBIETA"
+    ],
+    "ELCIA": [
+      "ELŻBIETA"
+    ],
+    "ELIZA": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "ELIZKA": [
+      "ELIZA"
+    ],
+    "ELIZUNIA": [
+      "ELIZA"
+    ],
+    "ELKA": [
+      "ELŻBIETA"
+    ],
+    "ELLIE": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "ELUNIA": [
+      "ELŻBIETA"
+    ],
+    "ELWIRKA": [
+      "ELWIRA"
+    ],
+    "ELŻBIETKA": [
+      "ELŻBIETA"
+    ],
+    "ELŻUNIA": [
+      "ELŻBIETA"
+    ],
+    "EM": [
+      "EMILY"
+    ],
+    "EMI": [
+      "EMILIA"
+    ],
+    "EMILCIA": [
+      "EMILIA"
+    ],
+    "EMILEK": [
+      "EMIL"
+    ],
+    "EMILKA": [
+      "EMILIA"
+    ],
+    "EMMY": [
+      "EMILY"
+    ],
+    "ERNIE": [
+      "ERNEST"
+    ],
+    "ERYCZEK": [
+      "ERYK"
+    ],
+    "EWCIA": [
+      "EWA"
+    ],
+    "EWELA": [
+      "EWELINA"
+    ],
+    "EWELINKA": [
+      "EWELINA"
+    ],
+    "EWELKA": [
+      "EWELINA"
+    ],
+    "EWKA": [
+      "EWA"
+    ],
+    "EWUNIA": [
+      "EWA"
+    ],
+    "EWUŚ": [
+      "EWA"
+    ],
+    "FABIANEK": [
+      "FABIAN"
+    ],
+    "FELEK": [
+      "FELIKS"
+    ],
+    "FIL": [
+      "FILIP"
+    ],
+    "FILIPEK": [
+      "FILIP"
+    ],
+    "FILUŚ": [
+      "FILIP"
+    ],
+    "FRAN": [
+      "FRANCES",
+      "FRANCESCA"
+    ],
+    "FRANEK": [
+      "FRANCISZEK"
+    ],
+    "FRANIO": [
+      "FRANCISZEK"
+    ],
+    "FRANK": [
+      "FRANCIS",
+      "FRANCISCO",
+      "FRANKLIN"
+    ],
+    "FRANKIE": [
+      "FRANCES",
+      "FRANCESCA"
+    ],
+    "FRANUŚ": [
+      "FRANCISZEK"
+    ],
+    "FRED": [
+      "ALFRED"
+    ],
+    "FREDDIE": [
+      "ALFRED"
+    ],
+    "FREDDY": [
+      "ALFRED"
+    ],
+    "FREDEK": [
+      "ALFRED"
+    ],
+    "GABCIA": [
+      "GABRIELA"
+    ],
+    "GABCIO": [
+      "GABRIEL"
+    ],
+    "GABI": [
+      "GABRIEL",
+      "GABRIELA"
+    ],
+    "GABRYSIA": [
+      "GABRIELA"
+    ],
+    "GABRYŚ": [
+      "GABRIEL"
+    ],
+    "GABRYŚKA": [
+      "GABRIELA"
+    ],
+    "GALIA": [
+      "HALYNA"
+    ],
+    "GALYA": [
+      "HALYNA"
+    ],
+    "GENEK": [
+      "EUGENIUSZ"
+    ],
+    "GENIA": [
+      "EUGENIA",
+      "GENOWEFA"
+    ],
+    "GEORGIE": [
+      "GEORGE"
+    ],
+    "GIENEK": [
+      "EUGENIUSZ"
+    ],
+    "GIENIA": [
+      "EUGENIA",
+      "GENOWEFA"
+    ],
+    "GIENKA": [
+      "EUGENIA",
+      "GENOWEFA"
+    ],
+    "GOSIA": [
+      "MAŁGORZATA"
+    ],
+    "GOSIEŃKA": [
+      "MAŁGORZATA"
+    ],
+    "GOŚKA": [
+      "MAŁGORZATA"
+    ],
+    "GRAŻCIA": [
+      "GRAŻYNA"
+    ],
+    "GRAŻKA": [
+      "GRAŻYNA"
+    ],
+    "GRAŻYNKA": [
+      "GRAŻYNA"
+    ],
+    "GREG": [
+      "GREGORY"
+    ],
+    "GRZECHU": [
+      "GRZEGORZ"
+    ],
+    "GRZESIEK": [
+      "GRZEGORZ"
+    ],
+    "GRZESIO": [
+      "GRZEGORZ"
+    ],
+    "GRZEŚ": [
+      "GRZEGORZ"
+    ],
+    "HALA": [
+      "HALINA"
+    ],
+    "HALCIA": [
+      "HALINA"
+    ],
+    "HALIA": [
+      "HALYNA"
+    ],
+    "HALINKA": [
+      "HALINA"
+    ],
+    "HALYA": [
+      "HALYNA"
+    ],
+    "HANECZKA": [
+      "HANNA"
+    ],
+    "HANIA": [
+      "HANNA"
+    ],
+    "HANK": [
+      "HENRY"
+    ],
+    "HANKA": [
+      "HANNA"
+    ],
+    "HANUSIA": [
+      "HANNA"
+    ],
+    "HARRY": [
+      "HARRISON",
+      "HENRY"
+    ],
+    "HELA": [
+      "HELENA"
+    ],
+    "HELCIA": [
+      "HELENA"
+    ],
+    "HELENKA": [
+      "HELENA"
+    ],
+    "HELKA": [
+      "HELENA"
+    ],
+    "HELUNIA": [
+      "HELENA"
+    ],
+    "HENIA": [
+      "HENRYKA"
+    ],
+    "HENIEK": [
+      "HENRYK"
+    ],
+    "HENIO": [
+      "HENRYK"
+    ],
+    "HENIU": [
+      "HENRYK"
+    ],
+    "HENIUSIA": [
+      "HENRYKA"
+    ],
+    "HEŃKA": [
+      "HENRYKA"
+    ],
+    "HONORATKA": [
+      "HONORATA"
+    ],
+    "HUBCIO": [
+      "HUBERT"
+    ],
+    "HUBERCIK": [
+      "HUBERT"
+    ],
+    "IGNAC": [
+      "IGNACY"
+    ],
+    "IGNACEK": [
+      "IGNACY"
+    ],
+    "IGNAŚ": [
+      "IGNACY"
+    ],
+    "IGOREK": [
+      "IGOR"
+    ],
+    "IGUSIA": [
+      "IGA"
+    ],
+    "IHOROK": [
+      "IHOR"
+    ],
+    "ILIUSHA": [
+      "ILLIA"
+    ],
+    "ILJUSZA": [
+      "ILLIA"
+    ],
+    "ILONCIA": [
+      "ILONA"
+    ],
+    "ILONKA": [
+      "ILONA"
+    ],
+    "ILYUSHA": [
+      "ILLIA"
+    ],
+    "INNUSIA": [
+      "INNA"
+    ],
+    "IRA": [
+      "IRYNA"
+    ],
+    "IREK": [
+      "IRENEUSZ"
+    ],
+    "IRENKA": [
+      "IRENA"
+    ],
+    "IRKA": [
+      "IRENA",
+      "IRYNA"
+    ],
+    "IRO": [
+      "IRENEUSZ"
+    ],
+    "IROCHKA": [
+      "IRYNA"
+    ],
+    "IRUSIA": [
+      "IRENA"
+    ],
+    "IRUŚ": [
+      "IRENA",
+      "IRENEUSZ"
+    ],
+    "IVANKA": [
+      "IVANNA"
+    ],
+    "IVAŃKO": [
+      "IVAN"
+    ],
+    "IWA": [
+      "IWONA"
+    ],
+    "IWANKA": [
+      "IVANNA"
+    ],
+    "IWONCIA": [
+      "IWONA"
+    ],
+    "IWONKA": [
+      "IWONA"
+    ],
+    "IZA": [
+      "IZABELA",
+      "IZABELLA"
+    ],
+    "IZABELKA": [
+      "IZABELA",
+      "IZABELLA"
+    ],
+    "IZI": [
+      "IZABELA",
+      "IZABELLA"
+    ],
+    "IZKA": [
+      "IZABELA",
+      "IZABELLA"
+    ],
+    "IZUNIA": [
+      "IZABELA",
+      "IZABELLA"
+    ],
+    "IZUSIA": [
+      "IZABELA",
+      "IZABELLA"
+    ],
+    "IZZY": [
+      "ISABEL",
+      "ISABELLA",
+      "ISABELLE"
+    ],
+    "JACUŚ": [
+      "JACEK"
+    ],
+    "JADZIA": [
+      "JADWIGA"
+    ],
+    "JADZIUNIA": [
+      "JADWIGA"
+    ],
+    "JADŹKA": [
+      "JADWIGA"
+    ],
+    "JAGA": [
+      "JADWIGA",
+      "JAGODA"
+    ],
+    "JAGUSIA": [
+      "JAGODA"
+    ],
+    "JAGÓDKA": [
+      "JAGODA"
+    ],
+    "JAKE": [
+      "JACOB"
+    ],
+    "JAMIE": [
+      "JAMES"
+    ],
+    "JANECZEK": [
+      "JAN"
+    ],
+    "JANECZKA": [
+      "JANINA"
+    ],
+    "JANEK": [
+      "JAN"
+    ],
+    "JANIO": [
+      "JAN"
+    ],
+    "JANKA": [
+      "JANINA"
+    ],
+    "JANUSIA": [
+      "JANINA"
+    ],
+    "JANUSZEK": [
+      "JANUSZ"
+    ],
+    "JAREK": [
+      "JAROSŁAW"
+    ],
+    "JARO": [
+      "JAROSŁAW"
+    ],
+    "JARUŚ": [
+      "JAROSŁAW"
+    ],
+    "JASIA": [
+      "JANINA"
+    ],
+    "JASIEK": [
+      "JAN"
+    ],
+    "JASIO": [
+      "JAN"
+    ],
+    "JAŚ": [
+      "JAN"
+    ],
+    "JEN": [
+      "JENNIFER"
+    ],
+    "JENNY": [
+      "JENNIFER"
+    ],
+    "JERZYK": [
+      "JERZY"
+    ],
+    "JESS": [
+      "JESSICA"
+    ],
+    "JESSIE": [
+      "JESSICA"
+    ],
+    "JIM": [
+      "JAMES"
+    ],
+    "JIMMY": [
+      "JAMES"
+    ],
+    "JO": [
+      "JOSEPHINE"
+    ],
+    "JOASIA": [
+      "JOANNA"
+    ],
+    "JOASKA": [
+      "JOANNA"
+    ],
+    "JOE": [
+      "JOSEPH"
+    ],
+    "JOEY": [
+      "JOSEPH"
+    ],
+    "JOHNNY": [
+      "JOHN",
+      "JONATHAN"
+    ],
+    "JOLA": [
+      "JOLANTA"
+    ],
+    "JOLCIA": [
+      "JOLANTA"
+    ],
+    "JOLECZKA": [
+      "JOLANTA"
+    ],
+    "JOLKA": [
+      "JOLANTA"
+    ],
+    "JON": [
+      "JOHN",
+      "JONATHAN"
+    ],
+    "JOSIE": [
+      "JOSEPHINE"
+    ],
+    "JUDYTKA": [
+      "JUDYTA"
+    ],
+    "JULCIA": [
+      "JULIA",
+      "JULITA"
+    ],
+    "JULECZKA": [
+      "JULIA"
+    ],
+    "JULEK": [
+      "JULIAN",
+      "JULIUSZ"
+    ],
+    "JULES": [
+      "JULIA",
+      "JULIANA",
+      "JULIET"
+    ],
+    "JULI": [
+      "JULIA"
+    ],
+    "JULIANEK": [
+      "JULIAN"
+    ],
+    "JULITKA": [
+      "JULITA"
+    ],
+    "JULKA": [
+      "JULIA",
+      "JULIANA"
+    ],
+    "JULUNIA": [
+      "JULIA"
+    ],
+    "JULUŚ": [
+      "JULIAN",
+      "JULIUSZ"
+    ],
+    "JURA": [
+      "YURII"
+    ],
+    "JURCIO": [
+      "JERZY"
+    ],
+    "JUREK": [
+      "JERZY"
+    ],
+    "JURUŚ": [
+      "JERZY"
+    ],
+    "JUSTA": [
+      "JUSTYNA"
+    ],
+    "JUSTYNKA": [
+      "JUSTYNA"
+    ],
+    "JUSTYSIA": [
+      "JUSTYNA"
+    ],
+    "JÓZEK": [
+      "JÓZEF"
+    ],
+    "JÓZIA": [
+      "JÓZEFA"
+    ],
+    "JÓZIO": [
+      "JÓZEF"
+    ],
+    "JÓZIU": [
+      "JÓZEF"
+    ],
+    "JÓZKA": [
+      "JÓZEFA"
+    ],
+    "JÓZUŚ": [
+      "JÓZEF"
+    ],
+    "JĘDREK": [
+      "ANDRZEJ",
+      "JĘDRZEJ"
+    ],
+    "JĘDRULA": [
+      "ANDRZEJ"
+    ],
+    "JĘDRUŚ": [
+      "ANDRZEJ",
+      "JĘDRZEJ"
+    ],
+    "KACPEREK": [
+      "KACPER"
+    ],
+    "KAJETANEK": [
+      "KAJETAN"
+    ],
+    "KAJKA": [
+      "KAJA"
+    ],
+    "KAJTEK": [
+      "KAJETAN"
+    ],
+    "KAJUNIA": [
+      "KAJA"
+    ],
+    "KALINKA": [
+      "KALINA"
+    ],
+    "KAMCIA": [
+      "KAMILA"
+    ],
+    "KAMCIO": [
+      "KAMIL"
+    ],
+    "KAMI": [
+      "KAMIL",
+      "KAMILA"
+    ],
+    "KAMILEK": [
+      "KAMIL"
+    ],
+    "KAMILKA": [
+      "KAMILA"
+    ],
+    "KARINKA": [
+      "KARINA"
+    ],
+    "KARO": [
+      "KAROL",
+      "KAROLINA"
+    ],
+    "KAROLA": [
+      "KAROLINA"
+    ],
+    "KAROLCIA": [
+      "KAROLINA"
+    ],
+    "KAROLEK": [
+      "KAROL"
+    ],
+    "KAROLINKA": [
+      "KAROLINA"
+    ],
+    "KAROLKA": [
+      "KAROLINA"
+    ],
+    "KASIA": [
+      "KATARZYNA"
+    ],
+    "KASIEŃKA": [
+      "KATARZYNA"
+    ],
+    "KASIUNIA": [
+      "KATARZYNA"
+    ],
+    "KAT": [
+      "CATHERINE",
+      "KATHARINE",
+      "KATHERINE"
+    ],
+    "KATE": [
+      "CATHERINE",
+      "KATHARINE",
+      "KATHERINE",
+      "KATHLEEN"
+    ],
+    "KATERYNKA": [
+      "KATERYNA"
+    ],
+    "KATHY": [
+      "CATHERINE",
+      "KATHARINE",
+      "KATHERINE",
+      "KATHLEEN"
+    ],
+    "KATI": [
+      "KATARZYNA",
+      "KATERYNA",
+      "KATHERINE"
+    ],
+    "KATIA": [
+      "KATERYNA"
+    ],
+    "KATIE": [
+      "CATHERINE",
+      "KATHARINE",
+      "KATHERINE",
+      "KATHLEEN"
+    ],
+    "KATJA": [
+      "KATERYNA"
+    ],
+    "KATKA": [
+      "KATARZYNA"
+    ],
+    "KATRUSIA": [
+      "KATERYNA"
+    ],
+    "KATYA": [
+      "KATERYNA"
+    ],
+    "KAZIA": [
+      "KAZIMIERA"
+    ],
+    "KAZIK": [
+      "KAZIMIERZ"
+    ],
+    "KAZIO": [
+      "KAZIMIERZ"
+    ],
+    "KAZIU": [
+      "KAZIMIERZ"
+    ],
+    "KAŚKA": [
+      "KATARZYNA"
+    ],
+    "KHRYSTIA": [
+      "KHRYSTYNA"
+    ],
+    "KHRYSTYA": [
+      "KHRYSTYNA"
+    ],
+    "KIM": [
+      "KIMBERLY"
+    ],
+    "KINGUSIA": [
+      "KINGA"
+    ],
+    "KINIA": [
+      "KINGA"
+    ],
+    "KINUSIA": [
+      "KINGA"
+    ],
+    "KIRYUSHA": [
+      "KYRYLO"
+    ],
+    "KLARCIA": [
+      "KLARA"
+    ],
+    "KLARKA": [
+      "KLARA"
+    ],
+    "KLAUDI": [
+      "KLAUDIA"
+    ],
+    "KLAUDUSIA": [
+      "KLAUDIA"
+    ],
+    "KOLA": [
+      "MYKOLA"
+    ],
+    "KOLIA": [
+      "MYKOLA"
+    ],
+    "KOLYA": [
+      "MYKOLA"
+    ],
+    "KONDZIO": [
+      "KONRAD"
+    ],
+    "KONRADEK": [
+      "KONRAD"
+    ],
+    "KORNELEK": [
+      "KORNEL"
+    ],
+    "KORNELKA": [
+      "KORNELIA"
+    ],
+    "KOSTEK": [
+      "KONSTANTY",
+      "KONSTANTYN",
+      "KOSTIANTYN"
+    ],
+    "KOSTIA": [
+      "KONSTANTIN",
+      "KONSTANTY",
+      "KOSTIANTYN"
+    ],
+    "KOSTJA": [
+      "KOSTIANTYN"
+    ],
+    "KOSTYA": [
+      "KONSTANTIN",
+      "KONSTANTY",
+      "KOSTIANTYN"
+    ],
+    "KRIS": [
+      "KRYSTIAN"
+    ],
+    "KRYCHA": [
+      "KRYSTYNA",
+      "KRZYSZTOF"
+    ],
+    "KRYSIA": [
+      "KRYSTYNA"
+    ],
+    "KRYSIUNIA": [
+      "KRYSTYNA"
+    ],
+    "KRYSTIANEK": [
+      "KRYSTIAN"
+    ],
+    "KRYSTYNKA": [
+      "KRYSTYNA"
+    ],
+    "KRYŚKA": [
+      "KRYSTYNA"
+    ],
+    "KRZYCHO": [
+      "KRZYSZTOF"
+    ],
+    "KRZYCHU": [
+      "KRZYSZTOF"
+    ],
+    "KRZYSIEK": [
+      "KRZYSZTOF"
+    ],
+    "KRZYSIO": [
+      "KRZYSZTOF"
+    ],
+    "KRZYŚ": [
+      "KRZYSZTOF"
+    ],
+    "KSANA": [
+      "OKSANA"
+    ],
+    "KSAWCIO": [
+      "KSAWERY"
+    ],
+    "KSAWEREK": [
+      "KSAWERY"
+    ],
+    "KUBA": [
+      "JAKUB"
+    ],
+    "KUBEK": [
+      "JAKUB"
+    ],
+    "KUBULEK": [
+      "JAKUB",
+      "KUBA"
+    ],
+    "KUBUŚ": [
+      "JAKUB",
+      "KUBA"
+    ],
+    "KYRYK": [
+      "KYRYLO"
+    ],
+    "LANA": [
+      "SVETLANA",
+      "SVITLANA"
+    ],
+    "LARA": [
+      "LARYSA"
+    ],
+    "LARRY": [
+      "LAWRENCE"
+    ],
+    "LAURKA": [
+      "LAURA"
+    ],
+    "LECHU": [
+      "LECH",
+      "LESZEK"
+    ],
+    "LEN": [
+      "LEONARD"
+    ],
+    "LENA": [
+      "ELENA",
+      "HELEN",
+      "HELENA",
+      "MAGDALENA",
+      "MARLENA",
+      "MILENA",
+      "OLENA"
+    ],
+    "LENKA": [
+      "ELENA",
+      "HELENA",
+      "LENA",
+      "OLENA"
+    ],
+    "LENNY": [
+      "LEONARD"
+    ],
+    "LENOCHKA": [
+      "OLENA"
+    ],
+    "LENUSIA": [
+      "LENA"
+    ],
+    "LEO": [
+      "LEON",
+      "LEONARD"
+    ],
+    "LEONEK": [
+      "LEON"
+    ],
+    "LEOSIA": [
+      "LEOKADIA"
+    ],
+    "LERA": [
+      "VALERIIA"
+    ],
+    "LEROCHKA": [
+      "VALERIIA"
+    ],
+    "LESHA": [
+      "ALIAKSEI",
+      "OLEKSII"
+    ],
+    "LESIA": [
+      "LARYSA",
+      "OLEKSANDRA"
+    ],
+    "LESIO": [
+      "LECH",
+      "LESZEK",
+      "LESŁAW"
+    ],
+    "LESIU": [
+      "LESZEK"
+    ],
+    "LESZEK": [
+      "LECH",
+      "LESŁAW"
+    ],
+    "LEXI": [
+      "ALEXANDRA"
+    ],
+    "LEXIE": [
+      "ALEXANDRA"
+    ],
+    "LIAM": [
+      "WILLIAM"
+    ],
+    "LIBBY": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "LIDA": [
+      "LIDIA",
+      "LIDIIA"
+    ],
+    "LIDKA": [
+      "LIDIA"
+    ],
+    "LIDZIA": [
+      "LIDIA"
+    ],
+    "LILA": [
+      "LILIANA",
+      "LILIANNA",
+      "LILIIA"
+    ],
+    "LILI": [
+      "ELISABETH",
+      "ELIZABETH",
+      "LILIANA",
+      "LILIANNA",
+      "LILIIA"
+    ],
+    "LILKA": [
+      "LILIANA",
+      "LILIANNA"
+    ],
+    "LILLY": [
+      "ELISABETH",
+      "ELIZABETH",
+      "LILIANA",
+      "LILIANNA"
+    ],
+    "LILY": [
+      "ELISABETH",
+      "ELIZABETH",
+      "LILIANA",
+      "LILIANNA",
+      "LILIIA"
+    ],
+    "LILYA": [
+      "LILIIA"
+    ],
+    "LINA": [
+      "ANHELINA"
+    ],
+    "LINOCHKA": [
+      "ANHELINA"
+    ],
+    "LISA": [
+      "YELYZAVETA"
+    ],
+    "LIUBA": [
+      "LIUBOV"
+    ],
+    "LIUDA": [
+      "LIUDMYLA"
+    ],
+    "LIWKA": [
+      "LIWIA"
+    ],
+    "LIZ": [
+      "ELISABETH",
+      "ELIZABETH",
+      "YELYZAVETA"
+    ],
+    "LIZA": [
+      "YELYZAVETA"
+    ],
+    "LIZZIE": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "LIZZY": [
+      "ELISABETH",
+      "ELIZABETH"
+    ],
+    "LJUBA": [
+      "LIUBOV"
+    ],
+    "LODZIA": [
+      "LEOKADIA"
+    ],
+    "LONIA": [
+      "LEOKADIA"
+    ],
+    "LOSHA": [
+      "ALIAKSEI",
+      "OLEKSII"
+    ],
+    "LOTTIE": [
+      "CHARLOTTE"
+    ],
+    "LUBA": [
+      "LIUBOV",
+      "LUBOMIRA"
+    ],
+    "LUBKO": [
+      "LUBOMIR"
+    ],
+    "LUBUŚ": [
+      "LUBOMIR"
+    ],
+    "LUCEK": [
+      "LUCJAN"
+    ],
+    "LUCJANEK": [
+      "LUCJAN"
+    ],
+    "LUCY": [
+      "LUCYNA"
+    ],
+    "LUCYNKA": [
+      "LUCYNA"
+    ],
+    "LUDA": [
+      "LIUDMYLA"
+    ],
+    "LUDEK": [
+      "LUDWIK"
+    ],
+    "LUDWICZEK": [
+      "LUDWIK"
+    ],
+    "LUIZKA": [
+      "LUIZA"
+    ],
+    "LUKE": [
+      "LUCAS"
+    ],
+    "LUNIA": [
+      "LUCYNA"
+    ],
+    "LUŚKA": [
+      "LUCYNA"
+    ],
+    "LYUBA": [
+      "LIUBOV"
+    ],
+    "LYUDA": [
+      "LIUDMYLA"
+    ],
+    "MACIEK": [
+      "MACIEJ"
+    ],
+    "MACIO": [
+      "MACIEJ"
+    ],
+    "MACIUŚ": [
+      "MACIEJ"
+    ],
+    "MADZIA": [
+      "MAGDA",
+      "MAGDALENA"
+    ],
+    "MAGDA": [
+      "MAGDALENA"
+    ],
+    "MAGDALENKA": [
+      "MAGDALENA"
+    ],
+    "MAGDUNIA": [
+      "MAGDALENA"
+    ],
+    "MAGDZIA": [
+      "MAGDALENA"
+    ],
+    "MAGGIE": [
+      "MARGARET"
+    ],
+    "MAJA": [
+      "MARIA"
+    ],
+    "MAJECZKA": [
+      "MAJA"
+    ],
+    "MAJKA": [
+      "MAJA"
+    ],
+    "MAKS": [
+      "MAKSIM",
+      "MAKSYM",
+      "MAKSYMILIAN",
+      "MAXIMILIAN"
+    ],
+    "MAKSIO": [
+      "MAKSYMILIAN"
+    ],
+    "MAKSIU": [
+      "MAKSYMILIAN"
+    ],
+    "MAKSYM": [
+      "MAKSYMILIAN"
+    ],
+    "MAKSYMKO": [
+      "MAKSIM",
+      "MAKSYM"
+    ],
+    "MALWINKA": [
+      "MALWINA"
+    ],
+    "MALWISIA": [
+      "MALWINA"
+    ],
+    "MANDY": [
+      "AMANDA"
+    ],
+    "MANIA": [
+      "MARIA",
+      "MARIANA",
+      "MARIANNA"
+    ],
+    "MANIEK": [
+      "MARIAN"
+    ],
+    "MANIUŚ": [
+      "MARIAN"
+    ],
+    "MARCELA": [
+      "MARCELINA"
+    ],
+    "MARCELEK": [
+      "MARCEL"
+    ],
+    "MARCELINKA": [
+      "MARCELINA"
+    ],
+    "MARCELKA": [
+      "MARCELA",
+      "MARCELINA"
+    ],
+    "MARCINEK": [
+      "MARCIN"
+    ],
+    "MARECZEK": [
+      "MAREK"
+    ],
+    "MARIANKA": [
+      "MARIANA",
+      "MARIANNA"
+    ],
+    "MARINKA": [
+      "MARYNA"
+    ],
+    "MARIO": [
+      "MARIUSZ"
+    ],
+    "MARIOLKA": [
+      "MARIOLA"
+    ],
+    "MARIUSZEK": [
+      "MARIUSZ"
+    ],
+    "MARKY": [
+      "MARK"
+    ],
+    "MARLENKA": [
+      "MARLENA"
+    ],
+    "MARO": [
+      "MAREK"
+    ],
+    "MARTECZKA": [
+      "MARTA"
+    ],
+    "MARTUNIA": [
+      "MARTA"
+    ],
+    "MARTUSIA": [
+      "MARTA"
+    ],
+    "MARTY": [
+      "MARTIN"
+    ],
+    "MARTYNKA": [
+      "MARTYNA"
+    ],
+    "MARUSIA": [
+      "MARIA",
+      "MARIIA"
+    ],
+    "MARUSYA": [
+      "MARIA",
+      "MARIIA"
+    ],
+    "MARUŚ": [
+      "MAREK"
+    ],
+    "MARY": [
+      "MARIA"
+    ],
+    "MARYLKA": [
+      "MARIA"
+    ],
+    "MARYNIA": [
+      "MARIA"
+    ],
+    "MARYNKA": [
+      "MARYNA"
+    ],
+    "MARYSIA": [
+      "MARIA",
+      "MARIANA",
+      "MARIANNA"
+    ],
+    "MARYSIEŃKA": [
+      "MARIA"
+    ],
+    "MARYŚ": [
+      "MARIA"
+    ],
+    "MARYŚKA": [
+      "MARIA"
+    ],
+    "MARZENKA": [
+      "MARZENA"
+    ],
+    "MASHA": [
+      "MARIA",
+      "MARIIA"
+    ],
+    "MASZA": [
+      "MARIA",
+      "MARIIA"
+    ],
+    "MATEUSZEK": [
+      "MATEUSZ"
+    ],
+    "MATI": [
+      "MATEUSZ"
+    ],
+    "MATT": [
+      "MATTHEW"
+    ],
+    "MATTY": [
+      "MATTHEW"
+    ],
+    "MATVIIKO": [
+      "MATVII"
+    ],
+    "MATYLDKA": [
+      "MATYLDA"
+    ],
+    "MATYLDZIA": [
+      "MATYLDA"
+    ],
+    "MATYUSHA": [
+      "MATVII"
+    ],
+    "MAX": [
+      "MAKSIM",
+      "MAKSYM",
+      "MAKSYMILIAN",
+      "MAXIMILIAN"
+    ],
+    "MAŁGONIA": [
+      "MAŁGORZATA"
+    ],
+    "MAŁGORZATKA": [
+      "MAŁGORZATA"
+    ],
+    "MAŁGOSIA": [
+      "MAŁGORZATA"
+    ],
+    "MAŁGOŚKA": [
+      "MAŁGORZATA"
+    ],
+    "MAŃKA": [
+      "MARIA"
+    ],
+    "MEG": [
+      "MARGARET"
+    ],
+    "MELA": [
+      "MELANIA"
+    ],
+    "MELCIA": [
+      "MELANIA"
+    ],
+    "MELKA": [
+      "MELANIA"
+    ],
+    "MIA": [
+      "MARIA",
+      "MARIAM"
+    ],
+    "MICHALINKA": [
+      "MICHALINA"
+    ],
+    "MICHASIA": [
+      "MICHALINA"
+    ],
+    "MICHAŁEK": [
+      "MICHAŁ"
+    ],
+    "MICHI": [
+      "MICHELLE"
+    ],
+    "MICK": [
+      "MICHAEL"
+    ],
+    "MICKY": [
+      "MICHAEL"
+    ],
+    "MIECIA": [
+      "MIECZYSŁAWA"
+    ],
+    "MIECIO": [
+      "MIECZYSŁAW"
+    ],
+    "MIETEK": [
+      "MIECZYSŁAW"
+    ],
+    "MIETIO": [
+      "MIECZYSŁAW"
+    ],
+    "MIEĆKA": [
+      "MIECZYSŁAWA"
+    ],
+    "MIKE": [
+      "MICHAEL"
+    ],
+    "MIKEY": [
+      "MICHAEL"
+    ],
+    "MIKO": [
+      "MIKOŁAJ"
+    ],
+    "MIKOŁAJEK": [
+      "MIKOŁAJ"
+    ],
+    "MIKUŚ": [
+      "MIKOŁAJ"
+    ],
+    "MILA": [
+      "MILENA"
+    ],
+    "MILCIA": [
+      "MILENA"
+    ],
+    "MILENKA": [
+      "MILENA"
+    ],
+    "MIRA": [
+      "MIROSŁAWA"
+    ],
+    "MIRCIA": [
+      "MIROSŁAWA"
+    ],
+    "MIREK": [
+      "MIROSŁAW"
+    ],
+    "MIRKA": [
+      "MIROSŁAWA"
+    ],
+    "MIRO": [
+      "MIROSŁAW"
+    ],
+    "MIRUŚ": [
+      "MIROSŁAW"
+    ],
+    "MISHA": [
+      "MIKHAIL",
+      "MYKHAILO"
+    ],
+    "MISHKA": [
+      "MYKHAILO"
+    ],
+    "MISIA": [
+      "MICHALINA",
+      "MICHAŁ"
+    ],
+    "MISIEK": [
+      "MICHAŁ"
+    ],
+    "MISZA": [
+      "MIKHAIL",
+      "MYKHAILO"
+    ],
+    "MIŁOSZEK": [
+      "MIŁOSZ"
+    ],
+    "MIŚ": [
+      "MICHAŁ"
+    ],
+    "MOLLY": [
+      "MARY"
+    ],
+    "MONIA": [
+      "MONIKA"
+    ],
+    "MYKYTKA": [
+      "MYKYTA"
+    ],
+    "NADIA": [
+      "NADIIA"
+    ],
+    "NADJA": [
+      "NADIIA"
+    ],
+    "NADKA": [
+      "NADIA"
+    ],
+    "NADUSIA": [
+      "NADIA"
+    ],
+    "NADYA": [
+      "NADIIA"
+    ],
+    "NASTIA": [
+      "ANASTASIA",
+      "ANASTASIIA",
+      "ANASTAZJA"
+    ],
+    "NASTJA": [
+      "ANASTASIA",
+      "ANASTASIIA"
+    ],
+    "NASTKA": [
+      "ANASTASIIA",
+      "ANASTAZJA"
+    ],
+    "NASTUSIA": [
+      "ANASTAZJA"
+    ],
+    "NASTYA": [
+      "ANASTASIA",
+      "ANASTASIIA",
+      "ANASTAZJA"
+    ],
+    "NAT": [
+      "NATALIA",
+      "NATALIE",
+      "NATALIIA",
+      "NATANIEL",
+      "NATASHA"
+    ],
+    "NATA": [
+      "NATALIA",
+      "NATALIIA"
+    ],
+    "NATALKA": [
+      "NATALIA",
+      "NATALIIA"
+    ],
+    "NATASHA": [
+      "NATALIIA"
+    ],
+    "NATASZA": [
+      "NATALIIA"
+    ],
+    "NATASZKA": [
+      "NATASZA"
+    ],
+    "NATE": [
+      "NATANIEL",
+      "NATHAN",
+      "NATHANIEL"
+    ],
+    "NATEK": [
+      "NATAN"
+    ],
+    "NATI": [
+      "NATALIA",
+      "NATAN",
+      "NATANIEL"
+    ],
+    "NATKA": [
+      "NATALIA",
+      "NATALIIA"
+    ],
+    "NAZARKO": [
+      "NAZAR"
+    ],
+    "NELA": [
+      "ANIELA",
+      "KORNELIA",
+      "PETRONELA"
+    ],
+    "NELCIA": [
+      "NELA"
+    ],
+    "NELKA": [
+      "KORNELIA",
+      "NELA",
+      "PETRONELA"
+    ],
+    "NICK": [
+      "NICHOLAS",
+      "NICOLAS",
+      "NIKOLAS"
+    ],
+    "NICKI": [
+      "NICOLA",
+      "NICOLE"
+    ],
+    "NICKY": [
+      "NICHOLAS",
+      "NICOLA",
+      "NICOLAS",
+      "NICOLE",
+      "NIKOLAS"
+    ],
+    "NIK": [
+      "NIKODEM",
+      "NIKOLAS"
+    ],
+    "NIKA": [
+      "NICOLA",
+      "NICOLE",
+      "NIKOLA",
+      "VERONIKA",
+      "WERONIKA"
+    ],
+    "NIKI": [
+      "NICOLA",
+      "NICOLE",
+      "NIKOLA"
+    ],
+    "NIKITKA": [
+      "NIKITA"
+    ],
+    "NIKO": [
+      "NIKODEM"
+    ],
+    "NIKODEMEK": [
+      "NIKODEM"
+    ],
+    "NIKOLKA": [
+      "NICOLA",
+      "NICOLE",
+      "NIKOLA"
+    ],
+    "NIKUŚ": [
+      "NIKODEM"
+    ],
+    "NINKA": [
+      "NINA"
+    ],
+    "NORBEK": [
+      "NORBERT"
+    ],
+    "NORBI": [
+      "NORBERT"
+    ],
+    "OKSANKA": [
+      "OKSANA"
+    ],
+    "OLA": [
+      "ALEKSANDRA",
+      "OLGA",
+      "OLHA",
+      "OLIMPIA"
+    ],
+    "OLAFEK": [
+      "OLAF"
+    ],
+    "OLEK": [
+      "ALEKSANDER"
+    ],
+    "OLESIA": [
+      "OLEKSANDRA"
+    ],
+    "OLEZHA": [
+      "OLEG",
+      "OLEH"
+    ],
+    "OLEŃKA": [
+      "ALEKSANDRA",
+      "OLGA"
+    ],
+    "OLI": [
+      "OLIVER",
+      "OLIVIA",
+      "OLIVIER",
+      "OLIWIA",
+      "OLIWIER"
+    ],
+    "OLIA": [
+      "OLHA"
+    ],
+    "OLIE": [
+      "OLIVER",
+      "OLIVIER",
+      "OLIWIER"
+    ],
+    "OLIWIEREK": [
+      "OLIVER",
+      "OLIVIER",
+      "OLIWIER"
+    ],
+    "OLIWKA": [
+      "OLIVIA",
+      "OLIWIA"
+    ],
+    "OLKA": [
+      "ALEKSANDRA",
+      "OLGA"
+    ],
+    "OLLIE": [
+      "OLIVER",
+      "OLIVIER",
+      "OLIWIER"
+    ],
+    "OLUNIA": [
+      "ALEKSANDRA",
+      "OLGA"
+    ],
+    "OLUŚ": [
+      "ALEKSANDER"
+    ],
+    "OLYA": [
+      "OLGA",
+      "OLHA"
+    ],
+    "OSKAREK": [
+      "OSKAR"
+    ],
+    "PADDY": [
+      "PATRICK"
+    ],
+    "PASHA": [
+      "PAVEL",
+      "PAVLO"
+    ],
+    "PASZA": [
+      "PAVEL",
+      "PAVLO"
+    ],
+    "PAT": [
+      "PATRICIA",
+      "PATRICK"
+    ],
+    "PATI": [
+      "PATRYCJA",
+      "PATRYK"
+    ],
+    "PATKA": [
+      "PATRYCJA"
+    ],
+    "PATRYSIA": [
+      "PATRYCJA"
+    ],
+    "PATRYŚ": [
+      "PATRYK"
+    ],
+    "PATTY": [
+      "PATRICIA"
+    ],
+    "PAULA": [
+      "PAULINA"
+    ],
+    "PAULCIA": [
+      "PAULA",
+      "PAULINA"
+    ],
+    "PAULINKA": [
+      "PAULINA"
+    ],
+    "PAWCIO": [
+      "PAWEŁ"
+    ],
+    "PAWEŁEK": [
+      "PAWEŁ"
+    ],
+    "PAWLIK": [
+      "PAVLO",
+      "PAWEŁ"
+    ],
+    "PAWLUŚ": [
+      "PAWEŁ"
+    ],
+    "PEGGY": [
+      "MARGARET"
+    ],
+    "PETE": [
+      "PETER"
+    ],
+    "PETIA": [
+      "PETRO"
+    ],
+    "PETYA": [
+      "PETRO"
+    ],
+    "PHIL": [
+      "PHILIP",
+      "PHILLIP"
+    ],
+    "PIETIA": [
+      "PETRO"
+    ],
+    "PIOTREK": [
+      "PIOTR"
+    ],
+    "PIOTRUNIO": [
+      "PIOTR"
+    ],
+    "PIOTRUŚ": [
+      "PIOTR"
+    ],
+    "POLA": [
+      "APOLONIA"
+    ],
+    "POLCIA": [
+      "APOLONIA",
+      "POLA"
+    ],
+    "POLIA": [
+      "POLINA"
+    ],
+    "POLINKA": [
+      "POLINA"
+    ],
+    "POLLY": [
+      "MARY"
+    ],
+    "POLUNIA": [
+      "POLA"
+    ],
+    "POLYA": [
+      "POLINA"
+    ],
+    "PRZEMEK": [
+      "PRZEMYSŁAW"
+    ],
+    "PRZEMUŚ": [
+      "PRZEMYSŁAW"
+    ],
+    "RADEK": [
+      "RADOSŁAW"
+    ],
+    "RADO": [
+      "RADOSŁAW"
+    ],
+    "RADUŚ": [
+      "RADOSŁAW"
+    ],
+    "RADZIO": [
+      "RADOSŁAW"
+    ],
+    "RAFA": [
+      "RAFAŁ"
+    ],
+    "RAFAŁEK": [
+      "RAFAŁ"
+    ],
+    "REGINKA": [
+      "REGINA"
+    ],
+    "REMEK": [
+      "REMIGIUSZ"
+    ],
+    "REMI": [
+      "REMIGIUSZ"
+    ],
+    "REMIGIUSZEK": [
+      "REMIGIUSZ"
+    ],
+    "RENATKA": [
+      "RENATA"
+    ],
+    "RENIA": [
+      "RENATA"
+    ],
+    "REŃKA": [
+      "RENATA"
+    ],
+    "RICH": [
+      "RICHARD"
+    ],
+    "RICK": [
+      "RICHARD"
+    ],
+    "RICKY": [
+      "RICHARD"
+    ],
+    "RITA": [
+      "MARGARITA",
+      "MARGARYTA"
+    ],
+    "ROB": [
+      "ROBERT"
+    ],
+    "ROBBIE": [
+      "ROBERT"
+    ],
+    "ROBBY": [
+      "ROBERT"
+    ],
+    "ROBCIO": [
+      "ROBERT"
+    ],
+    "ROBERCIK": [
+      "ROBERT"
+    ],
+    "ROBUŚ": [
+      "ROBERT"
+    ],
+    "ROKSANKA": [
+      "ROKSANA"
+    ],
+    "ROKSI": [
+      "ROKSANA"
+    ],
+    "ROMEK": [
+      "ROMAN",
+      "ROMUALD"
+    ],
+    "ROMUŚ": [
+      "ROMAN",
+      "ROMUALD"
+    ],
+    "ROXY": [
+      "ROKSANA",
+      "ROXANA"
+    ],
+    "ROZALKA": [
+      "ROZALIA"
+    ],
+    "RUSIK": [
+      "RUSLAN"
+    ],
+    "RYSIEK": [
+      "RYSZARD"
+    ],
+    "RYSIO": [
+      "RYSZARD"
+    ],
+    "RYŚ": [
+      "RYSZARD"
+    ],
+    "RÓZIA": [
+      "ROZALIA"
+    ],
+    "RÓŻYCZKA": [
+      "RÓŻA"
+    ],
+    "SABINKA": [
+      "SABINA"
+    ],
+    "SACHA": [
+      "ALEKSANDER",
+      "ALEKSANDRA",
+      "ALEXANDER",
+      "ALEXANDRA",
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "SAM": [
+      "SAMANTHA",
+      "SAMUEL"
+    ],
+    "SAMMY": [
+      "SAMANTHA",
+      "SAMUEL"
+    ],
+    "SANDRA": [
+      "ALEKSANDRA"
+    ],
+    "SANDRKA": [
+      "SANDRA"
+    ],
+    "SANDRUSIA": [
+      "SANDRA"
+    ],
+    "SANDY": [
+      "ALEXANDER",
+      "ALEXANDRA"
+    ],
+    "SARCIA": [
+      "SARA"
+    ],
+    "SARUNIA": [
+      "SARA"
+    ],
+    "SASCHA": [
+      "ALEKSANDER",
+      "ALEKSANDRA",
+      "ALEXANDER",
+      "ALEXANDRA",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "SASHA": [
+      "ALEKSANDER",
+      "ALEKSANDRA",
+      "ALEXANDER",
+      "ALEXANDRA",
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "SASHKO": [
+      "ALEKSANDER",
+      "ALIAKSANDR",
+      "OLEKSANDR"
+    ],
+    "SASZA": [
+      "ALEKSANDER",
+      "ALEKSANDRA",
+      "ALEXANDER",
+      "ALEXANDRA",
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "SASZKO": [
+      "ALEKSANDER",
+      "OLEKSANDR"
+    ],
+    "SEBA": [
+      "SEBASTIAN"
+    ],
+    "SEBCIO": [
+      "SEBASTIAN"
+    ],
+    "SEBEK": [
+      "SEBASTIAN"
+    ],
+    "SERIOZHA": [
+      "SERHII",
+      "SIARHEI"
+    ],
+    "SERIOŻA": [
+      "SERHII",
+      "SIARHEI"
+    ],
+    "SERYOZHA": [
+      "SERHII",
+      "SIARHEI"
+    ],
+    "SHURA": [
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "SLAVA": [
+      "VIACHESLAV"
+    ],
+    "SLAVIK": [
+      "VIACHESLAV",
+      "YAROSLAV"
+    ],
+    "SLAWKO": [
+      "SŁAWOMIR"
+    ],
+    "SOFI": [
+      "SOFIA",
+      "SOFIIA",
+      "SOPHIA"
+    ],
+    "SONIA": [
+      "SOFIIA"
+    ],
+    "SONIUSIA": [
+      "SONIA"
+    ],
+    "SONKA": [
+      "SONIA"
+    ],
+    "SONYA": [
+      "SOFIIA"
+    ],
+    "SOPHIE": [
+      "SOFIA",
+      "SOPHIA"
+    ],
+    "STACH": [
+      "STANISŁAW"
+    ],
+    "STAN": [
+      "STANISŁAW"
+    ],
+    "STAS": [
+      "STANISLAV"
+    ],
+    "STASIA": [
+      "STANISŁAWA"
+    ],
+    "STASIK": [
+      "STANISLAV"
+    ],
+    "STASIO": [
+      "STANISŁAW"
+    ],
+    "STASZEK": [
+      "STANISŁAW"
+    ],
+    "STAŚ": [
+      "STANISŁAW"
+    ],
+    "STAŚKA": [
+      "STANISŁAWA"
+    ],
+    "STEFA": [
+      "STEFANIA"
+    ],
+    "STEFCIA": [
+      "STEFANIA"
+    ],
+    "STEFCIO": [
+      "STEFAN"
+    ],
+    "STEFEK": [
+      "STEFAN"
+    ],
+    "STEFFI": [
+      "STEPHANIE"
+    ],
+    "STEPA": [
+      "STEPAN"
+    ],
+    "STEPH": [
+      "STEPHANIE"
+    ],
+    "STEVE": [
+      "STEPHEN",
+      "STEVEN"
+    ],
+    "STEVIE": [
+      "STEPHEN",
+      "STEVEN"
+    ],
+    "STIOPA": [
+      "STEPAN"
+    ],
+    "STYOPA": [
+      "STEPAN"
+    ],
+    "SUE": [
+      "SUSAN",
+      "SUSANNA",
+      "SUSANNAH"
+    ],
+    "SUZIE": [
+      "SUSAN",
+      "SUSANNA",
+      "SUSANNAH"
+    ],
+    "SVETA": [
+      "SVITLANA"
+    ],
+    "SWETA": [
+      "SVITLANA"
+    ],
+    "SWIETA": [
+      "SVITLANA"
+    ],
+    "SYL": [
+      "SYLVESTER",
+      "SYLWESTER"
+    ],
+    "SYLWEK": [
+      "SYLWESTER"
+    ],
+    "SYLWKA": [
+      "SYLWIA"
+    ],
+    "SYLWUSIA": [
+      "SYLWIA"
+    ],
+    "SZCZEPANEK": [
+      "SZCZEPAN"
+    ],
+    "SZCZEPCIO": [
+      "SZCZEPAN"
+    ],
+    "SZURA": [
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "SZYMCIO": [
+      "SZYMON"
+    ],
+    "SZYMEK": [
+      "SZYMON"
+    ],
+    "SZYMUŚ": [
+      "SZYMON"
+    ],
+    "SŁAWA": [
+      "VIACHESLAV"
+    ],
+    "SŁAWEK": [
+      "SŁAWOMIR"
+    ],
+    "SŁAWIK": [
+      "YAROSLAV"
+    ],
+    "SŁAWUŚ": [
+      "SŁAWOMIR"
+    ],
+    "TADEK": [
+      "TADEUSZ"
+    ],
+    "TADEUSZEK": [
+      "TADEUSZ"
+    ],
+    "TADZIO": [
+      "TADEUSZ"
+    ],
+    "TAMARKA": [
+      "TAMARA"
+    ],
+    "TANECHKA": [
+      "TATIANA",
+      "TETIANA"
+    ],
+    "TANIA": [
+      "TATIANA",
+      "TETIANA"
+    ],
+    "TANJA": [
+      "TATIANA",
+      "TETIANA"
+    ],
+    "TANYA": [
+      "TATIANA",
+      "TETIANA"
+    ],
+    "TARASYK": [
+      "TARAS"
+    ],
+    "TED": [
+      "TEODOR"
+    ],
+    "TEDDY": [
+      "TEODOR"
+    ],
+    "TEDI": [
+      "TADEUSZ",
+      "TEODOR"
+    ],
+    "TEMA": [
+      "ARTEM"
+    ],
+    "TEO": [
+      "TEODOR"
+    ],
+    "TERESKA": [
+      "TERESA"
+    ],
+    "THEO": [
+      "TEODOR"
+    ],
+    "TILDA": [
+      "MATYLDA"
+    ],
+    "TILLY": [
+      "MATYLDA"
+    ],
+    "TIM": [
+      "TIMOTHY",
+      "TYMOTEUSZ"
+    ],
+    "TIMI": [
+      "TYMOTEUSZ"
+    ],
+    "TIMMY": [
+      "TIMOTHY"
+    ],
+    "TOBI": [
+      "TOBIASZ"
+    ],
+    "TOBIK": [
+      "TOBIASZ"
+    ],
+    "TOBY": [
+      "TOBIASZ"
+    ],
+    "TOLIA": [
+      "ANATOLII"
+    ],
+    "TOLYA": [
+      "ANATOLII"
+    ],
+    "TOM": [
+      "THOMAS",
+      "TOMASZ"
+    ],
+    "TOMCIO": [
+      "TOMASZ"
+    ],
+    "TOMEK": [
+      "TOMASZ"
+    ],
+    "TOMMY": [
+      "THOMAS"
+    ],
+    "TOMUŚ": [
+      "TOMASZ"
+    ],
+    "TONI": [
+      "ANTHONY",
+      "ANTON",
+      "ANTONI",
+      "ANTONIA",
+      "ANTONINA",
+      "ANTONIO"
+    ],
+    "TONIA": [
+      "ANTON",
+      "ANTONIA",
+      "ANTONINA"
+    ],
+    "TONKA": [
+      "ANTONINA"
+    ],
+    "TONY": [
+      "ANTHONY",
+      "ANTON",
+      "ANTONI",
+      "ANTONIO"
+    ],
+    "TOSIA": [
+      "ANTONIA",
+      "ANTONINA"
+    ],
+    "TOŚKA": [
+      "ANTONINA"
+    ],
+    "TRISH": [
+      "PATRICIA"
+    ],
+    "TRUDA": [
+      "GERTRUDA"
+    ],
+    "TRUDZIA": [
+      "GERTRUDA"
+    ],
+    "TYMEK": [
+      "TYMON",
+      "TYMOTEUSZ"
+    ],
+    "TYMUŚ": [
+      "TYMON",
+      "TYMOTEUSZ"
+    ],
+    "ULA": [
+      "URSZULA"
+    ],
+    "ULECZKA": [
+      "URSZULA"
+    ],
+    "ULINKA": [
+      "URSZULA"
+    ],
+    "ULKA": [
+      "URSZULA"
+    ],
+    "VADIK": [
+      "VADYM"
+    ],
+    "VALERA": [
+      "VALERII"
+    ],
+    "VALIA": [
+      "VALENTYN",
+      "VALENTYNA"
+    ],
+    "VALYA": [
+      "VALENTYN",
+      "VALENTYNA"
+    ],
+    "VANIA": [
+      "IVAN"
+    ],
+    "VANYA": [
+      "IVAN"
+    ],
+    "VASIA": [
+      "VASYL"
+    ],
+    "VASYA": [
+      "VASYL"
+    ],
+    "VERO": [
+      "VERONIKA"
+    ],
+    "VEROCHKA": [
+      "VIRA"
+    ],
+    "VICKI": [
+      "VICTORIA"
+    ],
+    "VICKY": [
+      "VICTORIA"
+    ],
+    "VIKA": [
+      "VICTORIA",
+      "VIKTORIIA"
+    ],
+    "VINCE": [
+      "VINCENT"
+    ],
+    "VITALIK": [
+      "VITALII"
+    ],
+    "VITIA": [
+      "VIKTOR"
+    ],
+    "VITYA": [
+      "VIKTOR"
+    ],
+    "VLAD": [
+      "VLADYSLAV"
+    ],
+    "VLADIK": [
+      "VLADYSLAV"
+    ],
+    "VOLODIA": [
+      "VOLODYMYR",
+      "WOŁODYMYR",
+      "WŁODZIMIERZ"
+    ],
+    "VOLODYA": [
+      "VOLODYMYR"
+    ],
+    "VOVA": [
+      "VOLODYMYR",
+      "WOŁODYMYR",
+      "WŁODZIMIERZ"
+    ],
+    "WACEK": [
+      "WACŁAW"
+    ],
+    "WACUŚ": [
+      "WACŁAW"
+    ],
+    "WALA": [
+      "VALENTYN",
+      "VALENTYNA",
+      "WALENTY",
+      "WALENTYN",
+      "WALENTYNA"
+    ],
+    "WALDEK": [
+      "WALDEMAR"
+    ],
+    "WALDZIU": [
+      "WALDEMAR"
+    ],
+    "WALERA": [
+      "VALERII"
+    ],
+    "WANDECZKA": [
+      "WANDA"
+    ],
+    "WANDZIA": [
+      "WANDA"
+    ],
+    "WANIA": [
+      "IVAN"
+    ],
+    "WASIA": [
+      "VASYL"
+    ],
+    "WERA": [
+      "WERONIKA"
+    ],
+    "WERCIA": [
+      "WERONIKA"
+    ],
+    "WERKA": [
+      "WERONIKA"
+    ],
+    "WERONICZKA": [
+      "WERONIKA"
+    ],
+    "WIESIA": [
+      "WIESŁAWA"
+    ],
+    "WIESIEK": [
+      "WIESŁAW"
+    ],
+    "WIESIO": [
+      "WIESŁAW"
+    ],
+    "WIEŚKA": [
+      "WIESŁAWA"
+    ],
+    "WIKA": [
+      "VICTORIA",
+      "VIKTORIIA",
+      "WIKTORIA"
+    ],
+    "WIKCIA": [
+      "WIKTORIA"
+    ],
+    "WIKI": [
+      "WIKTOR",
+      "WIKTORIA"
+    ],
+    "WIKTOREK": [
+      "WIKTOR"
+    ],
+    "WIKTORKA": [
+      "WIKTORIA"
+    ],
+    "WILL": [
+      "WILLIAM"
+    ],
+    "WILLY": [
+      "WILLIAM"
+    ],
+    "WIOLA": [
+      "VIOLETTA",
+      "WIOLETA",
+      "WIOLETTA"
+    ],
+    "WIOLCIA": [
+      "VIOLETTA",
+      "WIOLETA",
+      "WIOLETTA"
+    ],
+    "WIOLKA": [
+      "VIOLETTA",
+      "WIOLETA",
+      "WIOLETTA"
+    ],
+    "WITEK": [
+      "WITOLD"
+    ],
+    "WITIA": [
+      "VIKTOR"
+    ],
+    "WITO": [
+      "WITOLD"
+    ],
+    "WITUŚ": [
+      "WITOLD"
+    ],
+    "WLAD": [
+      "VLADYSLAV"
+    ],
+    "WOJCIO": [
+      "WOJCIECH"
+    ],
+    "WOJTEK": [
+      "WOJCIECH"
+    ],
+    "WOJTUŚ": [
+      "WOJCIECH"
+    ],
+    "WOLODIA": [
+      "VOLODYMYR"
+    ],
+    "WOWA": [
+      "VOLODYMYR",
+      "WOŁODYMYR",
+      "WŁODZIMIERZ"
+    ],
+    "WŁADEK": [
+      "WŁADYSŁAW"
+    ],
+    "WŁADZIA": [
+      "WŁADYSŁAWA"
+    ],
+    "WŁADZIO": [
+      "WŁADYSŁAW"
+    ],
+    "WŁODEK": [
+      "WŁODZIMIERZ"
+    ],
+    "XANDER": [
+      "ALEXANDER"
+    ],
+    "YANOCHKA": [
+      "YANA"
+    ],
+    "YARIK": [
+      "YAROSLAV"
+    ],
+    "YARYK": [
+      "YAROSLAV"
+    ],
+    "YULYA": [
+      "YULIIA"
+    ],
+    "YURA": [
+      "YURII"
+    ],
+    "ZACH": [
+      "ZACHARY"
+    ],
+    "ZACK": [
+      "ZACHARY"
+    ],
+    "ZBYSIO": [
+      "ZBIGNIEW"
+    ],
+    "ZBYSZEK": [
+      "ZBIGNIEW"
+    ],
+    "ZBYSZKO": [
+      "ZBIGNIEW"
+    ],
+    "ZBYŚ": [
+      "ZBIGNIEW"
+    ],
+    "ZDZICH": [
+      "ZDZISŁAW"
+    ],
+    "ZDZISIA": [
+      "ZDZISŁAWA"
+    ],
+    "ZDZISIEK": [
+      "ZDZISŁAW"
+    ],
+    "ZDZISIO": [
+      "ZDZISŁAW"
+    ],
+    "ZENEK": [
+      "ZENON"
+    ],
+    "ZENUŚ": [
+      "ZENON"
+    ],
+    "ZHENIA": [
+      "YEVHEN",
+      "YEVHENII",
+      "YEVHENIIA"
+    ],
+    "ZHENYA": [
+      "YEVHEN",
+      "YEVHENII",
+      "YEVHENIIA"
+    ],
+    "ZOFIJKA": [
+      "ZOFIA"
+    ],
+    "ZOSIA": [
+      "ZOFIA"
+    ],
+    "ZOSIEŃKA": [
+      "ZOFIA"
+    ],
+    "ZOŚKA": [
+      "ZOFIA"
+    ],
+    "ZUZA": [
+      "ZUZANNA"
+    ],
+    "ZUZANKA": [
+      "ZUZANNA"
+    ],
+    "ZUZIA": [
+      "ZUZANNA"
+    ],
+    "ZUŹKA": [
+      "ZUZANNA"
+    ],
+    "ZYGMUNCIK": [
+      "ZYGMUNT"
+    ],
+    "ZYGMUŚ": [
+      "ZYGMUNT"
+    ],
+    "ŁOSZA": [
+      "ALIAKSEI",
+      "OLEKSII"
+    ],
+    "ŁUCYJKA": [
+      "ŁUCJA"
+    ],
+    "ŁUKASZEK": [
+      "ŁUKASZ"
+    ],
+    "ŁUKI": [
+      "ŁUKASZ"
+    ],
+    "ŻANCIA": [
+      "ŻANETA"
+    ],
+    "ŻANETKA": [
+      "ŻANETA"
+    ],
+    "ŻENIA": [
+      "YEVHEN",
+      "YEVHENII",
+      "YEVHENIIA"
+    ],
+    "ЄВГЕНКА": [
+      "YEVHENIIA"
+    ],
+    "ЄВГЕНКО": [
+      "YEVHEN",
+      "YEVHENII"
+    ],
+    "ІВАНКО": [
+      "IVAN"
+    ],
+    "ІГОРЬОК": [
+      "IHOR"
+    ],
+    "ІЛЮША": [
+      "ILLIA"
+    ],
+    "ІРА": [
+      "IRYNA"
+    ],
+    "ІРКА": [
+      "IRYNA"
+    ],
+    "ІРОЧКА": [
+      "IRYNA"
+    ],
+    "АЛЕКС": [
+      "OLEKSANDR",
+      "OLEKSII"
+    ],
+    "АЛЛОЧКА": [
+      "ALLA"
+    ],
+    "АНДРІЙКО": [
+      "ANDRII"
+    ],
+    "БОГДАНЧИК": [
+      "BOHDAN"
+    ],
+    "ВІКА": [
+      "VICTORIA",
+      "VIKTORIIA"
+    ],
+    "ВІРОЧКА": [
+      "VIRA"
+    ],
+    "ВІТАЛІК": [
+      "VITALII"
+    ],
+    "ВІТЯ": [
+      "VIKTOR"
+    ],
+    "ВАДИК": [
+      "VADYM"
+    ],
+    "ВАЛЕРА": [
+      "VALERII"
+    ],
+    "ВАЛЯ": [
+      "VALENTYN",
+      "VALENTYNA"
+    ],
+    "ВАНЯ": [
+      "IVAN"
+    ],
+    "ВАСИЛЬКО": [
+      "VASYL"
+    ],
+    "ВАСЯ": [
+      "VASYL"
+    ],
+    "ВИТЯ": [
+      "VIKTOR"
+    ],
+    "ВЛАД": [
+      "VLADYSLAV"
+    ],
+    "ВЛАДИК": [
+      "VLADYSLAV"
+    ],
+    "ВОВА": [
+      "VOLODYMYR"
+    ],
+    "ВОЛОДЯ": [
+      "VOLODYMYR"
+    ],
+    "ГАЛИНКА": [
+      "HALYNA"
+    ],
+    "ГАЛЯ": [
+      "HALYNA"
+    ],
+    "ДІМА": [
+      "DMYTRO",
+      "DZMITRY"
+    ],
+    "ДАНИЛКА": [
+      "DANIIL",
+      "DANYLO"
+    ],
+    "ДАНИЛКО": [
+      "DANIIL",
+      "DANYLO"
+    ],
+    "ДАНЯ": [
+      "DANIIL",
+      "DANYLO"
+    ],
+    "ДАРА": [
+      "DARYNA"
+    ],
+    "ДАРИНКА": [
+      "DARYNA"
+    ],
+    "ДАША": [
+      "DARYNA"
+    ],
+    "ДЕНИСКА": [
+      "DENIS",
+      "DENYS"
+    ],
+    "ДИМА": [
+      "DMYTRO",
+      "DZMITRY"
+    ],
+    "ДМИТРИК": [
+      "DMYTRO"
+    ],
+    "ЖЕНЯ": [
+      "YEVHEN",
+      "YEVHENII",
+      "YEVHENIIA"
+    ],
+    "КАТРУСЯ": [
+      "KATERYNA"
+    ],
+    "КАТЯ": [
+      "KATERYNA"
+    ],
+    "КИРИЛКО": [
+      "KYRYLO"
+    ],
+    "КИРЮША": [
+      "KYRYLO"
+    ],
+    "КОЛЯ": [
+      "MYKOLA"
+    ],
+    "КОСТЯ": [
+      "KOSTIANTYN"
+    ],
+    "КСАНА": [
+      "OKSANA"
+    ],
+    "ЛЁША": [
+      "ALIAKSEI",
+      "OLEKSII"
+    ],
+    "ЛІЗА": [
+      "YELYZAVETA"
+    ],
+    "ЛІЛЯ": [
+      "LILIIA"
+    ],
+    "ЛІНА": [
+      "ANHELINA"
+    ],
+    "ЛАРА": [
+      "LARYSA"
+    ],
+    "ЛЕНА": [
+      "OLENA"
+    ],
+    "ЛЕРА": [
+      "VALERIIA"
+    ],
+    "ЛЕСЯ": [
+      "LARYSA",
+      "OLEKSANDRA"
+    ],
+    "ЛИЗА": [
+      "YELYZAVETA"
+    ],
+    "ЛЬОША": [
+      "ALIAKSEI",
+      "OLEKSII"
+    ],
+    "ЛЮБА": [
+      "LIUBOV"
+    ],
+    "ЛЮДА": [
+      "LIUDMYLA"
+    ],
+    "ЛЮДОЧКА": [
+      "LIUDMYLA"
+    ],
+    "МІША": [
+      "MYKHAILO"
+    ],
+    "МАРИНКА": [
+      "MARYNA"
+    ],
+    "МАРУСЯ": [
+      "MARIIA"
+    ],
+    "МАТВІЙКО": [
+      "MATVII"
+    ],
+    "МАТЮША": [
+      "MATVII"
+    ],
+    "МАША": [
+      "MARIIA"
+    ],
+    "МИКИТКА": [
+      "MYKYTA"
+    ],
+    "МИКОЛКА": [
+      "MYKOLA"
+    ],
+    "МИША": [
+      "MYKHAILO"
+    ],
+    "НІКІТКА": [
+      "NIKITA"
+    ],
+    "НІКА": [
+      "VERONIKA"
+    ],
+    "НАДІЙКА": [
+      "NADIIA"
+    ],
+    "НАДЯ": [
+      "NADIIA"
+    ],
+    "НАЗАРКО": [
+      "NAZAR"
+    ],
+    "НАСТЕНЬКА": [
+      "ANASTASIIA"
+    ],
+    "НАСТЯ": [
+      "ANASTASIIA"
+    ],
+    "НАТА": [
+      "NATALIIA"
+    ],
+    "НАТАЛКА": [
+      "NATALIIA"
+    ],
+    "НАТАША": [
+      "NATALIIA"
+    ],
+    "НИКА": [
+      "VERONIKA"
+    ],
+    "ОКСАНКА": [
+      "OKSANA"
+    ],
+    "ОЛЕЖА": [
+      "OLEG",
+      "OLEH"
+    ],
+    "ОЛЕНКА": [
+      "OLENA"
+    ],
+    "ОЛЕСЯ": [
+      "OLEKSANDRA"
+    ],
+    "ОЛЕЧКА": [
+      "OLHA"
+    ],
+    "ОЛЯ": [
+      "OLHA"
+    ],
+    "ПАВЛИК": [
+      "PAVEL",
+      "PAVLO"
+    ],
+    "ПАША": [
+      "PAVEL",
+      "PAVLO"
+    ],
+    "ПЕТРИК": [
+      "PETRO"
+    ],
+    "ПЕТЯ": [
+      "PETRO"
+    ],
+    "ПОЛІНКА": [
+      "POLINA"
+    ],
+    "ПОЛЯ": [
+      "POLINA"
+    ],
+    "РУСІК": [
+      "RUSLAN"
+    ],
+    "РУСИК": [
+      "RUSLAN"
+    ],
+    "САША": [
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "САШКО": [
+      "ALIAKSANDR",
+      "OLEKSANDR"
+    ],
+    "СВЄТА": [
+      "SVITLANA"
+    ],
+    "СВІТА": [
+      "SVITLANA"
+    ],
+    "СВЕТА": [
+      "SVITLANA"
+    ],
+    "СЕРГІЙКО": [
+      "SERHII"
+    ],
+    "СЕРЬОЖА": [
+      "SERHII",
+      "SIARHEI"
+    ],
+    "СЛАВІК": [
+      "VIACHESLAV",
+      "YAROSLAV"
+    ],
+    "СЛАВА": [
+      "VIACHESLAV"
+    ],
+    "СОНЯ": [
+      "SOFIIA"
+    ],
+    "СОФІЙКА": [
+      "SOFIIA"
+    ],
+    "СТАС": [
+      "STANISLAV"
+    ],
+    "СТАСИК": [
+      "STANISLAV"
+    ],
+    "СТЕПА": [
+      "STEPAN"
+    ],
+    "СТЬОПА": [
+      "STEPAN"
+    ],
+    "ТАНЯ": [
+      "TATIANA",
+      "TETIANA"
+    ],
+    "ТАРАСИК": [
+      "TARAS"
+    ],
+    "ТОЛЯ": [
+      "ANATOLII"
+    ],
+    "ХРИСТЯ": [
+      "KHRYSTYNA"
+    ],
+    "ШУРА": [
+      "ALIAKSANDR",
+      "OLEKSANDR",
+      "OLEKSANDRA"
+    ],
+    "ЮЛЬКА": [
+      "YULIIA"
+    ],
+    "ЮЛЯ": [
+      "YULIIA"
+    ],
+    "ЮРА": [
+      "YURII"
+    ],
+    "ЯНОЧКА": [
+      "YANA"
+    ],
+    "ЯРИК": [
+      "YAROSLAV"
+    ]
+  }
+}

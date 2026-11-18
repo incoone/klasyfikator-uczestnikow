@@ -327,3 +327,525 @@ test('Ważność komunikatu i konieczność weryfikacji są niezależne', () => 
   assert.deepEqual(oba.informacyjne.map(m => [m.kod,m.severity]),[['BLEDNY_PESEL','high']]);
   assert.deepEqual(oba.doWeryfikacji.map(m => m.severity),['high']);
 });
+
+// 1.2: przykładowe kombinacje nie opisują rzeczywistych osób.
+// Liczebności poniżej są fragmentami dostarczonych słowników PESEL.
+const imiona12 = { imiona: { ...slownik.imiona,
+  ANNA: [1063756,12], PIOTR: [3,682516], KLIMEK: [0,48], GALA: [43,0],
+  KASIA: [211,0], KATARZYNA: [100000,0], SASHA: [122,103], WITEK: [0,47],
+  WITOLD: [0,54261], MIREK: [0,56], MIROSŁAW: [0,10000]
+} };
+const nazwiska12 = { nazwiska: {
+  KLIMEK: [10002,9741], GALA: [1283,1250], KASIA: [32,32], WITEK: [7369,7391],
+  KOWALSKA: [67308,3], KOWALSKI: [535,66589], NOWAK: [99738,98387],
+  MIREK: [2416,2435], PIOTR: [207,215]
+} };
+const zdrobnienia12 = { zdrobnienia: {
+  KASIA: ['KATARZYNA'], WITEK: ['WITOLD'], MIREK: ['MIROSŁAW'],
+  SASHA: ['ALEKSANDER','ALEKSANDRA'], OLEŃKA: ['ALEKSANDRA'],
+  // Brak pełnego odpowiednika w tym wycinku nie może zostać przedstawiony jako zero.
+  ALEX: ['ALEKSANDER','NIEOBECNE']
+} };
+const klasyfikator12 = API.utworzKlasyfikator(imiona12,nazwiska12,zdrobnienia12);
+const w12 = tekst => klasyfikator12.klasyfikujWiersz(tekst);
+const info12 = osoba => API.pobierzKomunikaty(osoba).informacyjne;
+for (const [tekst, plec, zrodlo] of [
+  ['Anna Klimek',K,'imiona'], ['Piotr Gala',M,'imiona'], ['Kasia Kowalska',K,'imiona'],
+  ['Sasha Kowalska',K,'imiona_i_nazwisko'], ['Witek Kowalski',M,'imiona'],
+  ['Sasha Nowak',W,null], ['Anna Witek Kowalski',W,null], ['Anna Mirek',K,'imiona'],
+  ['Witek',M,'imiona'], ['Klimek Witek',M,'imiona'], ['Kowalska',W,null],
+  ['Xyz Kowalska',W,null], ['Oleńka Kowalska',W,null], ['Remis Kowalska',W,null],
+  ['Sasha Nur Kowalska',W,null], ['Nur Kowalska',W,null]
+]) test('1.2 role i kolejność: '+tekst, () => {
+  for (const wejscie of [tekst,tekst.split(' ').reverse().join(' ')]) {
+    const osoba = w12(wejscie);
+    assert.equal(osoba.kategoriaAutomatyczna,plec);
+    assert.equal(osoba.zrodlo,zrodlo);
+    assert.equal(osoba.oryginalnyWiersz,wejscie);
+  }
+});
+test('Pomijane imię pozostaje w szczegółach, ale nie w licznikach ani uwagach o imieniu', () => {
+  const osoba = w12('Anna Klimek');
+  assert.deepEqual(osoba.wskazania,{kobieta:1,mezczyzna:0,niejednoznaczne:0});
+  const klimek = osoba.rozpoznaneImiona.find(i => i.klucz === 'KLIMEK');
+  assert.equal(klimek.uwzglednione,false);
+  assert.equal(klimek.statystyki.mezczyzni,48);
+  assert.equal(osoba.czlonyTekstowe[1].podstawaRoli,'PRZEWAGA_NAZWISKA');
+  assert.deepEqual(info12(osoba).map(i => [i.kod,i.severity]),[['ROLA_NAZWISKA_ZE_STATYSTYK','medium']]);
+  assert.deepEqual(API.pobierzKomunikaty(osoba).doWeryfikacji,[]);
+});
+for (const [liczba,oczekiwana] of [[30,'high'],[49,'high'],[50,'medium'],[99,'medium'],[100,null]]) {
+  test('Rzadkość - granica '+liczba, () => {
+    const osoba = API.utworzKlasyfikator({imiona:{RZADKIE:[0,liczba]}}).klasyfikujWiersz('Rzadkie');
+    assert.equal(osoba.kategoriaAutomatyczna,M);
+    const uwagi = info12(osoba).filter(u => u.kod === 'RZADKIE_IMIE');
+    assert.equal(uwagi.length,oczekiwana ? 1 : 0);
+    if (oczekiwana) assert.equal(uwagi[0].severity,oczekiwana);
+    assert.equal(API.podsumuj([osoba]).doWeryfikacji,0);
+  });
+}
+for (const [ileImion,ileNazwisk,usun] of [[30,1499,false],[30,1500,true],[30,1501,true],[1,99,false],[2,100,true]]) {
+  test('Przewaga nazwiska i minimum: '+ileImion+'/'+ileNazwisk, () => {
+    const k = API.utworzKlasyfikator({imiona:{ANNA:[10000,0],KOLIZJA:[0,ileImion]}},
+      {nazwiska:{KOLIZJA:[ileNazwisk,0]}});
+    const osoba = k.klasyfikujWiersz('Anna Kolizja');
+    assert.equal(osoba.rozpoznaneImiona[1].uwzglednione,!usun);
+    assert.equal(osoba.kategoriaAutomatyczna,usun ? K : W);
+  });
+}
+for (const [kobiety,mezczyzni,silne] of [[998999,1001,false],[999000,1000,true],
+  [999001,999,true],[999800,200,true],[99,0,false],[100,0,true]]) {
+  test('Próg nazwiska: '+kobiety+'/'+mezczyzni, () => {
+    for (const odwroc of [false,true]) {
+      const k = API.utworzKlasyfikator({imiona:{SLABE:odwroc?[40,60]:[60,40]}},
+        {nazwiska:{TESTOWE:odwroc?[mezczyzni,kobiety]:[kobiety,mezczyzni]}});
+      const osoba = k.klasyfikujWiersz('Slabe Testowe');
+      assert.equal(osoba.kategoriaAutomatyczna,silne?(odwroc?M:K):W);
+      assert.equal(osoba.rozpoznaneNazwiska[0].statystyki.silneWskazanie,silne);
+    }
+  });
+}
+test('Słownik nazwisk nie używa końcówek ani nie łączy statystyk', () => {
+  const k = API.utworzKlasyfikator({imiona:{SLABE:[60,40]}},
+    {nazwiska:{PIERWSZE:[990,10],DRUGIE:[990,10],SILNE:[10000,0]}});
+  assert.equal(k.klasyfikujWiersz('Slabe Pierwsze Drugie').kategoriaAutomatyczna,W);
+  assert.equal(k.klasyfikujWiersz('Slabe Nieznana').kategoriaAutomatyczna,W);
+  // To samo słabe imię wielokrotnie nie przekroczy progu.
+  assert.equal(k.klasyfikujWiersz('Slabe Slabe').kategoriaAutomatyczna,W);
+});
+test('Sprzeczne silne nazwiska blokują wspomaganie, nie jednoznaczne imię ani PESEL', () => {
+  const k = API.utworzKlasyfikator(imiona12,{nazwiska:{ŻEŃSKIE:[10000,0],MĘSKIE:[0,10000]}});
+  assert.equal(k.klasyfikujWiersz('Sasha Żeńskie Męskie').kategoriaAutomatyczna,W);
+  for (const [tekst,plec] of [['Anna Męskie',K],[pm+' Żeńskie',M]]) {
+    const osoba = k.klasyfikujWiersz(tekst);
+    assert.equal(osoba.kategoriaAutomatyczna,plec);
+    assert.ok(info12(osoba).some(u=>u.kod==='NAZWISKO_PRZECIWNE_WYNIKOWI' && u.severity==='high'));
+    assert.equal(API.pobierzKomunikaty(osoba).doWeryfikacji.length,0);
+  }
+});
+test('PESEL nie zmienia przypisania ról; rzeczywisty konflikt imienia nadal blokuje', () => {
+  const bez = w12('Anna Klimek');
+  for (const p of [pk,pm]) {
+    const osoba = w12('Anna Klimek '+p);
+    assert.deepEqual(osoba.czlonyTekstowe,bez.czlonyTekstowe);
+    assert.equal(osoba.kategoriaAutomatyczna,p===pk?K:W);
+  }
+  for (const tekst of [pm+' Sasha Kowalska','Sasha '+pm+' Kowalska','Sasha Kowalska '+pm]) {
+    const osoba = w12(tekst);
+    assert.equal(osoba.kategoriaAutomatyczna,M);
+    assert.equal(osoba.zrodlo,'pesel');
+    assert.ok(kody(info12(osoba)).includes('PESEL_PRZECIWNE_IMIE'));
+    assert.ok(kody(info12(osoba)).includes('NAZWISKO_PRZECIWNE_WYNIKOWI'));
+  }
+  assert.equal(w12(pk+' Witek Kowalski').kategoriaAutomatyczna,W);
+  assert.equal(w12(pm+' Remis Kowalska').kategoriaAutomatyczna,M);
+});
+test('Rola z kontekstu i pozostałe uwagi pozostają informacyjne', () => {
+  const osoba = w12('Witek Kowalski');
+  const komunikaty = API.pobierzKomunikaty(osoba);
+  assert.deepEqual(new Set(kody(komunikaty.informacyjne)),new Set([
+    'RZADKIE_IMIE','ROLA_IMIENIA_Z_KONTEKSTU','MOZLIWE_ZDROBNIENIE']));
+  assert.ok(komunikaty.informacyjne.every(u=>u.severity===(u.kod==='ROLA_IMIENIA_Z_KONTEKSTU'?'low':'high')));
+  assert.equal(komunikaty.doWeryfikacji.length,0);
+  assert.equal(API.podsumuj([osoba]).doWeryfikacji,0);
+  assert.equal(osoba.czlonyTekstowe[0].rola,'imie');
+});
+test('Zdrobnienia pobierają liczby dynamicznie, nie dziedziczą płci, brak wpisu nie oznacza zera', () => {
+  const osoba = w12('Witek Kowalski');
+  const z = osoba.rozpoznaneZdrobnienia[0];
+  assert.equal(z.statystyki.mezczyzni,47);
+  assert.equal(z.odpowiedniki[0].statystyki.mezczyzni,54261);
+  assert.match(info12(osoba).find(u=>u.kod==='MOZLIWE_ZDROBNIENIE').opis,/54261/);
+  const alex = w12('Alex Kowalska');
+  assert.equal(alex.kategoriaAutomatyczna,W);
+  assert.equal(alex.rozpoznaneZdrobnienia[0].statystyki,null);
+  assert.ok(alex.rozpoznaneZdrobnienia[0].odpowiedniki.every(p=>p.statystyki===null));
+  assert.match(info12(alex).find(u=>u.kod==='MOZLIWE_ZDROBNIENIE').opis,/nie oznacza zera/);
+  const zmieniony = API.utworzKlasyfikator({imiona:{WITEK:[0,47],WITOLD:[0,777]}},null,zdrobnienia12);
+  assert.equal(zmieniony.klasyfikujWiersz('Witek').rozpoznaneZdrobnienia[0].odpowiedniki[0].statystyki.mezczyzni,777);
+});
+test('Zdrobnienie jako nazwisko nie otrzymuje polecenia rozwinięcia imienia', () => {
+  const osoba = w12('Anna Witek');
+  assert.equal(osoba.kategoriaAutomatyczna,K);
+  const uwaga = info12(osoba).find(u=>u.kod==='MOZLIWE_ZDROBNIENIE');
+  assert.match(uwaga.opis,/potraktowany jako nazwisko/);
+  assert.doesNotMatch(uwaga.opis,/Sprawdź zgodność imienia/);
+  assert.ok(!kody(info12(osoba)).includes('RZADKIE_IMIE'));
+});
+test('Powtórzone dopasowania zachowują pozycje i nie powielają komunikatów', () => {
+  const osoba = w12('Witek Witek Kowalski');
+  assert.equal(osoba.wskazania.mezczyzna,2);
+  for (const kod of ['RZADKIE_IMIE','MOZLIWE_ZDROBNIENIE','NIEROZSTRZYGNIETA_ROLA']) {
+    const znalezione = info12(osoba).filter(u=>u.kod===kod);
+    assert.equal(znalezione.length,1);
+    assert.deepEqual(znalezione[0].pozycje,[0,1]);
+  }
+});
+test('Nowe słowniki nie zmieniają dat, numerów ani ręcznych decyzji', () => {
+  const tekst = '1. Kasia 18/11/2008 Kowalska 123456789';
+  const osoba = w12(tekst);
+  assert.equal(osoba.oryginalnyWiersz,tekst);
+  assert.equal(osoba.urodzenie.data,'2008-11-18');
+  assert.equal(API.obliczWiek(osoba,'2026-11-17').wiek,17);
+  assert.equal(API.obliczWiek(osoba,'2026-11-18').wiek,18);
+  assert.equal(osoba.pesel.znalezione.length,0);
+  const reczna = API.ustawKlasyfikacjeReczna(osoba,M);
+  assert.equal(API.pobierzKategorie(reczna),M);
+  assert.equal(reczna.kategoriaAutomatyczna,K);
+  assert.deepEqual(info12(reczna),info12(osoba));
+  assert.equal(w12('Kasia Kowalska 1234567890').kategoriaAutomatyczna,W);
+  assert.equal(w12('Kasia Kowalska '+pk+' '+pk).kategoriaAutomatyczna,W);
+});
+test('Opcjonalne słowniki, walidacja i odporność na zmianę wejścia', () => {
+  assert.equal(API.utworzKlasyfikator(imiona12).klasyfikujWiersz('Anna Klimek').kategoriaAutomatyczna,W);
+  assert.equal(API.utworzKlasyfikator(imiona12,{nazwiska:{}}).klasyfikujWiersz('Anna').kategoriaAutomatyczna,K);
+  for (const json of [{},{nazwiska:[]},{nazwiska:{A:[0,0]}},{nazwiska:{A:[1,-1]}},
+    {nazwiska:{A:[1,1],a:[1,1]}},{nazwiska:{A:[Number.MAX_SAFE_INTEGER,1]}}]) {
+    assert.throws(()=>API.utworzKlasyfikator(imiona12,json),TypeError);
+  }
+  for (const json of [{},{zdrobnienia:[]},{zdrobnienia:{A:[]}},{zdrobnienia:{A:[null]}},
+    {zdrobnienia:{A:['A'],a:['B']}}]) {
+    assert.throws(()=>API.utworzKlasyfikator(imiona12,null,json),TypeError);
+  }
+  const n={nazwiska:{TESTOWE:[100,0]}}, z={zdrobnienia:{SASHA:['ANNA']}};
+  const k=API.utworzKlasyfikator(imiona12,n,z);
+  n.nazwiska.TESTOWE[0]=0; z.zdrobnienia.SASHA[0]='JAN';
+  const osoba=k.klasyfikujWiersz('Sasha Testowe');
+  assert.equal(osoba.kategoriaAutomatyczna,K);
+  assert.equal(osoba.rozpoznaneZdrobnienia[0].odpowiedniki[0].klucz,'ANNA');
+  assert.doesNotThrow(()=>JSON.stringify(osoba));
+});
+test('Przeglądarka z trzema słownikami działa bez DOM, sieci i zapisu', () => {
+  const kontekst=vm.createContext({});
+  vm.runInContext(fs.readFileSync(require.resolve('./script.js'),'utf8'),kontekst);
+  const k=kontekst.KlasyfikatorUczestnikow.utworzKlasyfikator(imiona12,nazwiska12,zdrobnienia12);
+  assert.equal(k.klasyfikujWiersz('Sasha Kowalska').zrodlo,'imiona_i_nazwisko');
+});
+
+// Aktualizacja 1.2: rola imienia nie jest oceną jednoznaczności płci.
+function probaRoli(ileImion, ileNazwisk) {
+  return API.utworzKlasyfikator({imiona:{KOLIZJA:[0,ileImion], ANNA:[10000,0]}},
+    {nazwiska:{KOLIZJA:[ileNazwisk,0], OSOBNE:[50,50]}});
+}
+for (const [i,n,rola,podstawa] of [
+  [2999,100,'nierozstrzygnieta',null], [3000,100,'imie','PRZEWAGA_IMIENIA_30'],
+  [3001,100,'imie','PRZEWAGA_IMIENIA_30'], [99,1,'nierozstrzygnieta',null],
+  [100,1,'imie','PRZEWAGA_IMIENIA_30']
+]) test(`Rola 30x bez kontekstu: ${i}/${n}`,()=>{
+  const o=probaRoli(i,n).klasyfikujWiersz('Kolizja');
+  assert.equal(o.czlonyTekstowe[0].rola,rola);
+  assert.equal(o.czlonyTekstowe[0].podstawaRoli,podstawa);
+  assert.equal(info12(o).some(u=>u.kod==='NIEROZSTRZYGNIETA_ROLA'),rola==='nierozstrzygnieta');
+  assert.equal(o.kategoriaAutomatyczna,M);
+});
+for (const [i,n,podstawa,kod] of [
+  [999,100,null,'NIEROZSTRZYGNIETA_ROLA'],
+  [1000,100,'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM','ROLA_IMIENIA_ZE_STATYSTYK'],
+  [1001,100,'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM','ROLA_IMIENIA_ZE_STATYSTYK'],
+  [2999,100,'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM','ROLA_IMIENIA_ZE_STATYSTYK'],
+  [3000,100,'PRZEWAGA_IMIENIA_30',null],
+  [99,5,null,'NIEROZSTRZYGNIETA_ROLA'],
+  [100,5,'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM','ROLA_IMIENIA_ZE_STATYSTYK']
+]) test(`Rola 10x w dłuższym wierszu: ${i}/${n}`,()=>{
+  for(const tekst of ['Kolizja Osobne Xyz','Xyz Osobne Kolizja']){
+    const o=probaRoli(i,n).klasyfikujWiersz(tekst);
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='KOLIZJA').podstawaRoli,podstawa);
+    const role=info12(o).filter(u=>u.obszar==='dane');
+    assert.deepEqual(role.map(u=>u.kod),kod?[kod]:[]);
+    if(kod==='ROLA_IMIENIA_ZE_STATYSTYK') assert.equal(role[0].severity,'low');
+  }
+});
+for(const [i,n,podstawa,uwaga] of [
+  [999,100,'KONTEKST_DWOCH_CZLONOW',true],
+  [1000,100,'PRZEWAGA_IMIENIA_10_DWA_CZLONY',false],
+  [1001,100,'PRZEWAGA_IMIENIA_10_DWA_CZLONY',false],
+  [99,1,'KONTEKST_DWOCH_CZLONOW',true],
+  [100,10,'PRZEWAGA_IMIENIA_10_DWA_CZLONY',false],
+  [47,14760,'KONTEKST_DWOCH_CZLONOW',true],
+  [3000,100,'PRZEWAGA_IMIENIA_30',false]
+]) test(`Dwa człony: ${i}/${n}`,()=>{
+  for(const tekst of ['Kolizja Osobne','Osobne Kolizja']){
+    const o=probaRoli(i,n).klasyfikujWiersz(tekst);
+    const c=o.czlonyTekstowe.find(c=>c.klucz==='KOLIZJA');
+    assert.equal(c.rola,'imie'); assert.equal(c.podstawaRoli,podstawa);
+    const role=info12(o).filter(u=>u.obszar==='dane');
+    assert.deepEqual(role.map(u=>[u.kod,u.severity]),uwaga?[['ROLA_IMIENIA_Z_KONTEKSTU','low']]:[]);
+    assert.equal(API.pobierzKomunikaty(o).doWeryfikacji.length,0);
+  }
+});
+test('Przewaga 10x bez osobnego nazwiska nie rozstrzyga roli',()=>{
+  const k=probaRoli(1000,100);
+  for(const tekst of ['Kolizja','Kolizja Xyz','Anna Kolizja']){
+    const o=k.klasyfikujWiersz(tekst);
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='KOLIZJA').rola,'nierozstrzygnieta');
+  }
+});
+test('Dwa człony wymagają dokładnie jednego dopasowania wyłącznie do nazwisk',()=>{
+  const k=API.utworzKlasyfikator({imiona:{ALEX:[60,40],MORGAN:[55,45]}},
+    {nazwiska:{ALEX:[500,500],MORGAN:[500,500]}});
+  const o=k.klasyfikujWiersz('Alex Morgan');
+  assert.ok(o.czlonyTekstowe.every(c=>c.rola==='nierozstrzygnieta'));
+  assert.equal(o.kategoriaAutomatyczna,W);
+});
+test('Rola imienia nie usuwa niejednoznaczności lub remisu płci',()=>{
+  for(const liczby of [[6000,4000],[5000,5000]]){
+    const k=API.utworzKlasyfikator({imiona:{ALEX:liczby}}, {nazwiska:{ALEX:[50,50],NOWAK:[50,50]}});
+    const o=k.klasyfikujWiersz('Alex Nowak');
+    assert.equal(o.czlonyTekstowe[0].rola,'imie');
+    assert.equal(o.kategoriaAutomatyczna,W);
+    assert.ok(!kody(info12(o)).includes('NIEROZSTRZYGNIETA_ROLA'));
+  }
+});
+test('Kontekst dwóch członów ignoruje datę i cyfry, ale nie dodatkowy człon tekstowy',()=>{
+  for(const tekst of ['Witek Nowak 18/11/2008','1. Nowak 18.11.2008 Witek',pm+' Witek Nowak']){
+    const o=w12(tekst);
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='WITEK').podstawaRoli,'KONTEKST_DWOCH_CZLONOW');
+    assert.equal(o.oryginalnyWiersz,tekst);
+    assert.equal(o.kategoriaAutomatyczna,M);
+    const opis=info12(o).find(u=>u.kod==='ROLA_IMIENIA_Z_KONTEKSTU').opis;
+    assert.match(opis,/„Witek” występuje zarówno w słowniku imion, jak i nazwisk/);
+    assert.match(opis,/drugi człon \(„Nowak”\) występuje wyłącznie w słowniku nazwisk/);
+  }
+  for(const tekst of ['Lp. Witek Nowak','Witek A123 Nowak','Anna Witek Nowak']){
+    const o=w12(tekst);
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='WITEK').rola,'nierozstrzygnieta');
+  }
+  assert.equal(w12(pk+' Witek Nowak').kategoriaAutomatyczna,W);
+});
+test('Rola 10x może użyć nazwiska rozstrzygniętego dotychczasową regułą 50x',()=>{
+  const k=API.utworzKlasyfikator({imiona:{KOLIZJA:[0,1000],KLIMEK:[0,30]}},
+    {nazwiska:{KOLIZJA:[50,50],KLIMEK:[1000,1000]}});
+  for(const tekst of ['Kolizja Klimek','Klimek Kolizja']){
+    const o=k.klasyfikujWiersz(tekst);
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='KOLIZJA').podstawaRoli,'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM');
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='KLIMEK').podstawaRoli,'PRZEWAGA_NAZWISKA');
+  }
+});
+
+// Sugestia zapisu z polskimi znakami nie uczestniczy w klasyfikacji.
+const kodPisowni = 'MOZLIWY_BRAK_POLSKICH_ZNAKOW';
+function pisownia(imiona, tekst, nazwiska=null, zdrobnienia=null) {
+  return API.utworzKlasyfikator({imiona},nazwiska,zdrobnienia).klasyfikujWiersz(tekst);
+}
+for(const [pelne,proste,uwaga] of [[9999,95,false],[10000,95,true],[10001,95,true],
+  [19999,2000,false],[20000,2000,true],[20001,2000,true]]) {
+  test(`Pisownia - granice popularności: ${pelne}/${proste}`,()=>{
+    const o=pisownia({MALGORZATA:[proste,0],MAŁGORZATA:[pelne,0]},'Malgorzata');
+    assert.equal(kody(info12(o)).includes(kodPisowni),uwaga);
+    assert.equal(kody(info12(o)).includes('RZADKIE_IMIE'),proste<100&&!uwaga);
+    assert.equal(o.kategoriaAutomatyczna,K);
+    assert.equal(o.wariantZPolskimiZnakami,undefined);
+    assert.equal(o.rozpoznaneImiona[0].wariantZPolskimiZnakami?.klucz ?? null,uwaga?'MAŁGORZATA':null);
+  });
+}
+for(const [proste,pelne,plec,rzadkie] of [
+  [[95,0],[10000,0],K,false], [[0,47],[0,10000],M,false],
+  [[95,0],[0,10000],K,true], [[50,45],[10000,0],W,true],
+  [[95,0],[9990,10],K,false], [[95,0],[9989,11],K,true],
+  [[50,45],[5000,5000],W,true]
+]) test(`Pisownia - niezależność płci: ${proste}/${pelne}`,()=>{
+  const o=pisownia({MALGORZATA:proste,MAŁGORZATA:pelne},'Malgorzata');
+  assert.equal(o.kategoriaAutomatyczna,plec);
+  assert.ok(kody(info12(o)).includes(kodPisowni));
+  assert.equal(kody(info12(o)).includes('RZADKIE_IMIE'),rzadkie);
+  assert.equal(info12(o).find(u=>u.kod===kodPisowni).severity,'low');
+  assert.equal(API.pobierzKomunikaty(o).doWeryfikacji.length,plec===W?1:0);
+});
+for(const [bez,z] of [['A','Ą'],['C','Ć'],['E','Ę'],['L','Ł'],['N','Ń'],['O','Ó'],['S','Ś'],['Z','Ź'],['Z','Ż']]) {
+  test(`Sugestie - polski znak ${z}`,()=>{
+    const o=pisownia({['TEST'+bez]:[40,0],['TEST'+z]:[10000,0]},'Test'+bez.toLowerCase());
+    assert.ok(kody(info12(o)).includes(kodPisowni));
+  });
+}
+test('Kilka polskich odpowiedników wyklucza sugestię, także gdy tylko jeden spełnia progi',()=>{
+  for(const drugie of [30,10000]) {
+    const o=pisownia({ZANA:[40,0],ŻANA:[10000,0],ŹANA:[drugie,0]},'Zana');
+    assert.ok(!kody(info12(o)).includes(kodPisowni));
+    assert.ok(kody(info12(o)).includes('RZADKIE_IMIE'));
+  }
+});
+test('Brak dokładnego dopasowania, polskie znaki i obce znaki nie uruchamiają korekty',()=>{
+  for(const [imiona,tekst] of [
+    [{MAŁGORZATA:[10000,0]},'Malgorzata'],
+    [{MAŁGORZATA:[10000,0],MALGORZATA:[95,0]},'Małgorzata'],
+    [{ROBERT:[0,100000],RÓBERT:[0,95]},'Robert'],
+    [{ANDRE:[40,0],ANDRÉ:[10000,0]},'Andre'],
+    [{MAŁGORZATA:[95,0],MĄŁGORZATA:[10000,0]},'Małgorzata']
+  ]) {
+    const o=pisownia(imiona,tekst);
+    assert.ok(!kody(info12(o)).includes(kodPisowni));
+  }
+  assert.equal(pisownia({ŁUKASZ:[0,100000]},'Lukasz').kategoriaAutomatyczna,W);
+});
+test('Sugestia nie zmienia oryginału, statystyk, wskazań, PESEL-u ani źródła daty',()=>{
+  const imiona={MALGORZATA:[95,0],MAŁGORZATA:[572067,0]};
+  const tekst='  malgorzata 18/11/2008 '+pm;
+  const o=pisownia(imiona,tekst);
+  assert.equal(o.oryginalnyWiersz,tekst);
+  assert.equal(o.rozpoznaneImiona[0].tekst,'malgorzata');
+  assert.equal(o.rozpoznaneImiona[0].statystyki.kobiety,95);
+  assert.deepEqual(o.wskazania,{kobieta:1,mezczyzna:0,niejednoznaczne:0});
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.ok(kody(API.pobierzKomunikaty(o).doWeryfikacji).includes('KONFLIKT_DATY_PESEL'));
+  const opis=info12(o).find(u=>u.kod===kodPisowni).opis;
+  assert.match(opis,/95 osób/); assert.match(opis,/572067 osób/); assert.match(opis,/Małgorzata/);
+});
+test('Sugestia nie znosi pozostałych uwag i nie jest prezentowana dla pominiętego imienia',()=>{
+  const imiona={MALGORZATA:[95,0],MAŁGORZATA:[572067,0],JAN:[0,10000]};
+  const nazwiska={nazwiska:{MALGORZATA:[5000,5000],NOWAK:[50,50]}};
+  const zdrobnienia={zdrobnienia:{MALGORZATA:['MAŁGORZATA']}};
+  const o=pisownia(imiona,'Malgorzata Nowak',nazwiska,zdrobnienia);
+  const kodyUwag=kody(info12(o));
+  for(const kod of [kodPisowni,'MOZLIWE_ZDROBNIENIE','ROLA_IMIENIA_Z_KONTEKSTU']) assert.ok(kodyUwag.includes(kod));
+  assert.ok(!kodyUwag.includes('RZADKIE_IMIE'));
+  const nazwisko=pisownia(imiona,'Jan Malgorzata',nazwiska);
+  assert.equal(nazwisko.rozpoznaneImiona[1].uwzglednione,false);
+  assert.equal(nazwisko.rozpoznaneImiona[1].wariantZPolskimiZnakami,null);
+  assert.ok(!kody(info12(nazwisko)).includes(kodPisowni));
+  assert.equal(nazwisko.kategoriaAutomatyczna,M);
+});
+test('Powtórzenia dają jedną uwagę z pozycjami, dane są dynamiczne i odizolowane od wejścia',()=>{
+  const imiona={MALGORZATA:[95,0],MAŁGORZATA:[123456,0]};
+  const k=API.utworzKlasyfikator({imiona});
+  imiona.MAŁGORZATA[0]=1;
+  const o=k.klasyfikujWiersz('Malgorzata MALGORZATA');
+  const uwagi=info12(o).filter(u=>u.kod===kodPisowni);
+  assert.equal(uwagi.length,1); assert.deepEqual(uwagi[0].pozycje,[0,1]);
+  assert.match(uwagi[0].opis,/123456 osób/);
+  assert.deepEqual(info12(API.ustawKlasyfikacjeReczna(o,M)),info12(o));
+  assert.equal(API.podsumuj([o]).doWeryfikacji,0);
+});
+
+// Klasyfikacja ze zdrobnień: dane syntetyczne i fragmenty statystyk słownika.
+const zdrobImiona={imiona:{...imiona12.imiona, PIOTR:[3,682516],
+  BARTOSZ:[0,205155], BARTŁOMIEJ:[0,126070], BARTEK:[0,706],
+  ALEKSANDER:[18,162886], ALEKSANDRA:[390147,3], SASZA:[23,99], ALEX:[158,11985], MORGAN:[58,88]}};
+const zdrobNazwiska={nazwiska:{...nazwiska12.nazwiska, KRAWCZYK:[31329,30308],
+  MORGAN:[182,115], ALEX:[31,35], BARTEK:[104,108]}};
+const zdrobSlownik={zdrobnienia:{...zdrobnienia12.zdrobnienia,
+  PIOTREK:['PIOTR'], PIOTRUŚ:['PIOTR'], BARTEK:['BARTOSZ','BARTŁOMIEJ'],
+  BARTUŚ:['BARTOSZ','BARTŁOMIEJ'], ANUSIA:['ANNA'], SASZA:['ALEKSANDER','ALEKSANDRA'],
+  ALEX:['ALEKSANDER','ALEKSANDRA'], SASZEŃKA:['ALEKSANDER','ALEKSANDRA'],
+  NIEPELNE:['PIOTR','NIEOBECNE'], SLABE:['NUR'], REMISOWE:['REMIS']}};
+const zdrobK=API.utworzKlasyfikator(zdrobImiona,zdrobNazwiska,zdrobSlownik);
+const zdrobW=tekst=>zdrobK.klasyfikujWiersz(tekst);
+for(const [tekst,plec,zrodlo] of [
+  ['Piotrek Krawczyk',M,'zdrobnienia'], ['Kasia Nowak',K,'imiona'],
+  ['Bartek Kowalski',M,'imiona'], ['Sasza Nowak',W,null], ['Alex Morgan',W,null],
+  ['Bartuś Nowak',M,'zdrobnienia'], ['Anusia Nowak',K,'zdrobnienia'],
+  ['Piotrek',W,null], ['Piotrek Xyz',W,null], ['Piotrek Jan',M,'imiona'],
+  ['Piotrek Jan Krawczyk',M,'imiona'], ['Piotrek Anna Krawczyk',W,null],
+  ['Piotrek Kowalska',W,null], ['Piotrek Nur Nowak',W,null],
+  ['Piotrek Kim Kowalska',W,null], ['Piotrek Remis Nowak',W,null],
+  ['Piotrek Piotruś Nowak',M,'zdrobnienia'], ['Piotrek Anusia Nowak',W,null],
+  ['Piotrek Saszeńka Nowak',W,null], ['Niepelne Nowak',W,null],
+  ['Slabe Nowak',W,null], ['Remisowe Nowak',W,null]
+]) test('Zdrobnienia - decyzja i kolejność: '+tekst,()=>{
+  for(const wejscie of [tekst,tekst.split(' ').reverse().join(' ')]){
+    const o=zdrobW(wejscie);
+    assert.equal(o.kategoriaAutomatyczna,plec);
+    assert.equal(o.zrodlo,zrodlo);
+    assert.equal(o.oryginalnyWiersz,wejscie);
+  }
+});
+test('Rozwinięcie zdrobnienia nie zastępuje dopasowanego samodzielnego imienia',()=>{
+  const k=API.utworzKlasyfikator({imiona:{SKROT:[0,30],PELNE:[10000,0],SŁABE:[49,51]}},
+    {nazwiska:{NOWAK:[50,50]}},{zdrobnienia:{SKROT:['PELNE'],SŁABE:['PELNE']}});
+  const o=k.klasyfikujWiersz('Skrot Nowak');
+  assert.equal(o.kategoriaAutomatyczna,M);
+  assert.equal(o.zrodlo,'imiona');
+  assert.equal(o.rozpoznaneZdrobnienia[0].plecZPelnychForm,null);
+  assert.ok(kody(info12(o)).includes('RZADKIE_IMIE'));
+  assert.equal(k.klasyfikujWiersz('Słabe Nowak').kategoriaAutomatyczna,W);
+});
+test('Zdrobnienie obecne w nazwiskach nie otrzymuje nowego kontekstu imienia',()=>{
+  const k=API.utworzKlasyfikator(zdrobImiona,{nazwiska:{...zdrobNazwiska.nazwiska,PIOTREK:[50,50]}},zdrobSlownik);
+  for(const tekst of ['Piotrek Nowak','Piotrek '+pk]){
+    const o=k.klasyfikujWiersz(tekst),z=o.rozpoznaneZdrobnienia[0];
+    assert.equal(z.kontekst,null); assert.equal(z.wykorzystaneDoKlasyfikacji,false);
+    assert.equal(z.rola,'nazwisko');
+    assert.equal(o.kategoriaAutomatyczna,tekst.includes(pk)?K:W);
+  }
+});
+for(const [liczby,plec] of [[[999,1],K],[[998,2],W],[[1,999],M],[[2,998],W]]){
+  test('Próg każdej pełnej formy: '+liczby,()=>{
+    const o=API.utworzKlasyfikator({imiona:{PELNE:liczby}},
+      {nazwiska:{NOWAK:[50,50]}},{zdrobnienia:{SKROT:['PELNE']}}).klasyfikujWiersz('Skrot Nowak');
+    assert.equal(o.kategoriaAutomatyczna,plec);
+  });
+}
+test('Każda pełna forma musi spełnić próg; nie sumujemy liczebności',()=>{
+  const o=API.utworzKlasyfikator({imiona:{PELNE:[0,1000000],DRUGIE:[49,51]}},
+    {nazwiska:{NOWAK:[50,50]}},{zdrobnienia:{SKROT:['PELNE','DRUGIE']}}).klasyfikujWiersz('Skrot Nowak');
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.equal(o.rozpoznaneZdrobnienia[0].plecZPelnychForm,null);
+});
+test('Poprawny PESEL wystarcza jako kontekst, ma pierwszeństwo i scala uwagę o rozbieżności',()=>{
+  for(const [p,plec] of [[pm,M],[pk,K]]){
+    for(const tekst of [p+' Piotrek','Piotrek '+p,'Piotrek '+p+' Nowak']){
+      const o=zdrobW(tekst),z=o.rozpoznaneZdrobnienia[0];
+      assert.equal(o.kategoriaAutomatyczna,plec); assert.equal(o.zrodlo,'pesel');
+      assert.equal(z.kontekst,tekst.includes('Nowak')?'nazwisko_i_pesel':'pesel');
+      assert.equal(z.sprzeczneZPeselem,plec===K);
+      assert.equal(z.wykorzystaneDoKlasyfikacji,false);
+      const uwagi=info12(o).filter(u=>u.kod==='MOZLIWE_ZDROBNIENIE');
+      assert.equal(uwagi.length,1); assert.equal(uwagi[0].severity,'high');
+      if(plec===K) assert.match(uwagi[0].opis,/PESEL mimo przeciwnego wskazania/);
+      assert.equal(API.pobierzKomunikaty(o).doWeryfikacji.length,0);
+    }
+  }
+  assert.equal(zdrobW(pk+' Piotrek Jan Nowak').kategoriaAutomatyczna,W);
+  assert.equal(zdrobW(pm+' Piotrek Anna Nowak').kategoriaAutomatyczna,W);
+});
+test('Zdrobnienia nie omijają błędów i wielokrotności PESEL',()=>{
+  for(const tekst of ['Piotrek 1234567890','Piotrek '+pm+' '+pm,
+    'Piotrek Nowak 1234567890','Piotrek Nowak '+pm+' '+pk]){
+    const o=zdrobW(tekst);
+    assert.equal(o.kategoriaAutomatyczna,W);
+    assert.ok(o.rozpoznaneZdrobnienia.every(z=>!z.wykorzystaneDoKlasyfikacji));
+    if(!tekst.includes('Nowak')) assert.equal(o.rozpoznaneZdrobnienia[0].kontekst,null);
+  }
+});
+test('Jedna uwaga o użytym zdrobnieniu zawiera liczby wszystkich pełnych form',()=>{
+  const o=zdrobW('Bartuś Bartuś Nowak');
+  const uwagi=info12(o).filter(u=>u.kod==='MOZLIWE_ZDROBNIENIE');
+  assert.equal(uwagi.length,1); assert.deepEqual(uwagi[0].pozycje,[0,1]);
+  for(const fragment of ['Płeć ustalono na podstawie zdrobnienia','205155 osób','126070 osób',
+    'kobiety: 0, mężczyźni: 205155','Jako samodzielne imię: brak wpisu']) assert.ok(uwagi[0].opis.includes(fragment));
+  assert.deepEqual(o.wskazania,{kobieta:0,mezczyzna:0,niejednoznaczne:0});
+  assert.deepEqual(o.rozpoznaneImiona,[]);
+  assert.equal(o.rozpoznaneZdrobnienia[0].statystyki,null);
+  assert.equal(o.rozpoznaneZdrobnienia[0].plecZPelnychForm,M);
+  assert.equal(o.rozpoznaneZdrobnienia[0].wykorzystaneDoKlasyfikacji,true);
+  assert.equal(o.czlonyTekstowe[0].podstawaRoli,'KONTEKST_ZDROBNIENIA');
+  assert.deepEqual(API.podsumuj([o]),{kobieta:0,mezczyzna:1,doWeryfikacji:0,razem:1});
+  assert.deepEqual(API.pobierzKomunikaty(o).doWeryfikacji,[]);
+});
+test('Zdrobnienia zachowują wiek, uwagi dat, ręczne decyzje i oryginał',()=>{
+  const tekst='  Piotrek 18/11/2008 Nowak  ';
+  const o=zdrobW(tekst);
+  assert.equal(o.oryginalnyWiersz,tekst);
+  assert.equal(API.obliczWiek(o,'2026-11-18').wiek,18);
+  assert.equal(o.kategoriaAutomatyczna,M);
+  const reczna=API.ustawKlasyfikacjeReczna(o,K);
+  assert.equal(API.pobierzKategorie(reczna),K);
+  assert.equal(reczna.kategoriaAutomatyczna,M);
+  assert.deepEqual(info12(reczna),info12(o));
+  const bledna=zdrobW('Piotrek Nowak 31.02.2008');
+  assert.equal(bledna.kategoriaAutomatyczna,M);
+  assert.ok(kody(API.pobierzKomunikaty(bledna).doWeryfikacji).includes('BLEDNA_DATA'));
+});
+
+test('Przeciwne nazwisko nadal daje tylko ostrzeżenie, gdy samodzielne imię i zdrobnienie są zgodne', () => {
+  const o = zdrobW('Piotrek Jan Kowalska');
+  assert.equal(o.kategoriaAutomatyczna, M);
+  assert.equal(o.zrodlo, 'imiona');
+  assert.ok(kody(info12(o)).includes('NAZWISKO_PRZECIWNE_WYNIKOWI'));
+  assert.equal(zdrobW('Piotrek Kowalska').sugestia, null);
+});
+
+test('PESEL z rozpoznanym zdrobnieniem nie zgłasza braku imienia', () => {
+  const o = zdrobW('Piotrek ' + pk);
+  assert.equal(o.kategoriaAutomatyczna, K);
+  assert.deepEqual(kody(info12(o)), ['MOZLIWE_ZDROBNIENIE']);
+});

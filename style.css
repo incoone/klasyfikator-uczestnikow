@@ -71,7 +71,8 @@ p { margin-top: 0; }
 .review-meta { color: var(--muted); font-size: .82rem; }
 .reason { margin: 4px 0 0; font-size: .9rem; overflow-wrap: anywhere; }
 .suggestion { color: var(--muted); font-size: .85rem; margin: 6px 0 0; }
-.review-item > .button { margin-top: 12px; min-height: 34px; padding: 5px 12px; font-size: .88rem; }
+.review-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.review-actions .button { min-height: 40px; max-width: 100%; padding: 7px 12px; font-size: .88rem; }
 .editor { margin-top: 12px; padding: 14px; background: #f5f8fc; border: 1px solid #d5e0ed; border-radius: 8px; }
 .editor-title { font-weight: 650; margin-bottom: 10px; }
 .editor-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(165px, 220px); gap: 12px; }
@@ -82,6 +83,7 @@ p { margin-top: 0; }
 .editor .actions { margin-top: 10px; }
 .editor-error { margin: 9px 0 0; font-size: .85rem; color: #a52828; }
 .footer { text-align: center; font-size: .82rem; padding: 4px 0; }
+.version-info { margin: 8px 0 0; font-size: .78rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .age-settings { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); font-size: .92rem; }
 .date-setting { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
@@ -118,8 +120,10 @@ p { margin-top: 0; }
 .record-notes li + li { margin-top: 4px; }
 .editor-basis { margin: 8px 0 12px; color: var(--muted); font-size: .85rem; }
 .name-stats { margin-top: 12px; min-width: 0; }
+.stats-heading { margin: 12px 0 6px; font-size: .9rem; }
+.age-auto-hint { margin: 8px 0 0; }
 .name-stats .hint { margin: 6px 0 0; font-size: .8rem; }
-.name-stats-table { font-size: .84rem; min-width: 360px; font-variant-numeric: tabular-nums; }
+.name-stats-table { font-size: .84rem; min-width: 520px; font-variant-numeric: tabular-nums; }
 .name-stats-table th, .name-stats-table td { padding: 6px 8px; }
 .name-stats-table tbody th { background: #fff; font-size: inherit; overflow-wrap: anywhere; }
 .name-stats-table tr:last-child th { border-bottom: 0; }
@@ -151,6 +155,7 @@ p { margin-top: 0; }
   .results-table th, .results-table td { padding: 8px; }
   .results-table .col-basis { width: 33%; }
   .editor-fields { grid-template-columns: 1fr; }
+  .review-actions .button { flex: 1 1 140px; min-width: 0; }
   .participants-table .col-basis { width: 18%; }
   .participants-table .editor { max-width: calc(100vw - 74px); }
   .age-options { padding: 10px; }

@@ -6,9 +6,9 @@
   <meta name="color-scheme" content="light">
   <meta name="referrer" content="no-referrer">
   <title>Klasyfikator uczestników</title>
-  <link rel="stylesheet" href="./style.css?v=1.1.2">
-  <script src="./script.js?v=1.1.2" defer></script>
-  <script src="./interfejs.js?v=1.1.2" defer></script>
+  <link rel="stylesheet" href="./style.css?v=1.2-r6">
+  <script src="./script.js?v=1.2-r6" defer></script>
+  <script src="./interfejs.js?v=1.2-r7" defer></script>
 </head>
 <body>
   <main class="container">
@@ -53,13 +53,14 @@
             </div>
           </fieldset>
           <p id="event-error" class="editor-error" role="alert" hidden></p>
+          <p class="hint age-auto-hint">Po analizie zmiana daty wydarzenia lub ustawień progów wiekowych automatycznie aktualizuje wyniki.</p>
         </div>
         <div class="actions">
           <button id="analyze-button" class="button button-primary" type="submit" disabled>Analizuj listę</button>
           <button id="clear-button" class="button button-secondary" type="button">Wyczyść</button>
         </div>
       </form>
-      <p id="status" class="status" role="status" aria-live="polite">Wczytywanie słownika imion...</p>
+      <p id="status" class="status" role="status" aria-live="polite">Wczytywanie słowników imion, nazwisk i zdrobnień...</p>
     </section>
 
     <section id="results" class="panel" aria-labelledby="results-title" hidden>
@@ -108,7 +109,10 @@
       </details>
     </section>
 
-    <footer class="footer">Wpisane dane są przetwarzane wyłącznie w przeglądarce. Nie są wysyłane ani zapisywane przez aplikację.</footer>
+    <footer class="footer">
+      Wpisane dane są przetwarzane wyłącznie w przeglądarce. Nie są wysyłane ani zapisywane przez aplikację.
+      <p class="version-info">Projekt w fazie rozwoju - wersja 1.2 - ostatnia modyfikacja: <time datetime="2026-11-17">17.11.2026</time></p>
+    </footer>
   </main>
 </body>
 </html>

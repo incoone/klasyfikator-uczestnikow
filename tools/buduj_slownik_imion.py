@@ -18,12 +18,18 @@ Wykazy pierwszych imion kobiet i mężczyzn przekazujemy osobno.
 Nie należy ich wcześniej filtrować, ponieważ liczymy sumy obu płci.
 
 Uruchomienie z katalogu projektu (Windows, Python 3.8+):
-    py tools\generuj_imiona.py
+    py tools\buduj_slownik_imion.py
 
 Bez argumentów skrypt sam znajdzie dwa CSV w folderze zrodla_imion/ obok tools/,
 rozpozna płeć z kolumny PŁEĆ i zapisze imiona.json w katalogu projektu.
 Można też podać ścieżki ręcznie:
-    py tools\generuj_imiona.py "zrodla_imion\kobiety.csv" "zrodla_imion\mezczyzni.csv"
+    py tools\buduj_slownik_imion.py "zrodla_imion\kobiety.csv" "zrodla_imion\mezczyzni.csv"
+
+Domyślny próg wynosi 30 wystąpień łącznie dla obu płci.
+Można go zmienić bez edycji kodu:
+    py tools\buduj_slownik_imion.py --prog 50
+
+Raport porównuje również progi 10, 20, 30, 50 i 100.
 
 Przy ręcznym wskazywaniu plików domyślny wynik powstaje w bieżącym
 katalogu terminala. Opcja -o pozwala wskazać inną lokalizację.
@@ -42,7 +48,8 @@ import unicodedata
 from pathlib import Path
 
 
-MINIMUM = 100
+MINIMUM = 30
+COMPARISON_THRESHOLDS = (10, 20, 30, 50, 100)
 HEADER = ("IMIĘ_PIERWSZE", "PŁEĆ", "LICZBA_WYSTĄPIEŃ")
 EXPECTED_GENDER = {"kobiety": "KOBIETA", "mezczyzni": "MĘŻCZYZNA"}
 SAMPLE_NAMES = ("ANNA", "MARIA", "MARTA", "PIOTR", "JAN", "NUR", "KIM", "AALIYAH", "AARON")
@@ -83,10 +90,11 @@ def calculate_sha256(path):
     return digest.hexdigest()
 
 
-def read_csv(path, role):
+def read_csv(path, role, minimum=MINIMUM):
     """Czyta CSV, sprawdzając kolejno nagłówek, każdy wiersz i zakres liczb.
 
-    Brak imion z liczbą wystąpień <=100 traktujemy jako błąd: takie dane
+    Brak imion z liczbą wystąpień w zakresie najniższego badanego progu
+    traktujemy jako błąd: takie dane
     mogły zostać wstępnie odfiltrowane osobno dla każdej płci, co zaburza
     późniejsze wyliczanie proporcji. Zmiana kolejności rekordów to tylko
     ostrzeżenie, ponieważ w przyszłości sposób sortowania może się zmienić.
@@ -98,6 +106,9 @@ def read_csv(path, role):
     names = {}
     normalized_names = set()
     count = 0
+    # Raport obejmuje także próg 10, dlatego sprawdzamy również jego zakres.
+    # Wykazy mogą nie publikować pojedynczych wystąpień.
+    source_limit = max(2, min(minimum, min(COMPARISON_THRESHOLDS)))
     has_small_numbers = False
     order_violations = 0
     previous_number = None
@@ -146,7 +157,7 @@ def read_csv(path, role):
                     raise InputError(f"{path.name}, wiersz {line}: duplikat imienia {name!r}.")
                 names[name] = occurrences
                 normalized_names.add(key)
-                if occurrences <= MINIMUM:
+                if occurrences <= source_limit:
                     has_small_numbers = True
                 if previous_number is not None and occurrences > previous_number:
                     order_violations += 1
@@ -159,7 +170,7 @@ def read_csv(path, role):
 
     if not has_small_numbers:
         raise InputError(
-            f"{path.name}: brak imion o liczbie wystąpień mniejszej lub równej {MINIMUM}. "
+            f"{path.name}: brak imion o liczbie wystąpień mniejszej lub równej {source_limit}. "
             "Możliwe, że CSV wstępnie odfiltrowano. Pobierz pełny wykaz - "
             "bez niego proporcje płci mogą być błędne. JSON nie został zapisany."
         )
@@ -175,8 +186,10 @@ def read_csv(path, role):
     }
 
 
-def generate(female, male, female_sha256, male_sha256):
-    """Łączy wystąpienia obu płci, a próg 100 stosuje dopiero do ich sumy."""
+def generate(female, male, female_sha256, male_sha256, minimum=MINIMUM):
+    """Łączy wystąpienia obu płci, a wybrany próg stosuje dopiero do ich sumy."""
+    if type(minimum) is not int or minimum < 1:
+        raise InputError("Próg musi być dodatnią liczbą całkowitą.")
     combined = {name: [count, 0] for name, count in female.items()}
     for name, count in male.items():
         combined.setdefault(name, [0, 0])[1] = count
@@ -184,13 +197,13 @@ def generate(female, male, female_sha256, male_sha256):
     filtered = {
         name: combined[name]
         for name in sorted(combined, key=alphabetical_key)
-        if sum(combined[name]) >= MINIMUM
+        if sum(combined[name]) >= minimum
     }
     payload = {
         "meta": {
             "zrodlo": "Ministerstwo Cyfryzacji - dane.gov.pl, zbior 1667 (osoby zyjace)",
             "stan_na": "",
-            "minimum_wystapien": MINIMUM,
+            "minimum_wystapien": minimum,
             "kolejnosc_liczb": ["kobiety", "mezczyzni"],
             "zasoby": {"kobiety": "", "mezczyzni": ""},
             "sha256": {"kobiety": female_sha256, "mezczyzni": male_sha256},
@@ -204,11 +217,13 @@ def generate(female, male, female_sha256, male_sha256):
     return payload, combined
 
 
-def validate_payload(payload, combined):
+def validate_payload(payload, combined, minimum=MINIMUM):
     """Porównuje wynik z połączonymi CSV i upewnia się, że filtr nic nie zgubił."""
     items = payload["imiona"]
+    if type(minimum) is not int or minimum < 1 or payload["meta"]["minimum_wystapien"] != minimum:
+        raise InputError("Kontrola JSON nie powiodła się: błędny próg w metadanych.")
     expected = {
-        name: pair for name, pair in combined.items() if sum(pair) >= MINIMUM
+        name: pair for name, pair in combined.items() if sum(pair) >= minimum
     }
     if items != expected:
         raise InputError("Kontrola JSON nie powiodła się: niezgodność danych ze źródłami.")
@@ -218,13 +233,13 @@ def validate_payload(payload, combined):
         not isinstance(pair, list)
         or len(pair) != 2
         or not all(isinstance(value, int) and value >= 0 for value in pair)
-        or sum(pair) < MINIMUM
+        or sum(pair) < minimum
         for pair in items.values()
     ):
         raise InputError("Kontrola JSON nie powiodła się: błędne liczby lub próg wystąpień.")
 
 
-def save_validated_json(output, payload, combined, source_paths):
+def save_validated_json(output, payload, combined, source_paths, minimum=MINIMUM):
     """Zapisuje bezpiecznie: dopiero po kontroli zastępuje istniejący plik.
 
     Jeśli wystąpi błąd, stary imiona.json nie zostaje nadpisany częściowym
@@ -235,7 +250,7 @@ def save_validated_json(output, payload, combined, source_paths):
             raise InputError("Ścieżka wynikowa jest taka sama jak wejściowy CSV.")
     if not output.parent.is_dir():
         raise InputError(f"Katalog wynikowy nie istnieje: {output.parent}")
-    validate_payload(payload, combined)
+    validate_payload(payload, combined, minimum)
     content = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
     temporary_path = None
@@ -252,7 +267,7 @@ def save_validated_json(output, payload, combined, source_paths):
             check = json.load(stream)
         if check != payload:
             raise InputError("Kontrola po zapisie nie powiodła się: różne dane JSON.")
-        validate_payload(check, combined)
+        validate_payload(check, combined, minimum)
         os.replace(temporary_path, output)
         temporary_path = None
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
@@ -338,6 +353,20 @@ def find_csv_in_source_directory():
     return paths, project_dir
 
 
+def print_threshold_comparison(combined, minimum):
+    """Porównuje liczebność słowników dla kilku progów na tych samych danych."""
+    print("\nPorównanie progów (łącznie kobiety i mężczyźni):")
+    print(f"{'Próg':>6} {'Imiona':>10} {'W obu wykazach':>16} {'Różnica vs 100':>16}")
+    baseline = sum(sum(pair) >= 100 for pair in combined.values())
+    for threshold in sorted(set(COMPARISON_THRESHOLDS) | {minimum}):
+        count = sum(sum(pair) >= threshold for pair in combined.values())
+        both = sum(
+            women > 0 and men > 0 and women + men >= threshold
+            for women, men in combined.values()
+        )
+        print(f"{threshold:>6} {count:>10,} {both:>16,} {count - baseline:>+16,}")
+
+
 def print_report(output_path, female, male, female_info, male_info, combined, payload, size):
     """Pokazuje podsumowanie, ostrzeżenia i przykładowe rekordy do sprawdzenia."""
     print(f"Gotowe: {output_path.resolve()}")
@@ -346,7 +375,8 @@ def print_report(output_path, female, male, female_info, male_info, combined, pa
     print(f"SHA-256 kobiet: {female_info['sha256']}")
     print(f"SHA-256 mężczyzn: {male_info['sha256']}")
     print(f"Unikalnych imion przed filtrowaniem: {len(combined):,}")
-    print(f"Imion po filtrowaniu (suma >= {MINIMUM}): {len(payload['imiona']):,}")
+    minimum = payload["meta"]["minimum_wystapien"]
+    print(f"Imion po filtrowaniu (suma >= {minimum}): {len(payload['imiona']):,}")
     print(f"Imion w obu wykazach przed filtrowaniem: {len(female.keys() & male.keys()):,}")
     print(
         "Imion w obu wykazach po filtrowaniu: "
@@ -354,6 +384,7 @@ def print_report(output_path, female, male, female_info, male_info, combined, pa
     )
     print(f"Rozmiar JSON: {size:,} bajtów ({size / 1024:.1f} KiB)")
     print("Kontrola poprawności: OK (CSV, liczby, duplikaty, próg, zgodność JSON)")
+    print_threshold_comparison(combined, minimum)
 
     for role, info in (("kobiet", female_info), ("mężczyzn", male_info)):
         if info["order_violations"]:
@@ -389,7 +420,13 @@ def main(argv=None):
         "-o", "--output", default=None,
         help="Ścieżka wynikowa (domyślnie imiona.json w katalogu projektu)",
     )
+    parser.add_argument(
+        "--prog", "--minimum", type=int, default=MINIMUM,
+        help=f"Minimalna łączna liczba wystąpień imienia (domyślnie {MINIMUM})",
+    )
     args = parser.parse_args(argv)
+    if args.prog < 1:
+        parser.error("--prog musi być dodatnią liczbą całkowitą")
 
     automatic = find_csv_in_source_directory() if not args.kobiety and not args.mezczyzni else None
     if automatic is not None:
@@ -407,13 +444,13 @@ def main(argv=None):
     if female_path.resolve() == male_path.resolve():
         raise InputError("Wskazano ten sam plik dla kobiet i mężczyzn.")
 
-    female, female_info = read_csv(female_path, "kobiety")
-    male, male_info = read_csv(male_path, "mezczyzni")
+    female, female_info = read_csv(female_path, "kobiety", args.prog)
+    male, male_info = read_csv(male_path, "mezczyzni", args.prog)
     payload, combined = generate(
-        female, male, female_info["sha256"], male_info["sha256"]
+        female, male, female_info["sha256"], male_info["sha256"], args.prog
     )
     size = save_validated_json(
-        output_path, payload, combined, (female_path, male_path)
+        output_path, payload, combined, (female_path, male_path), args.prog
     )
     print_report(output_path, female, male, female_info, male_info, combined, payload, size)
     return 0

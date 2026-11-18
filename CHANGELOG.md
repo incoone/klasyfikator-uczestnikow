@@ -1,5 +1,30 @@
 # Historia zmian
 
+## v1.2
+
+### Nowe funkcje
+
+- Rozszerzono słownik imion z 3 668 do 8 136 pozycji, obniżając minimalną łączną liczbę wystąpień ze 100 do 30.
+- Dodano słownik 117 159 nazwisk z podziałem na liczbę wystąpień u kobiet i mężczyzn.
+- Dodano analizę kolizji imion i nazwisk oraz rozpoznawanie roli poszczególnych członów na podstawie kontekstu i statystyk, niezależnie od kolejności.
+- Umożliwiono klasyfikację wspartą silnym wskazaniem nazwiska przy zgodnych, niejednoznacznych imionach. Samo nazwisko nie przesądza o płci.
+- Dodano słownik 1 101 zdrobnień i form potocznych oraz ostrożną automatyczną klasyfikację na podstawie jednoznacznych zdrobnień, gdy spełnione są wymagane warunki kontekstowe.
+- Dodano szybkie ręczne przypisywanie płci uczestnika w sekcji weryfikacji.
+
+### Zmiany i usprawnienia
+
+- Rozbudowano szczegóły wyników o statystyki nazwisk, rolę członów i pełne odpowiedniki zdrobnień.
+- Rozszerzono uwagi informacyjne o rzadkości imion, kolizjach, zdrobnieniach i możliwej pisowni z polskimi znakami.
+- Zaktualizowano interfejs, przykładowe dane i stronę pomocy.
+- Dodano skrypt do budowania słownika nazwisk i zaktualizowano generator słownika imion.
+- Rozszerzono zestaw testów automatycznych algorytmu do 265 przypadków.
+
+### Bez zmian
+
+- Dane uczestników są przetwarzane wyłącznie lokalnie w przeglądarce.
+- Zachowano próg jednoznaczności imion 99,90%, obsługę PESEL, dat urodzenia i statystyk wiekowych.
+- Projekt pozostaje dostępny na licencji MIT.
+
 ## v1.1
 
 ### Nowe funkcje
