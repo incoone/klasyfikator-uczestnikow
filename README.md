@@ -9,7 +9,8 @@ Projekt powstał z myślą o listach, których dane nie zawsze mają jednolity f
 ## Jak działa?
 
 - Klasyfikuje uczestników na podstawie rozpoznanych imion i numerów PESEL, jeśli zostały podane. W określonych przypadkach wykorzystuje także statystyki nazwisk i jednoznaczne zdrobnienia.
-- Rozpoznaje człony występujące zarówno jako imiona, jak i nazwiska, i analizuje ich rolę na podstawie kontekstu oraz statystyk, bez zakładania kolejności danych.
+- Rozpoznaje człony występujące zarówno jako imiona, jak i nazwiska, i analizuje ich rolę na podstawie kontekstu oraz statystyk, bez zakładania kolejności danych. W przypadku dokładnie dwóch członów stosuje dodatkowe reguły rozstrzygania ich ról.
+- Rozpoznaje zdrobnienia także w określonych przypadkach kolizji z nazwiskami lub zapisu bez polskich znaków. Nie zmienia oryginalnych danych uczestnika i kieruje sprzeczne wskazania do weryfikacji zgodnie z regułami algorytmu.
 - Dzieli uczestników na trzy kategorie: kobiety, mężczyźni oraz osoby do weryfikacji. Umożliwia szybkie ręczne przypisanie płci i edycję danych uczestnika.
 - Rozpoznaje i sprawdza daty urodzenia w różnych formatach oraz weryfikuje ich zgodność z datami zakodowanymi w numerach PESEL.
 - Oblicza wiek na wybrany dzień wydarzenia, niezależnie od klasyfikacji płci.
@@ -39,7 +40,17 @@ Szczegółowe zasady działania i ograniczenia algorytmu opisano w sekcji [Jak d
 
 ## Historia zmian
 
-Aktualna wersja: 1.2. Zobacz [historię zmian](CHANGELOG.md).
+Aktualna wersja: 1.2.2. Zobacz [historię zmian](CHANGELOG.md).
+
+## Dokumentacja techniczna i testy
+
+Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Szczegóły integracji, publicznego API i kolejności ładowania modułów opisano w [dokumentacji API 1.2.2](API-1.2.2.md).
+
+Zestaw obejmuje 448 testów automatycznych. Można je uruchomić w Node.js z katalogu głównego projektu:
+
+```sh
+node --test tests/*.test.js
+```
 
 ## Licencja
 

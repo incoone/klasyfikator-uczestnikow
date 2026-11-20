@@ -1,5 +1,42 @@
 # Historia zmian
 
+## v1.2.2 - Kontekstowe rozpoznawanie imion i nazwisk
+
+### Zmiany w klasyfikacji
+
+- Wprowadzono dodatkową analizę dokładnie dwóch członów tekstowych, uwzględniającą role wstępne, statystyki oraz kontekst, niezależnie od kolejności danych.
+- W analizie pary ujednolicono próg przewagi statystycznej imienia i nazwiska do 50:1, przy minimum 100 wystąpieniach roli dominującej.
+- Rozszerzono klasyfikację na podstawie zdrobnień o wybrane przypadki kolizji z nazwiskami, w tym pary dwóch statystycznie rozpoznanych nazwisk.
+- Dodano ograniczone rozpoznawanie zdrobnień zapisanych bez polskich znaków, jeżeli dopasowanie jest jednoznaczne i spełnia wymagane warunki kontekstowe.
+- Zabezpieczono klasyfikację ze zdrobnień przed pomijaniem przeciwnego jednoznacznego wskazania samodzielnego imienia uznanego kontekstowo za nazwisko.
+- Rozbudowano uzasadnienia wyników wymagających weryfikacji oraz uwagi dotyczące kontekstowego rozstrzygania ról i zdrobnień.
+
+### Interfejs i testy
+
+- Dostosowano interfejs i stronę pomocy do nowych reguł, podstaw rozstrzygania ról i komunikatów.
+- Zaktualizowano dokumentację API i rozszerzono zestaw do 448 testów automatycznych.
+
+### Bez zmian
+
+- Zachowano próg jednoznaczności płci imienia 99,90%, reguły walidacji PESEL-u, dat urodzenia i obliczania wieku.
+- Słowniki, dane źródłowe i lokalny sposób przetwarzania danych uczestników pozostają bez zmian.
+
+## v1.2.1 - Porządkowanie kodu
+
+### Zmiany techniczne
+
+- Podzielono logikę aplikacji na cztery moduły w katalogu `core/`: `klasyfikator.js`, `pesel.js`, `daty.js` i `komunikaty.js`.
+- Zastąpiono `script.js` głównym modułem `core/klasyfikator.js` i dostosowano kolejność ładowania skryptów oraz integrację interfejsu.
+- Wydzielono testy do katalogu `tests/`, dzieląc je według odpowiedzialności modułów.
+- Zaktualizowano dokumentację API, instrukcje integracji i stronę pomocy.
+- Zestaw 267 testów automatycznych obejmuje wszystkie 265 wcześniejszych przypadków oraz dwa nowe testy formatowania komunikatów.
+
+### Bez zmian
+
+- Zachowano zasady klasyfikacji, publiczne API, struktury wyników oraz treści komunikatów.
+- Słowniki i dane źródłowe pozostają bez zmian.
+- Dane uczestników są nadal przetwarzane lokalnie w przeglądarce.
+
 ## v1.2
 
 ### Nowe funkcje

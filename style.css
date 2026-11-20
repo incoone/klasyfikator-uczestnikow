@@ -143,6 +143,7 @@ p { margin-top: 0; }
 .info-level-label { font-size: .77rem; font-weight: 650; color: var(--info-label); }
 .info-messages { margin: 8px 0 0; padding-left: 20px; font-size: .88rem; }
 .info-messages li + li { margin-top: 4px; }
+.info-message-level { display: inline-block; margin-left: .4em; font-size: .75rem; font-weight: 650; color: var(--info-label); background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 4px; padding: 0 .35em; }
 .info-notes > .pesel-disclaimer { margin-bottom: 0; }
 @media (max-width: 640px) {
   .container { padding: 16px 12px 28px; }
@@ -178,6 +179,7 @@ p { margin-top: 0; }
 .help-section h2 { margin: 0 0 17px; padding-bottom: 10px; border-bottom: 1px solid var(--border); font-size: clamp(1.15rem, 2.5vw, 1.35rem); }
 .help-section h3 { margin: 24px 0 10px; font-size: 1.04rem; line-height: 1.4; }
 .help-section h3:first-of-type { margin-top: 18px; }
+.help-section h4 { margin: 16px 0 8px; font-size: .98rem; line-height: 1.4; }
 .help-section p { margin: 0 0 14px; }
 .help-section p:last-child { margin-bottom: 0; }
 .help-section ul { margin: 0 0 16px; padding-left: 25px; }

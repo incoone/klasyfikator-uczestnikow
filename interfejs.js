@@ -1,4 +1,4 @@
-/* Warstwa interfejsu. Nie zmienia algorytmu w script.js.
+/* Warstwa interfejsu. Nie zmienia algorytmu w modułach core/.
  * Dane uczestników pozostają w pamięci strony (bez localStorage i wysyłania).
  */
 (() => {
@@ -19,12 +19,18 @@
   const formatLiczby = new Intl.NumberFormat('pl-PL', { useGrouping: 'always' });
   const ROLE_CZLONOW = { imie: 'Imię', nazwisko: 'Nazwisko', nierozstrzygnieta: 'Nierozstrzygnięta' };
   const PODSTAWY_ROLI = Object.freeze({
-    PRZEWAGA_NAZWISKA: 'Nazwisko (przewaga w statystykach)',
+    TYLKO_IMIE: 'Imię (dopasowanie do słownika imion)',
+    TYLKO_NAZWISKO: 'Nazwisko (dopasowanie wyłącznie do słownika nazwisk)',
+    PRZEWAGA_NAZWISKA: 'Nazwisko (co najmniej 50-krotna przewaga w statystykach)',
+    PRZEWAGA_IMIENIA_50: 'Imię (co najmniej 50-krotna przewaga w statystykach)',
+    KONTEKST_IMIENIA_DWA_CZLONY: 'Prawdopodobne imię (kontekst dwóch członów)',
+    KONTEKST_NAZWISKA_DWA_CZLONY: 'Prawdopodobne nazwisko (kontekst dwóch członów)',
+    TYLKO_ZDROBNIENIE: 'Prawdopodobne imię (dopasowanie wyłącznie do zdrobnień)',
     PRZEWAGA_IMIENIA_30: 'Imię (co najmniej 30-krotna przewaga w statystykach)',
     PRZEWAGA_IMIENIA_10_DWA_CZLONY: 'Imię (przewaga w statystykach i kontekst dwóch członów)',
     PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM: 'Imię (przewaga w statystykach i rozpoznane nazwisko)',
     KONTEKST_DWOCH_CZLONOW: 'Prawdopodobne imię (kontekst dwóch członów)',
-    KONTEKST_ZDROBNIENIA: 'Prawdopodobne imię (kontekst zdrobnienia)'
+    KONTEKST_ZDROBNIENIA: 'Prawdopodobne imię'
   });
   const OBSZARY_UWAG = { plec: 'Płeć', wiek: 'Wiek', dane: 'Dane' };
   const KOMUNIKAT_ANALIZY = 'Analiza zakończona. Możesz przejrzeć wyniki w każdej z trzech kategorii. Zmiana daty wydarzenia lub ustawień progów wiekowych automatycznie aktualizuje wyniki. Ponowna analiza jest potrzebna tylko po zmianie listy uczestników w głównym polu.';
@@ -193,12 +199,12 @@ Kowalski
 
   async function wczytajSlownik() {
     if (!api) {
-      komunikat('Nie udało się uruchomić script.js. Sprawdź, czy plik znajduje się obok index.html.', true);
+      komunikat('Nie udało się uruchomić klasyfikatora. Sprawdź kompletność modułów w katalogu core/.', true);
       return;
     }
     if (typeof api.obliczWiek !== 'function' || typeof api.statystykiWiekowe !== 'function' ||
         typeof api.parsujProgi !== 'function' || typeof api.pobierzKomunikaty !== 'function' || !Array.isArray(api.PROGI_TURYSTYCZNE)) {
-      komunikat('Interfejs 1.2 wymaga aktualnego script.js. Zaktualizuj algorytm.', true);
+      komunikat('Interfejs 1.2.2 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
       return;
     }
     $('tourism-thresholds').textContent = api.PROGI_TURYSTYCZNE.join(', ') + ' lat';
@@ -217,16 +223,17 @@ Kowalski
         }
       }));
       const nowy = api.utworzKlasyfikator(...slowniki);
-      // Starszy script.js ignoruje dodatkowe argumenty. Nie uruchamiamy go po cichu.
-      const kontrola = nowy.klasyfikujWiersz('Test');
+      // Sprawdź zgodność struktury wyniku z aktualnym API.
+      const kontrola = nowy.klasyfikujWiersz('Test Test');
       if (!Array.isArray(kontrola.czlonyTekstowe) || !Array.isArray(kontrola.rozpoznaneNazwiska) ||
-          !Array.isArray(kontrola.rozpoznaneZdrobnienia)) throw new Error('Wymagany jest script.js w wersji 1.2.');
+          !Array.isArray(kontrola.rozpoznaneZdrobnienia) || !kontrola.czlonyTekstowe.every(c => 'rolaWstepna' in c))
+        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.2.');
       klasyfikator = nowy;
       $('analyze-button').disabled = false;
       komunikat('Wczytano słowniki: ' + ['imiona', 'nazwiska', 'zdrobnienia'].map((nazwa, i) =>
         nazwa + ' - ' + formatLiczby.format(Object.keys(slowniki[i][nazwa]).length)).join(', ') + '. Możesz rozpocząć analizę.');
     } catch (error) {
-      komunikat('Nie udało się uruchomić klasyfikatora. Sprawdź trzy słowniki i script.js. Przy otwieraniu z dysku użyj lokalnego serwera HTTP. (' + error.message + ')', true);
+      komunikat('Nie udało się uruchomić klasyfikatora. Sprawdź trzy słowniki oraz moduły w katalogu core/. Przy otwieraniu z dysku użyj lokalnego serwera HTTP. (' + error.message + ')', true);
     }
   }
 
@@ -296,7 +303,7 @@ Kowalski
         (uwaga.klucz ? i.klucz === uwaga.klucz : uwaga.opis.startsWith('Rozpoznane imię: ' + i.tekst + '.')));
       if (imie) {
         const s = imie.statystyki;
-        opis = 'W opublikowanych danych rejestru PESEL imię ' + imie.tekst + ' występuje wśród ' +
+        opis += ' W opublikowanych danych rejestru PESEL imię ' + imie.tekst + ' występuje wśród ' +
           formatLiczby.format(s.kobiety) + (s.kobiety === 1 ? ' kobiety' : ' kobiet') + ' i ' +
           formatLiczby.format(s.mezczyzni) + (s.mezczyzni === 1 ? ' mężczyzny' : ' mężczyzn') +
           ' (' + formatProcentu.format(Math.max(s.procentKobiet, s.procentMezczyzn)) +
@@ -306,7 +313,7 @@ Kowalski
     } else if (uwaga.kod === 'ZGODNE_SLABE_IMIE') {
       const a = nazwyImion(zgodne);
       const b = nazwyImion(i => i.statystyki.progOsiagniety && i.plec === wynik.kategoriaAutomatyczna);
-      if (a && b) opis = 'Imię (' + a + ') poniżej progu wskazuje tę samą płeć co imię jednoznaczne (' + b + ').';
+      if (a && b) opis += ' Poniżej progu: ' + a + '. Imię jednoznaczne: ' + b + '.';
     } else if (uwaga.kod === 'PESEL_REMIS') {
       const a = nazwyImion(i => slabe(i) && i.sugestia === null);
       if (a) opis = opis.replace('statystykach imienia.', 'statystykach imienia (' + a + ').');
@@ -316,11 +323,15 @@ Kowalski
     } else if (uwaga.kod === 'BLEDNY_PESEL') {
       const bledy = wynik.pesel.znalezione.filter(n => n.bledy.length).map(n => '„' + n.numer + '”: ' + n.bledy.join(' '));
       if (bledy.length) opis = opis.replace('Szczegóły w wyniku sprawdzenia numeru.', bledy.join(' '));
-    } else if (uwaga.kod === 'ROLA_NAZWISKA_ZE_STATYSTYK' || uwaga.kod === 'NIEROZSTRZYGNIETA_ROLA') {
+    } else if (['ROLA_NAZWISKA_ZE_STATYSTYK', 'ROLA_IMIENIA_ZE_STATYSTYK', 'ROLA_IMIENIA_Z_KONTEKSTU',
+      'ROLA_NAZWISKA_Z_KONTEKSTU', 'NIEROZSTRZYGNIETA_ROLA'].includes(uwaga.kod)) {
       const i = wynik.rozpoznaneImiona.find(i => i.klucz === uwaga.klucz);
       const n = wynik.rozpoznaneNazwiska.find(n => n.klucz === uwaga.klucz);
+      const z = wynik.rozpoznaneZdrobnienia.find(z => z.klucz === uwaga.klucz);
       if (i && n) opis += ' W słownikach: imię - ' + liczebnosc(i.statystyki) +
         '; nazwisko - ' + liczebnosc(n.statystyki) + '.';
+      else if (z && n) opis += ' W słownikach: brak wpisu samodzielnego imienia; nazwisko - ' + liczebnosc(n.statystyki) +
+        '; zdrobnienie - możliwe pełne formy: ' + z.odpowiedniki.map(o => ladnaNazwa(o.klucz)).join(', ') + '.';
     } else if (uwaga.kod === 'KLASYFIKACJA_WSPARTA_NAZWISKIEM') {
       const nazwiska = wynik.rozpoznaneNazwiska.filter(n => n.rola === 'nazwisko' && n.statystyki.silneWskazanie);
       opis += ' Rozpoznane imiona: ' + imiona.map(i => i.tekst + ' - ' + liczebnosc(i.statystyki)).join('; ') +
@@ -367,9 +378,15 @@ Kowalski
 
   function listaUwag(wynik, uwagi, informacyjne = false) {
     const ul = element('ul', informacyjne ? 'info-messages' : 'record-notes');
+    const rozneWaznosci = informacyjne && new Set(uwagi.map(u => u.severity)).size > 1;
     for (const uwaga of uwagi) {
       const obszar = OBSZARY_UWAG[uwaga.obszar] ?? uwaga.obszar;
-      ul.append(element('li', '', obszar + ': ' + opisKomunikatu(wynik, uwaga)));
+      const li = element('li', '', obszar + ': ' + opisKomunikatu(wynik, uwaga));
+      if (rozneWaznosci) {
+        const ranga = KOLEJNOSC_WAZNOSCI[uwaga.severity] ?? 0;
+        li.append(element('span', 'info-message-level info-level-' + ranga, ETYKIETY_WAZNOSCI[ranga]));
+      }
+      ul.append(li);
     }
     return ul;
   }
@@ -427,10 +444,13 @@ Kowalski
       const ul = element('ul', 'record-notes');
       for (const z of wynik.rozpoznaneZdrobnienia) {
         const czlon = wynik.czlonyTekstowe.find(c => c.pozycja === z.pozycja);
-        ul.append(element('li', '', z.tekst + ' - rola: ' + opisRoli(czlon) + ' - jako samodzielne imię: ' +
+        ul.append(element('li', '', z.tekst +
+          (z.wariantZPolskimiZnakami ? ' (dopasowanie do zdrobnienia: ' + ladnaNazwa(z.wariantZPolskimiZnakami) + ')' : '') +
+          ' - rola: ' + opisRoli(czlon) + ' - jako samodzielne imię: ' +
           liczebnosc(z.statystyki) + '. Możliwe pełne formy: ' +
           z.odpowiedniki.map(o => ladnaNazwa(o.klucz) + ': ' + liczebnosc(o.statystyki)).join('; ') + '.' +
           (z.wykorzystaneDoKlasyfikacji ? ' Na podstawie zdrobnienia ustalono płeć automatycznie: ' + wynik.kategoriaAutomatyczna + '.' : '') +
+          (z.kontekst === 'para_nazwisk' ? ' Rozpoznano kontekst pary nazwisk. Wykorzystanie zdrobnienia nie zmienia roli członu ani nie potwierdza pola imienia.' : '') +
           (z.sprzeczneZPeselem ? ' Pełne formy wskazują płeć przeciwną do wyniku z PESEL-u.' : '')));
       }
       sekcja.append(ul);

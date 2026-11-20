@@ -7,7 +7,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="description" content="Jak działa klasyfikacja uczestników? Instrukcja użytkowania, rozpoznawanie imion, PESEL, daty urodzenia, statystyki wiekowe, weryfikacja wyników i prywatność.">
   <title>Jak działa klasyfikacja uczestników?</title>
-  <link rel="stylesheet" href="./style.css?v=1.2-r6">
+  <link rel="stylesheet" href="./style.css?v=1.2.2">
 </head>
 <body>
   <main class="container help-page">
@@ -17,7 +17,7 @@
     </header>
 
     <section class="panel help-intro" aria-label="Wprowadzenie">
-<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. W wersji 1.2 wykorzystuje statystyki imion i nazwisk pochodzące z polskiego rejestru PESEL, słownik zdrobnień oraz opcjonalne daty urodzenia i numery PESEL.</p>
+<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. W wersji 1.2.2 wykorzystuje statystyki imion i nazwisk pochodzące z polskiego rejestru PESEL, słownik zdrobnień oraz opcjonalne daty urodzenia i numery PESEL. Rozpoznaje również role imion i nazwisk na podstawie kontekstu dwóch członów tekstowych.</p>
 <p>Klasyfikacja płci i ustalanie wieku odbywają się niezależnie. Program wskazuje problemy wymagające ręcznego sprawdzenia oraz dodatkowe uwagi informacyjne.</p>
 <p>Cała analiza odbywa się lokalnie w przeglądarce użytkownika.</p>
     </section>
@@ -127,6 +127,8 @@ Zofia Nowak
 <td>Magda Marek</td>
 <td>Do weryfikacji</td>
 </tr>
+<tr><td>Anna Marek</td><td>Kobieta (Marek jako prawdopodobne nazwisko)</td></tr>
+<tr><td>Pawelek Nowak</td><td>Mężczyzna (na podstawie zdrobnienia)</td></tr>
 </tbody>
 </table></div>
 <p>Bez numeru PESEL automatyczna klasyfikacja jest możliwa, gdy co najmniej jedno uwzględnione imię osiąga próg 99,90%, a wszystkie uwzględnione imiona mają przewagę tej samej płci. Słabsze wskazanie zgodne z jednoznacznym imieniem nie blokuje wyniku, ale może wygenerować uwagę informacyjną.</p>
@@ -148,25 +150,35 @@ Zofia Nowak
 <p>Moglibyśmy założyć, że pierwsze słowo jest imieniem, a drugie nazwiskiem. Jednak dane często pochodzą z formularzy i różnych systemów, w których kolejność może być odwrócona lub pola mogły zostać błędnie wypełnione.</p>
 <p>Dlatego <strong>wolimy skierować taki wpis do ręcznej weryfikacji, zamiast zgadywać i ryzykować błędne automatyczne przypisanie płci</strong>.</p>
 <h3>Rozstrzyganie roli członu</h3>
-<p>Dopasowanie wyłącznie do słownika imion otrzymuje rolę imienia, a dopasowanie wyłącznie do słownika nazwisk - rolę nazwiska. Człon obecny w obu słownikach początkowo ma nierozstrzygniętą rolę. Kolejne reguły mogą przypisać mu rolę nazwiska lub imienia, zanim program oceni płeć.</p>
-<p>Jeżeli człon występuje w obu słownikach, program może potraktować go jako nazwisko wyłącznie wtedy, gdy łącznie spełnione są cztery warunki:</p>
+<h4>Dokładnie dwa człony tekstowe (wersja 1.2.2)</h4>
+<p>Program najpierw rozpoznaje wstępne role obu członów na podstawie trzech słowników. Dopasowanie do imion lub zdrobnień bez dopasowania do nazwisk wskazuje imię, a dopasowanie wyłącznie do nazwisk wskazuje nazwisko. Jeżeli człon występuje jako samodzielne imię i nazwisko, rolę można rozstrzygnąć statystycznie: dominująca rola musi mieć minimum 100 wystąpień i co najmniej 50-krotną przewagę liczebności nad drugą rolą. Obie granice są włączne. Bez takiej przewagi dopasowanie do nazwiska i imienia lub zdrobnienia pozostaje wstępnie niejednoznaczne.</p>
+<p>Następnie program ocenia role w dowolnej kolejności:</p>
+<div aria-label="Rozstrzyganie ról dwóch członów" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead><tr><th scope="col">Role wstępne</th><th scope="col">Wynik</th></tr></thead>
+<tbody>
+<tr><td>Imię + człon niejednoznaczny</td><td>Prawdopodobne nazwisko dla niejednoznacznego członu</td></tr>
+<tr><td>Nazwisko + człon niejednoznaczny</td><td>Prawdopodobne imię dla niejednoznacznego członu</td></tr>
+<tr><td>Pozostałe pary</td><td>Bez zmiany ról; człony niejednoznaczne lub nierozpoznane pozostają nierozstrzygnięte</td></tr>
+</tbody></table></div>
+<p>Przykłady: <strong>Jan Nowak</strong> - przewaga statystyczna imienia Jan; <strong>Filip Sokołowski</strong> - prawdopodobne imię Filip z kontekstu; <strong>Anna Marek</strong> - prawdopodobne nazwisko Marek i klasyfikacja jako kobieta. Każde z tych rozstrzygnięć roli generuje uwagę informacyjną o średniej ważności. W przypadku Magda Marek obie role pozostają nierozstrzygnięte, a przeciwne wskazania imion kierują wpis do weryfikacji.</p>
+<p>Przykład: <strong>Patryk Klimek</strong>. Klimek występuje jako imię 48 razy, a jako nazwisko 19 743 razy. Program przyjmuje rolę nazwiska, nie uwzględnia imienia Klimek przy ocenie płci i klasyfikuje uczestnika na podstawie imienia Patryk. Pominięte dopasowanie pozostaje widoczne w szczegółach.</p>
+<p>Człony uznane za nazwiska nie uczestniczą w zwykłej ocenie imion i zdrobnień. Wyjątki dotyczą konfliktu ze zdrobnieniem i szczególnego kontekstu pary nazwisk (sekcja 3). Pojedynczy PESEL po walidacji nie zmienia ról ustalonych dla pary.</p>
+<h4>Pozostałe długości wiersza</h4>
+<p>Poza nową analizą pary zachowano dotychczasowe reguły. Można potraktować człon obecny w obu słownikach jako nazwisko, gdy łącznie:</p>
 <ul>
 <li>Ma co najmniej 100 opublikowanych wystąpień jako nazwisko.</li>
 <li>Jako nazwisko występuje minimum 50 razy częściej niż jako imię.</li>
 <li>W wierszu znajduje się inne jednoznaczne imię, które samo nie spełnia warunku przewagi nazwiska.</li>
 <li>Nie ma osobnego członu występującego wyłącznie w słowniku nazwisk.</li>
 </ul>
-<p>Przykład: <strong>Patryk Klimek</strong>. Klimek występuje jako imię 48 razy, a jako nazwisko 19 743 razy. Program przyjmuje rolę nazwiska, nie uwzględnia imienia Klimek przy ocenie płci i klasyfikuje uczestnika na podstawie imienia Patryk. Pominięte dopasowanie pozostaje widoczne w szczegółach. Powstaje uwaga informacyjna o przypisaniu roli.</p>
 <p>Po rozpoznaniu nazwisk program rozstrzyga pozostałe kolizje, stosując kolejno następujące zasady:</p>
 <ul>
 <li><strong>Przewaga imienia co najmniej 30-krotna</strong> i minimum 100 wystąpień jako imię - przyjęcie roli imienia bez uwagi o kolizji.</li>
-<li><strong>Dokładnie dwa człony tekstowe</strong>, z których jeden występuje wyłącznie w słowniku nazwisk, a drugi w obu słownikach - przy minimum 100 wystąpieniach imienia i co najmniej 10-krotnej przewadze imienia program przyjmuje rolę imienia bez uwagi o kolizji. W pozostałych przypadkach przyjmuje rolę prawdopodobnego imienia i dodaje uwagę o niskiej ważności.</li>
-<li><strong>Przewaga imienia od 10-krotnej do poniżej 30-krotnej</strong> poza powyższą regułą dwóch członów - przy minimum 100 wystąpieniach imienia i obecności innego rozpoznanego nazwiska program przyjmuje rolę imienia z uwagą o niskiej ważności.</li>
+<li><strong>Przewaga imienia od 10-krotnej do poniżej 30-krotnej</strong> - przy minimum 100 wystąpieniach imienia i obecności innego rozpoznanego nazwiska program przyjmuje rolę imienia z uwagą o niskiej ważności.</li>
 <li>W pozostałych przypadkach rola pozostaje nierozstrzygnięta i człon nadal uczestniczy w analizie imion.</li>
 </ul>
-<p>Przewaga oznacza porównanie łącznej liczby wystąpień członu jako imienia i jako nazwiska, niezależnie od płci. Samodzielne liczby, PESEL i numeryczne fragmenty dat nie zwiększają liczby członów tekstowych, ale dodatkowe napisy, np. „Lp” lub „A123”, już tak. Reguła dwóch członów nie działa, gdy oba występują w obu słownikach.</p>
-<p>Przykłady: <strong>Jan Nowak</strong> i <strong>Filip Sokołowski</strong> nie generują uwagi o kolizji. W przypadku <strong>Witek Nowak</strong> program rozpoznaje Witka jako prawdopodobne imię dzięki kontekstowi i dodaje uwagę o niskiej ważności, niezależnie od uwag o rzadkości imienia i możliwym zdrobnieniu.</p>
-<p>Rola jest wynikiem reguł statystycznych lub kontekstowych, nie potwierdzeniem płci, tożsamości ani danych z dokumentu. Dla prawdopodobnego imienia nie wyznaczamy procentowej pewności roli. Nierozstrzygnięta kolizja imienia i nazwiska generuje uwagę o wysokiej ważności, ale sama nie blokuje ustalenia płci. Zwykły brak dopasowania członu nie generuje takiej uwagi. Program nie przestawia członów i zachowuje oryginalny zapis.</p>
+<p>Przewaga oznacza porównanie łącznej liczby wystąpień członu jako imienia i jako nazwiska, niezależnie od płci. Samodzielne liczby, PESEL i numeryczne fragmenty dat nie zwiększają liczby członów tekstowych, ale dodatkowe napisy, np. „Lp” lub „A123”, już tak.</p>
+<p>Rola jest wynikiem reguł statystycznych lub kontekstowych, nie potwierdzeniem płci, tożsamości ani danych z dokumentu. Dla prawdopodobnego imienia lub nazwiska nie wyznaczamy procentowej pewności roli. Nierozstrzygnięta kolizja imienia i nazwiska generuje uwagę o średniej ważności przy nowej analizie pary, a o wysokiej przy starszych regułach. Sama nie przesądza o konieczności weryfikacji płci. Zwykły brak dopasowania członu nie generuje takiej uwagi. Program nie przestawia członów i zachowuje oryginalny zapis.</p>
 <h3>Kiedy nazwisko pomaga ustalić płeć?</h3>
 <p>Silne wskazanie nazwiska wymaga jednocześnie co najmniej 100 opublikowanych wystąpień i udziału jednej płci minimum 99,90%. Program uwzględnia w tym celu tylko człony o przyjętej roli nazwiska, nie dopasowania o nierozstrzygniętej roli.</p>
 <p>Jeżeli żadne uwzględnione imię nie jest jednoznaczne, ale co najmniej jedno zostało rozpoznane, wszystkie wskazują zgodnie tę samą płeć bez remisu, a silne nazwiska potwierdzają ten sam kierunek, program może ustalić płeć automatycznie. Sprzeczne silne nazwiska blokują takie rozstrzygnięcie. Powstaje uwaga informacyjna o średniej ważności.</p>
@@ -201,9 +213,10 @@ Zofia Nowak
 <h3>Słownik zdrobnień</h3>
 <p>Osobny, redakcyjnie przygotowany słownik zawiera 1 101 zdrobnień i form potocznych. Obejmuje formy m.in. 200 najpopularniejszych imion żeńskich i 200 męskich oraz dodatkowe popularne odpowiedniki. Jedna forma może mieć kilka pełnych odpowiedników. Nie jest to urzędowy wykaz statystyczny ani kompletna baza językoznawcza.</p>
 <p>Przykład: <strong>Witek</strong> może być zdrobnieniem od Witold, ale występuje też jako samodzielne imię (47 opublikowanych wystąpień; Witold - 54 261). Program pokazuje te liczby i możliwe odpowiedniki w uwadze o wysokiej ważności. Jeżeli odpowiednik nie występuje w słowniku imion, wyświetla informację o braku wpisu, a nie zero.</p>
-<p>Program nie zastępuje zdrobnienia pełną formą ani nie przypisuje mu liczebności pełnych imion. Jeśli zdrobnienie występuje jako samodzielne imię, do klasyfikacji wykorzystuje jego własne statystyki zgodnie z regułami imion. Jeśli człon został potraktowany jako nazwisko, komunikat tylko informuje o takim dopasowaniu.</p>
+<p>Program nie zastępuje zdrobnienia pełną formą ani nie przypisuje mu liczebności pełnych imion. Jeśli zdrobnienie występuje jako samodzielne imię, co do zasady do klasyfikacji wykorzystuje jego własne statystyki. Wyjątkiem jest opisana niżej reguła pary nazwisk.</p>
 <h3>Kiedy zdrobnienie pozwala automatycznie ustalić płeć?</h3>
-<p>Bez PESEL-u program może ustalić płeć na podstawie zdrobnienia, gdy w wierszu nie ma samodzielnych imion uwzględnionych w klasyfikacji i jednocześnie:</p>
+<p>Przy dokładnie dwóch członach bez rozstrzygającego PESEL-u zdrobnienie może ustalić płeć, gdy nie występuje jako samodzielne imię, otrzymało rolę imienia, a drugi człon otrzymał rolę nazwiska (także kontekstowo). Wszystkie pełne odpowiedniki muszą występować w słowniku, każdy osiągać co najmniej 99,90% i wskazywać tę samą płeć. Przeciwne silne wskazanie nazwiska, błędny albo wielokrotny potencjalny PESEL blokuje taką decyzję. Blokuje ją również przeciwne jednoznaczne imię (minimum 99,90%), nawet gdy drugi człon uznano za nazwisko wyłącznie na podstawie kontekstu, np. <strong>Magda Piotrek</strong> lub <strong>Agusia Bartek</strong>.</p>
+<p>Poza analizą pary obowiązują dotychczasowe warunki: w wierszu nie ma samodzielnych imion uwzględnionych w klasyfikacji i jednocześnie:</p>
 <ul>
 <li>Zdrobnienie nie występuje w słowniku samodzielnych imion ani nazwisk.</li>
 <li>Inny człon wiersza jest rozpoznany jako nazwisko. Kolejność członów nie ma znaczenia.</li>
@@ -213,8 +226,15 @@ Zofia Nowak
 </ul>
 <p>Przykładowo, <strong>Piotrek Krawczyk</strong> i <strong>Krawczyk Piotrek</strong> zostaną zaklasyfikowani jako mężczyzna. W kolumnie „Podstawa” pojawi się „Na podstawie zdrobnienia”. Wpis zachowa oryginalne brzmienie, a sekcja uwag informacyjnych pokaże uwagę o wysokiej ważności ze statystykami pełnych form. Sama ta uwaga nie kieruje uczestnika do ręcznej weryfikacji płci.</p>
 <p>W przypadku <strong>Piotrek</strong> bez nazwiska lub PESEL-u kontekst nie wystarcza do automatycznego przypisania. Formy niejednoznaczne, np. Sasza, również nie pozwalają samodzielnie rozstrzygnąć płci.</p>
-<p>Jeżeli podano pojedynczy PESEL, który przeszedł walidację, może on wystarczyć do rozpoznania zdrobnienia jako prawdopodobnego imienia, o ile forma nie występuje jako nazwisko. Płeć nadal ustala PESEL. Przeciwne wskazanie pełnych form jest wtedy opisane w uwadze o zdrobnieniu, a sprzeczność z jednoznacznym samodzielnym imieniem nadal wymaga weryfikacji.</p>
+<p>Jeżeli podano pojedynczy PESEL, który przeszedł walidację, może on zapewnić kontekst zdrobnieniu, o ile forma nie występuje jako nazwisko. Przy nowej analizie pary nie zmienia ustalonych ról. Płeć nadal ustala PESEL. Przeciwne wskazanie pełnych form jest wtedy opisane w uwadze o zdrobnieniu, a sprzeczność z uwzględnionym jednoznacznym samodzielnym imieniem nadal wymaga weryfikacji.</p>
 <p>Bez PESEL-u jednoznaczne wskazanie pełnych form sprzeczne ze wskazaniem uwzględnionego imienia lub innego zdrobnienia o rozpoznanym kontekście kieruje płeć do weryfikacji. Zdrobnienia nie rozstrzygają niejednoznacznego dopasowania do samodzielnego imienia.</p>
+<p>Przy dwóch rolach imiennych lub dwóch nierozstrzygniętych rolach wstępnie niejednoznacznych program sprawdza zgodność wskazania samodzielnego imienia z pełnymi formami zdrobnienia. Zgodność zachowuje decyzję z imion, jeśli spełniają one warunki klasyfikacji; sprzeczność wymaga weryfikacji bez rozstrzygającego PESEL-u. Dwa zdrobnienia bez samodzielnego imienia lub nazwiska, np. Piotrek Piotruś, nie wystarczają do automatycznej decyzji.</p>
+<h3>Zdrobnienie w parze nazwisk</h3>
+<p>Gdy oba człony mają wstępną rolę nazwiska, a dokładnie jeden występuje w słowniku zdrobnień, program może ustalić płeć ze zdrobnienia. Każda pełna forma musi osiągać co najmniej 99,90% i wskazywać tę samą płeć. Przewaga przeciwnej płci w statystykach dowolnego samodzielnego imienia (także pominiętego jako nazwisko) lub przeciwne silne wskazanie nazwiska blokuje decyzję. Remis imienia nie wskazuje kierunku. Poprawny pojedynczy PESEL zachowuje pierwszeństwo; błędny lub wielokrotny wymaga weryfikacji.</p>
+<p>Przykłady: <strong>Klimek Witek</strong> i <strong>Witek Nowak</strong> - mężczyzna ze zdrobnienia. Oba człony zachowują rolę nazwiska; wynik nie potwierdza, który człon jest imieniem. <strong>Gala Witek</strong> - do weryfikacji z powodu przeciwnego wskazania imienia Gala; <strong>Witek Kowalska</strong> - do weryfikacji z powodu silnego wskazania nazwiska Kowalska. Dwa zdrobnienia, np. Witek Mirek, nie uruchamiają tej reguły.</p>
+<h3>Zdrobnienia bez polskich znaków</h3>
+<p>Przy dwóch członach jeden musi być dopasowany wyłącznie do nazwisk, a drugi zapisany literami A-Z i nie mieć dokładnego dopasowania w żadnym z trzech słowników. Możliwe jest dopasowanie do jednego zdrobnienia z polskimi znakami (ą, ć, ę, ł, ń, ó, ś, ź, ż), jeśli po uproszczeniu nie istnieje inny klucz w żadnym słowniku. Ten sam klucz może występować również jako nazwisko, lecz nie jako samodzielne imię. Każda pełna forma oraz pozostałe dane nadal podlegają zwykłej ocenie.</p>
+<p>Przykład: <strong>Pawelek Nowak</strong> - dopasowanie do „Pawełek” pozwala ustalić płeć jako mężczyznę. Obie pisownie są widoczne w uwadze o wysokiej ważności, ale oryginalny zapis Pawelek Nowak nie zostaje zmieniony. Jest to osobna reguła zdrobnień, nie automatyczna korekta imion.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-4" aria-labelledby="naglowek-4">
@@ -395,7 +415,7 @@ Zofia Nowak
 <td>Klasyfikacja wsparta nazwiskiem; uwaga informacyjna o średniej ważności</td>
 </tr>
 <tr>
-<td>Brak PESEL i uwzględnionych samodzielnych imion, zdrobnienie spełnia warunki z sekcji 3</td>
+<td>Brak PESEL, zdrobnienie spełnia warunki z sekcji 3 (w tym kontekst pary nazwisk)</td>
 <td>Klasyfikacja na podstawie zdrobnienia; uwaga informacyjna o wysokiej ważności</td>
 </tr>
 <tr>
@@ -411,7 +431,7 @@ Zofia Nowak
 <td>Klasyfikacja na podstawie PESEL z uwagą informacyjną o braku rozpoznanego imienia</td>
 </tr>
 <tr>
-<td>PESEL po walidacji i zdrobnienie o roli imienia</td>
+<td>PESEL po walidacji i zdrobnienie dopuszczone do porównania (także w parze nazwisk)</td>
 <td>Klasyfikacja na podstawie PESEL, z uwagą o zdrobnieniu; ewentualna rozbieżność z pełnymi formami jest opisana w tej uwadze. Sprzeczność z jednoznacznym samodzielnym imieniem nadal wymaga weryfikacji</td>
 </tr>
 <tr>
@@ -546,16 +566,19 @@ Piotr Wiśniewski 12/5/2008
 <td>Rozpoznano imiona wskazujące różne płcie</td>
 </tr>
 <tr>
-<td>Anna Marek</td>
-<td>Rozpoznano imiona wskazujące różne płcie</td>
+<td>Magda Piotrek</td>
+<td>Pełne formy zdrobnienia są sprzeczne z jednoznacznym imieniem Magda, mimo kontekstowego uznania go za nazwisko</td>
 </tr>
+<tr><td>Gala Witek</td><td>Przeciwne wskazanie samodzielnego imienia Gala blokuje klasyfikację ze zdrobnienia w parze nazwisk</td></tr>
+<tr><td>Witek Kowalska</td><td>Przeciwne silne wskazanie nazwiska Kowalska blokuje klasyfikację ze zdrobnienia</td></tr>
+<tr><td>Piotrek Piotruś</td><td>Dwa zdrobnienia bez odpowiedniego nazwiska nie wystarczają do automatycznej decyzji</td></tr>
 <tr>
 <td>Nikola Nowak</td>
 <td>Imię niejednoznaczne statystycznie</td>
 </tr>
 <tr>
 <td>Sasza Nowak</td>
-<td>Pełne odpowiedniki zdrobnienia nie pozwalają jednoznacznie ustalić płci</td>
+<td>Samodzielne imię nie osiąga progu, a nazwisko nie daje silnego zgodnego wskazania; zdrobnienie nie zastępuje samodzielnego imienia</td>
 </tr>
 <tr>
 <td>Krzysztfo Kowalski</td>
@@ -575,7 +598,7 @@ Piotr Wiśniewski 12/5/2008
 <p>Automatyczne poprawianie błędów mogłoby prowadzić do kolejnych pomyłek.</p>
 <p>Dlatego program nie korzysta z mechanizmów automatycznej korekty imion.</p>
 <p>Nie zamienia również samodzielnie zapisów bez polskich znaków, np. <code>Lukasz</code>, na <code>Łukasz</code>.</p>
-<p>Oba zapisy są traktowane jako odrębne ciągi znaków, a wynik zależy od tego, czy występują w słowniku.</p>
+<p>W przypadku samodzielnych imion oba zapisy są traktowane jako odrębne ciągi znaków, a wynik zależy od tego, czy występują w słowniku. Od wersji 1.2.2 istnieje osobna, ograniczona reguła dopasowania zdrobnień bez polskich znaków (sekcja 3).</p>
 <p>Program może jednak zasugerować wariant imienia z polskimi znakami. Dodaje uwagę o niskiej ważności, gdy wpisane imię bez polskich znaków zostało rozpoznane i uwzględnione w analizie, a w słowniku:</p>
 <ul>
 <li>istnieje dokładnie jeden odpowiednik z polskimi znakami;</li>
@@ -595,11 +618,11 @@ Piotr Wiśniewski 12/5/2008
 <p>Na dole wyników znajduje się zwijana sekcja <strong>„Uwagi informacyjne (X)”</strong>, widoczna tylko wtedy, gdy program ma dodatkowe informacje do przekazania. Licznik X oznacza liczbę uwag, a nie liczbę uczestników. Jeden wpis może zawierać kilka uwag.</p>
 <p>Uwagi mają trzy poziomy ważności:</p>
 <div class="info-notes-list" style="margin-bottom: 14px" aria-label="Poziomy ważności uwag informacyjnych">
-<div class="info-item info-level-1"><strong>Niska ważność - szaroniebieski</strong><p class="reason">Np. jednoznaczne imię z udziałem od 99,90% do poniżej 99,98%, słabsze imię zgodne z jednoznacznym wskazaniem, przyjęcie roli imienia na podstawie przewagi statystycznej i kontekstu lub sugestia zapisu imienia z polskimi znakami.</p></div>
-<div class="info-item info-level-2"><strong>Średnia ważność - żółty</strong><p class="reason">Np. płeć ustalono dzięki PESEL mimo nierozpoznanego imienia, remisu lub przeciwnego słabszego wskazania; imię ma 50-99 wystąpień; rolę nazwiska przyjęto na podstawie statystyk lub nazwisko wspomogło klasyfikację.</p></div>
-<div class="info-item info-level-3"><strong>Wysoka ważność - pomarańczowy</strong><p class="reason">Np. imię ma 30-49 wystąpień, wykryto możliwe zdrobnienie, nierozstrzygniętą kolizję imienia i nazwiska lub silne wskazanie nazwiska przeciwne do wyniku. Także np. błędna data urodzenia, gdy do obliczenia wieku wykorzystano datę z PESEL po walidacji.</p></div>
+<div class="info-item info-level-1"><strong>Niska ważność - szaroniebieski</strong><p class="reason">Np. jednoznaczne imię z udziałem od 99,90% do poniżej 99,98%, słabsze imię zgodne z jednoznacznym wskazaniem, przyjęcie roli imienia w starszych regułach przewagi i kontekstu lub sugestia zapisu samodzielnego imienia z polskimi znakami.</p></div>
+<div class="info-item info-level-2"><strong>Średnia ważność - żółty</strong><p class="reason">Np. płeć ustalono dzięki PESEL mimo nierozpoznanego imienia, remisu lub przeciwnego słabszego wskazania; imię ma 50-99 wystąpień; statystyczne lub kontekstowe rozstrzygnięcie roli w parze, nierozstrzygnięta kolizja w parze lub nazwisko wspomogło klasyfikację.</p></div>
+<div class="info-item info-level-3"><strong>Wysoka ważność - pomarańczowy</strong><p class="reason">Np. imię ma 30-49 wystąpień, wykryto możliwe zdrobnienie (również bez polskich znaków), nierozstrzygniętą kolizję imienia i nazwiska w starszych regułach lub silne wskazanie nazwiska przeciwne do wyniku. Także np. błędna data urodzenia, gdy do obliczenia wieku wykorzystano datę z PESEL po walidacji.</p></div>
 </div>
-<p>Rekordy wyświetlane są od najwyższej do najniższej ważności. Jeżeli jeden uczestnik ma kilka uwag, kolor jego rekordu odpowiada najważniejszej z nich.</p>
+<p>Rekordy wyświetlane są od najwyższej do najniższej ważności. Jeżeli jeden uczestnik ma kilka uwag, kolor jego rekordu odpowiada najważniejszej z nich. Gdy uwagi mają różną ważność, każda jest dodatkowo oznaczona własnym poziomem.</p>
 <p class="help-note"><strong>Ważne:</strong> kolor i ważność uwagi nie oznaczają konieczności ręcznej klasyfikacji. Decyzja o tym, czy wpis wymaga sprawdzenia, jest niezależna. Ten sam uczestnik może występować zarówno w sekcji uwag informacyjnych, jak i wśród wpisów do sprawdzenia.</p>
 <p>Uwagi dotyczą płci, wieku lub danych (np. roli członu i możliwych zdrobnień). Warto przeczytać je przed wykorzystaniem danych. Nawet brak uwag nie potwierdza rzeczywistej tożsamości uczestnika.</p>
     </section>
@@ -703,7 +726,7 @@ Piotr Wiśniewski 12/5/2008
 <td>Minimalna łączna liczba wystąpień w słownikach imion i nazwisk</td>
 <td>30</td>
 </tr>
-<tr><td>Liczebność słowników (wersja 1.2)</td><td>8 136 imion, 117 159 nazwisk, 1 101 zdrobnień i form potocznych</td></tr>
+<tr><td>Liczebność słowników (wersja 1.2.2)</td><td>8 136 imion, 117 159 nazwisk, 1 101 zdrobnień i form potocznych</td></tr>
 <tr><td>Źródło zdrobnień</td><td>Osobny słownik redakcyjny; uwagi informacyjne i warunkowa klasyfikacja płci</td></tr>
 <tr>
 <td>Próg automatycznej klasyfikacji</td>
@@ -718,17 +741,19 @@ Piotr Wiśniewski 12/5/2008
 <td>Minimum 100 wystąpień i 99,90% udziału jednej płci</td>
 </tr>
 <tr>
-<td>Rozstrzyganie kolizji roli jako nazwisko</td>
-<td>Minimum 100 wystąpień jako nazwisko, co najmniej 50-krotna przewaga nad imieniem oraz spełnienie pozostałych warunków opisanych w sekcji 2</td>
+<td>Rozstrzyganie ról dwóch członów</td>
+<td>Minimum 100 wystąpień w dominującej roli i co najmniej 50-krotna przewaga; dodatkowo kontekst drugiego członu dla niejednoznacznego dopasowania</td>
 </tr>
 <tr>
-<td>Rozstrzyganie kolizji roli jako imię</td>
-<td>Minimum 100 wystąpień jako imię i przewaga co najmniej 30-krotna lub co najmniej 10-krotna przy odpowiednim kontekście; także prawdopodobne imię na podstawie kontekstu dwóch członów bez wymogu liczebności (szczegóły w sekcji 2)</td>
+<td>Rozstrzyganie ról w pozostałych rekordach</td>
+<td>Starsze reguły: minimum 100 wystąpień w dominującej roli; przewaga nazwiska 50-krotna przy dodatkowych warunkach, przewaga imienia 30-krotna lub 10-krotna z kontekstem nazwiska (sekcja 2)</td>
 </tr>
 <tr>
 <td>Sugestia zapisu imienia z polskimi znakami</td>
 <td>Jeden odpowiednik w słowniku, minimum 10 000 wystąpień i co najmniej 10-krotna przewaga liczebności nad wpisanym imieniem</td>
 </tr>
+<tr><td>Dopasowanie zdrobnienia bez polskich znaków</td><td>Dokładnie dwa człony, osobne nazwisko, brak dokładnego dopasowania formy wejściowej, jeden niekolidujący wariant zdrobnienia bez wpisu samodzielnego imienia (sekcja 3)</td></tr>
+<tr><td>Klasyfikacja ze zdrobnień</td><td>Każda pełna forma osiąga minimum 99,90% i wskazuje tę samą płeć; wymagany właściwy kontekst i brak blokujących sprzeczności (sekcja 3)</td></tr>
 <tr>
 <td>Metoda analizy</td>
 <td>Słowniki imion, nazwisk i zdrobnień, opcjonalny PESEL i data urodzenia</td>
