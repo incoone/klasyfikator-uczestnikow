@@ -46,7 +46,8 @@
     pominieta: 'Statystyki grupy i jej części nie są wskazaniami płci.'
   });
   const OBSZARY_UWAG = { plec: 'Płeć', wiek: 'Wiek', dane: 'Dane' };
-  const KOMUNIKAT_ANALIZY = 'Analiza zakończona. Możesz przejrzeć wyniki w każdej z trzech kategorii. Zmiana daty wydarzenia lub ustawień progów wiekowych automatycznie aktualizuje wyniki. Ponowna analiza jest potrzebna tylko po zmianie listy uczestników w głównym polu.';
+  const UKLADY_LISTY = Object.freeze({ imiona_nazwiska: 'Imiona - nazwiska', nazwiska_imiona: 'Nazwiska - imiona' });
+  const KOMUNIKAT_ANALIZY = 'Analiza zakończona. Możesz przejrzeć wyniki w każdej z trzech kategorii. Zmiana daty wydarzenia lub ustawień progów wiekowych automatycznie aktualizuje wyniki. Ponowna analiza jest potrzebna po zmianie listy uczestników w głównym polu lub ustawienia kontekstu kolejności listy.';
 
   // Fikcyjne dane demonstracyjne; wpisanie przykładu nie uruchamia analizy.
   const PRZYKLAD_POPRAWNY = `Patryk Michalski 01810199012
@@ -139,6 +140,7 @@ Kowalski
   const dataWydarzenia = $('event-date');
   const statystykiWlaczone = $('age-enabled');
   const progiWlasne = $('custom-thresholds');
+  const kontekstWlaczony = $('list-context');
 
   let klasyfikator = null;
   let wyniki = [];
@@ -148,6 +150,7 @@ Kowalski
   let metryki = new Map();
   let dzien = '';
   let szkicEdycji = null;
+  let kontekstListy = null;
 
   function ustawDzisiejszaDate() {
     const teraz = new Date();
@@ -182,6 +185,8 @@ Kowalski
 
   function resetujWyniki() {
     wyniki = [];
+    kontekstListy = null;
+    $('list-context-report').hidden = true;
     metryki.clear();
     list.replaceChildren();
     $('age-stats-rows').replaceChildren();
@@ -217,7 +222,7 @@ Kowalski
     }
     if (typeof api.obliczWiek !== 'function' || typeof api.statystykiWiekowe !== 'function' ||
         typeof api.parsujProgi !== 'function' || typeof api.pobierzKomunikaty !== 'function' || !Array.isArray(api.PROGI_TURYSTYCZNE)) {
-      komunikat('Interfejs 1.2.4 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
+      komunikat('Interfejs 1.2.5 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
       return;
     }
     $('tourism-thresholds').textContent = api.PROGI_TURYSTYCZNE.join(', ') + ' lat';
@@ -236,15 +241,19 @@ Kowalski
         }
       }));
       const nowy = api.utworzKlasyfikator(...slowniki);
+      if (typeof nowy.analizujListe !== 'function') throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.5.');
       // Sprawdź zgodność struktury wyniku z aktualnym API.
       const kontrola = nowy.klasyfikujWiersz('Test Test 1234567890');
       const kontrolaKomunikatow = api.pobierzKomunikaty(kontrola, null);
+      const kontrolaListy = nowy.analizujListe('Test Test');
       if (!Array.isArray(kontrola.czlonyTekstowe) || !Array.isArray(kontrola.rozpoznaneNazwiska) ||
           !Array.isArray(kontrola.rozpoznaneZdrobnienia) || !kontrola.czlonyTekstowe.every(c => 'rolaWstepna' in c) ||
           !Array.isArray(kontrola.grupyZlozone) || !Array.isArray(kontrola.jednostkiTekstowe) ||
           !kontrola.jednostkiTekstowe.every(u => Array.isArray(u.pozycje) && 'pewnoscRoli' in u) ||
+          kontrolaListy.kontekstListy?.status !== 'wylaczony' || !kontrolaListy.kontekstListy.progi ||
+          !Array.isArray(kontrolaListy.wyniki) || kontrolaListy.wyniki[0]?.kontekstKolejnosci !== null ||
           !kontrolaKomunikatow.doWeryfikacji.some(u => u.powiazane?.some(p => p.obszar === 'wiek' && p.wymagaWeryfikacji === true)))
-        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.4.');
+        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.5.');
       klasyfikator = nowy;
       $('analyze-button').disabled = false;
       komunikat('Wczytano słowniki: ' + ['imiona', 'nazwiska', 'zdrobnienia'].map((nazwa, i) =>
@@ -383,22 +392,39 @@ Kowalski
     $('age-stats-unknown').textContent = 'Nieustalony wiek: ' + stat.nieustalony + ' z ' + stat.razem + ' uczestników.';
   }
 
-  function listaUwag(wynik, uwagi, informacyjne = false) {
-    const ul = element('ul', informacyjne ? 'info-messages' : 'record-notes');
-    const rozneWaznosci = informacyjne && new Set(uwagi.map(u => u.severity)).size > 1;
+  function listaUwag(wynik, uwagi, informacyjne = false, rozneWaznosci = informacyjne && new Set(uwagi.map(u => u.severity)).size > 1) {
+    const ul = element('ul', (informacyjne ? 'info-messages' : 'record-notes') +
+      (uwagi.some(u => u.severity === 'high') ? ' priority-notes' : ''));
     for (const uwaga of uwagi) {
       const obszar = [...new Set(aktywnePrzyczyny(uwaga).map(p => OBSZARY_UWAG[p.obszar] ?? p.obszar))].join(' i ').replace(' i Wiek', ' i wiek');
-      const li = element('li', '', obszar + ': ' + opisKomunikatu(wynik, uwaga));
-      if (rozneWaznosci) {
+      const wysoka = uwaga.severity === 'high';
+      const li = element('li', wysoka ? 'high-warning' : '', obszar + ': ' + opisKomunikatu(wynik, uwaga));
+      if (wysoka) {
+        const ikona = element('span', 'high-warning-icon', '⚠︎');
+        ikona.setAttribute('aria-hidden', 'true');
+        li.append(ikona);
+      }
+      if (rozneWaznosci || wysoka) {
         const ranga = KOLEJNOSC_WAZNOSCI[uwaga.severity] ?? 0;
         li.append(element('span', 'info-message-level info-level-' + ranga, ETYKIETY_WAZNOSCI[ranga]));
       }
+      if (wysoka) li.append(element('span', 'high-warning-kind', informacyjne ? 'Uwaga informacyjna' : 'Wymaga sprawdzenia'));
       ul.append(li);
     }
     return ul;
   }
 
+  function pokazPilneUwagi(kontener, wynik, { doWeryfikacji, informacyjne }) {
+    const pilne = doWeryfikacji.filter(u => u.severity === 'high');
+    const pilneInformacyjne = informacyjne.filter(u => u.severity === 'high');
+    if (pilne.length) kontener.append(listaUwag(wynik, pilne));
+    if (pilneInformacyjne.length) kontener.append(listaUwag(wynik, pilneInformacyjne, true));
+  }
+
   function opisRoli(czlon) {
+    if (czlon?.podstawaRoli === 'KONTEKST_KOLEJNOSCI_LISTY') {
+      return ROLE_CZLONOW[czlon.rola] + ' (kontekst całej listy)';
+    }
     return PODSTAWY_ROLI[czlon?.podstawaRoli] ?? ROLE_CZLONOW[czlon?.rola] ?? '-';
   }
 
@@ -417,9 +443,16 @@ Kowalski
     sekcja.append(element('h4', 'stats-heading', 'Rozpoznane jednostki tekstowe'));
     const ul = element('ul', 'unit-list');
     for (const u of wynik.jednostkiTekstowe) {
-      const li = element('li', 'text-unit');
+      const zmiana = wynik.kontekstKolejnosci?.zmiany.find(z => z.pozycje.length === u.pozycje.length &&
+        z.pozycje.every((p, i) => p === u.pozycje[i]));
+      const li = element('li', 'text-unit' + (zmiana ? ' contextual-unit' : ''));
       li.append(element('strong', '', u.tekst),
         element('span', 'unit-meta', opisRoli(u) + ' - pewność roli: ' + (PEWNOSC_ROLI[u.pewnoscRoli] ?? '-')));
+      if (zmiana) {
+        li.append(element('span', 'unit-meta', 'Przed analizą listy: ' +
+          (ROLE_CZLONOW[zmiana.rolaPrzed] ?? '-') + '. Układ: ' +
+          (UKLADY_LISTY[wynik.kontekstKolejnosci.uklad] ?? '-')));
+      }
       if (u.typ === 'grupa') {
         const grupa = wynik.grupyZlozone.find(g => g.pozycja === u.pozycja);
         if (grupa) {
@@ -481,7 +514,8 @@ Kowalski
       r.append(element('td', '', pominiete ? 'Statystyka nieużyta: ' + statusProgu : statusProgu));
       const etykietaRoli = opisRoli(jednostka);
       const rola = nazwiska ? etykietaRoli +
-        (pominiete ? ' - nie użyto jako nazwiska' : '') :
+        (pominiete ? (jednostka?.podstawaRoli === 'KONTEKST_KOLEJNOSCI_LISTY'
+          ? ' - statystyki nazwiska nie wpływają na płeć' : ' - nie użyto jako nazwiska') : '') :
         (pominiete ? etykietaRoli + ' - pominięte jako imię' :
           etykietaRoli + ' - uwzględnione jako imię');
       r.append(element('td', '', rola + (pominiete ? ' (tylko diagnostyka)' : '')));
@@ -551,7 +585,14 @@ Kowalski
         (wynik.klasyfikacjaReczna !== null
           ? ' (ręcznie; automat: ' + wynik.kategoriaAutomatyczna + (wynik.zrodlo === 'zdrobnienia' ? ', na podstawie zdrobnienia' : '') + ')'
           : wynik.zrodlo === 'zdrobnienia' ? ' · Na podstawie zdrobnienia' : '');
-      karta.append(top, element('div', 'review-meta', opis), listaUwag(wynik, [...uwagi].sort((a, b) => ranga(b) - ranga(a)), true));
+      const posortowane = [...uwagi].sort((a, b) => ranga(b) - ranga(a));
+      const pilne = posortowane.filter(u => u.severity === 'high');
+      const pozostale = posortowane.filter(u => u.severity !== 'high');
+      const rozneWaznosci = new Set(uwagi.map(u => u.severity)).size > 1;
+      karta.append(top);
+      if (pilne.length) karta.append(listaUwag(wynik, pilne, true, rozneWaznosci));
+      karta.append(element('div', 'review-meta', opis));
+      if (pozostale.length) karta.append(listaUwag(wynik, pozostale, true, rozneWaznosci));
       return karta;
     }));
   }
@@ -579,12 +620,37 @@ Kowalski
     return suma;
   }
 
+  function pokazKontekstListy() {
+    const raport = kontekstListy;
+    $('list-context-report').hidden = !raport || raport.status === 'wylaczony';
+    if (!raport || raport.status === 'wylaczony') return;
+    const procent = liczba => liczba == null ? 'Brak danych' : formatProcentu.format(liczba * 100) + '%';
+    const glosy = raport.glosy.imiona_nazwiska + raport.glosy.nazwiska_imiona;
+    const powod = {
+      brak_slownikow: 'Brakuje danych słownikowych wymaganych do oceny kolejności.',
+      za_malo_glosow: 'Za mało wiarygodnych głosów.',
+      za_male_pokrycie: 'Zbyt mała część porównywalnych rekordów oddała wiarygodny głos.',
+      lista_mieszana: 'Lista ma mieszany układ - zgodność jest zbyt niska.'
+    };
+    $('list-context-status').textContent = raport.status === 'dominujacy'
+      ? 'Dominujący układ: ' + UKLADY_LISTY[raport.uklad] + (raport.liczbaZmienionychRekordow === 0
+        ? '. Nie ustalono dodatkowych ról.' : '.')
+      : 'Kontekst niewykorzystany. ' + (powod[raport.status] ?? 'Nie ustalono dominującego układu.');
+    $('context-votes').textContent = formatLiczby.format(glosy) + ' / ' + formatLiczby.format(raport.liczbaRekordowPorownywalnych);
+    $('context-agreement').textContent = procent(raport.udzialDominujacego);
+    $('context-coverage').textContent = procent(raport.pokrycie);
+    $('context-changed').textContent = formatLiczby.format(raport.liczbaZmienionychRekordow);
+    $('list-context-thresholds').textContent = 'Wymagane minimum: ' + formatLiczby.format(raport.progi.minGlosow) +
+      ' głosów, ' + procent(raport.progi.minUdzial) + ' zgodności, ' + procent(raport.progi.minPokrycie) + ' pokrycia.';
+  }
+
   function aktualizujWidok() {
     if (resultsSection.hidden || zmienionyTekst) return;
     przeliczMetryki();
     const suma = przelicz();
     $('show-notes').textContent = 'Wpisy wymagające sprawdzenia (' + [...metryki.values()].filter(m => m.doWeryfikacji.length).length + ')';
     $('show-unknown-age').textContent = 'Nieustalony wiek (' + [...metryki.values()].filter(m => m.wiek === null).length + ')';
+    pokazKontekstListy();
     pokazStatystyki();
     pokazInformacyjne();
     tabs.forEach(tab => {
@@ -633,6 +699,7 @@ Kowalski
       nazwa.title = 'Kliknij, aby edytować wpis';
       nazwa.setAttribute('aria-expanded', String(edytowanyWiersz === wynik.numerWiersza));
       dane.append(nazwa);
+      pokazPilneUwagi(dane, wynik, m);
       tr.append(nr, dane);
       if (wybranaKategoria === A) tr.append(element('td', 'col-gender', kategoria(wynik)));
       const urodzenie = element('td', 'col-date', formatujDate(wynik.urodzenie.data));
@@ -674,8 +741,11 @@ Kowalski
       const top = element('div', 'review-top');
       top.append(element('span', 'review-name', wynik.oryginalnyWiersz),
         element('span', 'review-meta', 'Wiersz ' + wynik.numerWiersza));
-      karta.append(top, element('p', 'review-meta', 'Płeć: ' + kategoria(wynik) + ' · ' + opisPodstawy(wynik)), szczegolyWieku(wynik));
-      const uwagi = metryki.get(wynik.numerWiersza).doWeryfikacji;
+      karta.append(top);
+      const m = metryki.get(wynik.numerWiersza);
+      pokazPilneUwagi(karta, wynik, m);
+      karta.append(element('p', 'review-meta', 'Płeć: ' + kategoria(wynik) + ' · ' + opisPodstawy(wynik)), szczegolyWieku(wynik));
+      const uwagi = m.doWeryfikacji.filter(u => u.severity !== 'high');
       if (uwagi.length) karta.append(listaUwag(wynik, uwagi));
       if (wynik.sugestia && kategoria(wynik) === W) karta.append(element('p', 'suggestion', 'Sugestia: ' + wynik.sugestia));
       if (edytowanyWiersz !== wynik.numerWiersza) {
@@ -749,7 +819,7 @@ Kowalski
     formularz.append(element('div', 'editor-title', 'Edycja wpisu - wiersz ' + wynik.numerWiersza));
     if (wybranaKategoria !== W && wybranaKategoria !== U) {
       formularz.append(szczegolyWieku(wynik));
-      const uwagi = metryki.get(wynik.numerWiersza).doWeryfikacji;
+      const uwagi = metryki.get(wynik.numerWiersza).doWeryfikacji.filter(u => u.severity !== 'high');
       if (uwagi.length) formularz.append(listaUwag(wynik, uwagi));
       formularz.append(statystykiRozpoznanych(wynik));
     }
@@ -815,10 +885,22 @@ Kowalski
       try {
         let nowyWynik = wynik;
         if (nowyTekst !== wynik.oryginalnyWiersz) {
-          nowyWynik = klasyfikator.klasyfikujWiersz(nowyTekst, wynik.numerWiersza);
-          const linie = textarea.value.split(/\r\n|\n|\r/);
-          linie[wynik.numerWiersza - 1] = nowyTekst;
-          textarea.value = linie.join('\n');
+          // Zachowujemy separatory i pozostałe wiersze dokładnie jak w polu tekstowym.
+          const linie = textarea.value.split(/(\r\n|\n|\r)/);
+          linie[(wynik.numerWiersza - 1) * 2] = nowyTekst;
+          const tekstListy = linie.join('');
+          if (kontekstWlaczony.checked) {
+            const analiza = klasyfikator.analizujListe(tekstListy, { kontekstKolejnosci: true });
+            const poprzednie = new Map(wyniki.map(w => [w.numerWiersza, w.klasyfikacjaReczna]));
+            const noweWyniki = analiza.wyniki.map(w => w.numerWiersza === wynik.numerWiersza ? w :
+              api.ustawKlasyfikacjeReczna(w, poprzednie.get(w.numerWiersza) ?? null));
+            nowyWynik = noweWyniki.find(w => w.numerWiersza === wynik.numerWiersza);
+            wyniki = noweWyniki;
+            kontekstListy = analiza.kontekstListy;
+          } else {
+            nowyWynik = klasyfikator.klasyfikujWiersz(nowyTekst, wynik.numerWiersza);
+          }
+          textarea.value = tekstListy;
         }
         // null oznacza brak nadpisania, w tym przywrócenie automatu.
         const kategoriaReczna = plec.value === 'auto' ? null : plec.value;
@@ -837,13 +919,16 @@ Kowalski
     if (wyniki.some(w => w.klasyfikacjaReczna !== null) &&
         !window.confirm('Ponowna analiza usunie wszystkie ręcznie przypisane klasyfikacje. Kontynuować?')) return;
     try {
-      const nowe = klasyfikator.klasyfikujListe(textarea.value);
+      const { wyniki: nowe, kontekstListy: raport } = klasyfikator.analizujListe(textarea.value, {
+        kontekstKolejnosci: kontekstWlaczony.checked
+      });
       if (!nowe.length) {
         resetujWyniki();
         komunikat('Wpisz przynajmniej jednego uczestnika.', true);
         return;
       }
       wyniki = nowe;
+      kontekstListy = raport;
       wybranaKategoria = W;
       edytowanyWiersz = null;
       szkicEdycji = null;
@@ -866,6 +951,17 @@ Kowalski
     szkicEdycji = null;
     list.replaceChildren();
     komunikat('Lista została zmieniona. Kliknij „Ponownie analizuj listę”, aby odświeżyć wyniki.');
+  });
+
+  kontekstWlaczony.addEventListener('change', () => {
+    if (wyniki.length) {
+      zmienionyTekst = true;
+      resultsSection.hidden = true;
+      edytowanyWiersz = null;
+      szkicEdycji = null;
+      list.replaceChildren();
+      komunikat('Zmieniono ustawienie kontekstu kolejności listy. Kliknij „Ponownie analizuj listę”, aby odświeżyć wyniki.');
+    }
   });
 
   $('clear-button').addEventListener('click', () => {
@@ -901,6 +997,7 @@ Kowalski
   statystykiWlaczone.addEventListener('change', odswiezOpcjeWiekowe);
   document.querySelectorAll('input[name="age-mode"]').forEach(radio => radio.addEventListener('change', odswiezOpcjeWiekowe));
   progiWlasne.addEventListener('input', odswiezOpcjeWiekowe);
+  kontekstWlaczony.checked = false;
   ustawDzisiejszaDate();
   odswiezOpcjeWiekowe();
   wczytajSlownik();

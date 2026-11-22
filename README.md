@@ -12,12 +12,14 @@ Projekt powstał z myślą o listach, których dane nie zawsze mają jednolity f
 - Rozpoznaje człony występujące zarówno jako imiona, jak i nazwiska, i analizuje ich rolę na podstawie kontekstu oraz statystyk, bez zakładania kolejności danych. W przypadku dokładnie dwóch członów stosuje dodatkowe reguły rozstrzygania ich ról.
 - Rozpoznaje zdrobnienia także w określonych przypadkach kolizji z nazwiskami lub zapisu bez polskich znaków. Nie zmienia oryginalnych danych uczestnika i kieruje sprzeczne wskazania do weryfikacji zgodnie z regułami algorytmu.
 - Rozpoznaje imiona i nazwiska złożone, rozróżnia łączniki od separatorów i nadaje pierwszeństwo pełnym dopasowaniom słownikowym. Pokazuje grupy tekstowe oraz pewność rozpoznania ich ról, zachowując oryginalny zapis i kolejność danych. Przy rozpoznaniu nazwiska po częściach ich statystyki nie stanowią wskazania płci.
+- Opcjonalnie analizuje dominujący układ imion i nazwisk na całej liście. Przy co najmniej 12 wiarygodnych głosach, 85% zgodności i 50% pokrycia może rozstrzygnąć wybrane nieustalone role, bez zmiany klasyfikacji płci, PESEL-u, wieku ani kolejności danych. Opcja jest domyślnie wyłączona.
+- Uwzględnia także wybrane zwarte nazwiska złożone jako kontekst zdrobnień zapisanych bez polskich znaków, np. `Pawelek Witek-Nowak`.
 - Dzieli uczestników na trzy kategorie: kobiety, mężczyźni oraz osoby do weryfikacji. Umożliwia szybkie ręczne przypisanie płci i edycję danych uczestnika.
 - Rozpoznaje i sprawdza daty urodzenia w różnych formatach oraz weryfikuje ich zgodność z datami zakodowanymi w numerach PESEL.
 - Oblicza wiek na wybrany dzień wydarzenia, niezależnie od klasyfikacji płci.
 - Przedstawia statystyki według typowych dla branży turystycznej lub samodzielnie zdefiniowanych progów wiekowych.
 - Wyświetla liczebności i udziały procentowe rozpoznanych imion i nazwisk w danych rejestru PESEL oraz możliwe pełne odpowiedniki zdrobnień.
-- Wskazuje wpisy wymagające weryfikacji oraz prezentuje dodatkowe uwagi informacyjne z trzema poziomami ważności. Wersja 1.2.3 ogranicza rutynowe uwagi, zachowując szczegóły analizy, i scala powtarzające się komunikaty o błędach PESEL-u.
+- Wskazuje wpisy wymagające weryfikacji oraz prezentuje dodatkowe uwagi informacyjne z trzema poziomami ważności. Komunikaty wysokiej ważności wyróżnia bezpośrednio pod nazwą uczestnika. Ogranicza rutynowe uwagi, zachowując szczegóły analizy, i scala powtarzające się komunikaty o błędach PESEL-u.
 
 Priorytetem jest ograniczenie błędnej automatycznej klasyfikacji, a nie przypisanie każdej osoby do określonej kategorii za wszelką cenę. Statystyki imion nie potwierdzają płci konkretnej osoby, a walidacja PESEL nie potwierdza, że numer został jej nadany.
 
@@ -41,13 +43,13 @@ Szczegółowe zasady działania i ograniczenia algorytmu opisano w sekcji [Jak d
 
 ## Historia zmian
 
-Aktualna wersja: 1.2.4 - Imiona i nazwiska złożone. Zobacz [historię zmian](CHANGELOG.md).
+Aktualna wersja: 1.2.5 - Kontekst całej listy uczestników. Zobacz [historię zmian](CHANGELOG.md).
 
 ## Dokumentacja techniczna i testy
 
-Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Szczegóły integracji, grup tekstowych, rozpoznawania ról i kolejności ładowania modułów opisano w [dokumentacji API 1.2.4](API-1.2.4.md), która uzupełnia [API 1.2.3](API-1.2.3.md).
+Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Metodę `analizujListe`, raport układu listy, zasady rozstrzygania ról i kolejność ładowania modułów opisano w [dokumentacji API 1.2.5](API-1.2.5.md), która uzupełnia [API 1.2.4](API-1.2.4.md).
 
-Zestaw obejmuje 535 testów automatycznych. Można je uruchomić w Node.js z katalogu głównego projektu:
+Zestaw obejmuje 572 testy automatyczne. Można je uruchomić w Node.js z katalogu głównego projektu:
 
 ```sh
 node --test tests/*.test.js

@@ -6,12 +6,12 @@
   <meta name="color-scheme" content="light">
   <meta name="referrer" content="no-referrer">
   <title>Klasyfikator uczestników</title>
-  <link rel="stylesheet" href="./style.css?v=1.2.4">
-  <script src="./core/komunikaty.js?v=1.2.4" defer></script>
-  <script src="./core/daty.js?v=1.2.4" defer></script>
-  <script src="./core/pesel.js?v=1.2.4" defer></script>
-  <script src="./core/klasyfikator.js?v=1.2.4" defer></script>
-  <script src="./interfejs.js?v=1.2.4" defer></script>
+  <link rel="stylesheet" href="./style.css?v=1.2.5-ui1">
+  <script src="./core/komunikaty.js?v=1.2.5" defer></script>
+  <script src="./core/daty.js?v=1.2.5" defer></script>
+  <script src="./core/pesel.js?v=1.2.5" defer></script>
+  <script src="./core/klasyfikator.js?v=1.2.5" defer></script>
+  <script src="./interfejs.js?v=1.2.5-ui1" defer></script>
 </head>
 <body>
   <main class="container">
@@ -58,6 +58,10 @@
           <p id="event-error" class="editor-error" role="alert" hidden></p>
           <p class="hint age-auto-hint">Po analizie zmiana daty wydarzenia lub ustawień progów wiekowych automatycznie aktualizuje wyniki.</p>
         </div>
+        <div class="context-settings">
+          <label class="option-label" for="list-context"><input id="list-context" type="checkbox" autocomplete="off" aria-describedby="list-context-hint"> Uwzględnij kolejność imion i nazwisk na liście</label>
+          <p id="list-context-hint" class="hint">Jeśli na liście dominuje jeden układ, pomaga ustalić niejednoznaczne role. Nie zmienia klasyfikacji płci, PESEL-u, wieku ani kolejności danych.</p>
+        </div>
         <div class="actions">
           <button id="analyze-button" class="button button-primary" type="submit" disabled>Analizuj listę</button>
           <button id="clear-button" class="button button-secondary" type="button">Wyczyść</button>
@@ -83,6 +87,18 @@
         </button>
       </div>
       <p id="total" class="total">Łącznie uczestników: 0</p>
+      <section id="list-context-report" class="list-context-report" aria-labelledby="list-context-title" hidden>
+        <h3 id="list-context-title">Kontekst kolejności listy</h3>
+        <p id="list-context-status" class="context-status"></p>
+        <dl id="list-context-metrics" class="context-metrics">
+          <div><dt>Wiarygodne głosy</dt><dd id="context-votes"></dd></div>
+          <div><dt>Zgodność układu</dt><dd id="context-agreement"></dd></div>
+          <div><dt>Pokrycie</dt><dd id="context-coverage"></dd></div>
+          <div><dt>Rekordy z dodatkowymi rolami</dt><dd id="context-changed"></dd></div>
+        </dl>
+        <p id="list-context-thresholds" class="hint"></p>
+        <p class="hint context-explanation">Głosy podano w stosunku do liczby różnych porównywalnych rekordów. Zgodność dotyczy kolejności danych, nie pewności rozpoznania płci.</p>
+      </section>
       <div class="result-filters">
         <button id="show-notes" class="sample-link filter-link" type="button" data-tab="uwagi" aria-pressed="false">Wpisy wymagające sprawdzenia (0)</button>
         <button id="show-unknown-age" class="sample-link filter-link" type="button" data-tab="wiek" aria-pressed="false">Nieustalony wiek (0)</button>
@@ -114,7 +130,7 @@
 
     <footer class="footer">
       Wpisane dane są przetwarzane wyłącznie w przeglądarce. Nie są wysyłane ani zapisywane przez aplikację.
-      <p class="version-info">Projekt w fazie rozwoju - wersja 1.2.4 - ostatnia modyfikacja: <time datetime="2026-11-22">22.11.2026</time></p>
+      <p class="version-info">Projekt w fazie rozwoju - wersja 1.2.5 - ostatnia modyfikacja: <time datetime="2026-11-22">22.11.2026</time></p>
     </footer>
   </main>
 </body>

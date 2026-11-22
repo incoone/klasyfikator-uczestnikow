@@ -1834,6 +1834,74 @@ test('T-004 pozostawia rozpoznanie nazwisk po częściach także w obecności pe
   }
 });
 
+for (const [skrot, nazwisko] of [
+  ['Pawelek','Nowak'], ['Pawelek','Gąsienica-Daniel'], ['Pawełek','Witek-Nowak'],
+  ['Pawelek','Witek-Nowak'], ['Pawelek','Witek‐Nowak'], ['Pawelek','Witek‑Nowak'],
+  ['Pawelek','Kowalska-Nowak'], ['Pawelek','Witek-Kowalska-Nowak']
+]) test('T-005 rozpoznaje zdrobnienie w obu kolejnościach: '+skrot+' '+nazwisko, () => {
+  for (const tekst of [skrot+' '+nazwisko,nazwisko+' '+skrot]) {
+    const o = zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,M);
+    assert.equal(o.zrodlo,'zdrobnienia');
+    assert.equal(o.oryginalnyWiersz,tekst);
+    assert.equal(o.jednostkiTekstowe.length,2);
+    const aktywne = o.rozpoznaneZdrobnienia.filter(z=>z.wykorzystaneDoKlasyfikacji);
+    assert.equal(aktywne.length,1);
+    assert.equal(aktywne[0].tekst,skrot);
+    if (skrot==='Pawelek') assert.equal(aktywne[0].wariantZPolskimiZnakami,'PAWEŁEK');
+    assert.ok(info12(o).some(u=>u.kod==='MOZLIWE_ZDROBNIENIE'));
+    assert.ok(o.rozpoznaneNazwiska.filter(n=>n.czescGrupy).every(n=>n.uwzglednione===false));
+    assert.ok(o.rozpoznaneZdrobnienia.filter(z=>z.czescGrupy).every(z=>!z.kontekst && !z.wykorzystaneDoKlasyfikacji));
+  }
+});
+
+test('T-005 dopuszcza zwarty zapis i wymaga części wyłącznie nazwiskowej', () => {
+  for (const nazwisko of ['Witek - Nowak','Witek -Nowak','Witek ‑ Nowak','Witek–Nowak','Witek—Nowak','Witek-Mirek']) {
+    const o = zlozenie('Pawelek '+nazwisko);
+    assert.equal(o.grupyZlozone[0].podstawaRoli,'NAZWISKO_ZLOZONE_Z_CZESCI',nazwisko);
+    assert.equal(o.kategoriaAutomatyczna,W,nazwisko);
+    assert.ok(!o.rozpoznaneZdrobnienia.some(z=>z.wariantZPolskimiZnakami));
+  }
+  for (const tekst of ['Pawelek Jan-Nowak','Pawelek Xyz-Nowak','Pawelek Witek-Nowak Extra','Pawelek Pawełek Witek-Nowak',
+    'Pawelek-Nowak','Pawelek‑Witek‑Nowak']) {
+    assert.ok(!zlozenie(tekst).rozpoznaneZdrobnienia.some(z=>z.wariantZPolskimiZnakami),tekst);
+  }
+  assert.equal(zlozenie('Pawełek Witek - Nowak').zrodlo,'zdrobnienia');
+});
+
+test('T-005 nadal blokuje niejednoznaczny wariant i respektuje dokładne dopasowania', () => {
+  const imiona = imionaZlozoneEtap1.imiona, nazwiska = nazwiskaZlozoneEtap1.nazwiska, zdrobnienia = zdrobnieniaZlozoneEtap1.zdrobnienia;
+  for (const [i,n,z] of [
+    [{PAWELEK:[999,1]}, {}, {}], [{PAWEŁEK:[0,30]}, {}, {}], [{PAWĘLEK:[999,1]}, {}, {}],
+    [{},{PAWĘLEK:[50,50]},{}], [{},{},{PAWĘLEK:['PAWEŁ']}], [{},{},{PAWELEK:['PAWEŁ']}]
+  ]) {
+    const k = API.utworzKlasyfikator({imiona:{...imiona,...i}}, {nazwiska:{...nazwiska,...n}},
+      {zdrobnienia:{...zdrobnienia,...z}});
+    assert.ok(!k.klasyfikujWiersz('Pawelek Witek-Nowak').rozpoznaneZdrobnienia.some(w=>w.wariantZPolskimiZnakami));
+  }
+});
+
+test('T-005 zachowuje próg pełnej formy, konflikt pełnego nazwiska i reguły PESEL-u', () => {
+  const k = API.utworzKlasyfikator(imionaZlozoneEtap1, {nazwiska:{...nazwiskaZlozoneEtap1.nazwiska,
+    'WITEK-NOWAK':[999,1]}}, zdrobnieniaZlozoneEtap1);
+  const o = k.klasyfikujWiersz('Pawelek Witek-Nowak');
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.ok(o.ostrzezenia.includes('KONFLIKT_ZDROBNIENIA'));
+  for (const [numer, kategoria, zrodlo] of [[pm,M,'pesel'],[pk,K,'pesel'],[pm+' '+pk,W,null],['12345678901',W,null]]) {
+    const wynik = zlozenie('Pawelek '+numer+' Witek-Nowak');
+    const w = wynik.rozpoznaneZdrobnienia.find(z=>z.tekst==='Pawelek');
+    assert.equal(wynik.kategoriaAutomatyczna,kategoria);
+    assert.equal(wynik.zrodlo,zrodlo);
+    assert.equal(w.sprzeczneZPeselem,kategoria===K);
+    if (kategoria===K) assert.ok(info12(wynik).some(u=>u.kod==='MOZLIWE_ZDROBNIENIE' && u.severity==='high'));
+  }
+  for (const [statystyki, kategoria] of [[[1,999],M],[[2,998],W]]) {
+    const wariant = API.utworzKlasyfikator({imiona:{...imionaZlozoneEtap1.imiona,PAWEŁ:statystyki}},
+      nazwiskaZlozoneEtap1,zdrobnieniaZlozoneEtap1);
+    assert.equal(wariant.klasyfikujWiersz('Pawelek Witek-Nowak').kategoriaAutomatyczna,kategoria);
+  }
+});
+
 test('Złożenie nie zmienia dat, położeń i walidacji numerów PESEL', () => {
   for (const [tekst,plec,zrodlo] of [
     [pk+' Witek-Nowak',K,'pesel'],

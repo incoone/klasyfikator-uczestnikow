@@ -122,10 +122,20 @@ p { margin-top: 0; }
 .name-stats { margin-top: 12px; min-width: 0; }
 .stats-heading { margin: 12px 0 6px; font-size: .9rem; }
 .age-auto-hint { margin: 8px 0 0; }
+.context-settings { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: .92rem; }
+.context-settings .hint { margin: 4px 0 0 23px; font-size: .82rem; }
+.list-context-report { margin: 0 0 18px; padding: 12px 14px; min-width: 0; border: 1px solid var(--border); border-radius: 8px; background: #f9fbfd; overflow-wrap: anywhere; }
+.context-status { margin: 6px 0 10px; font-size: .9rem; font-weight: 600; }
+.context-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 12px; margin: 0 0 10px; }
+.context-metrics > div { min-width: 0; }
+.context-metrics dt { font-size: .8rem; color: var(--muted); }
+.context-metrics dd { margin: 2px 0 0; font-size: .95rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.list-context-report .hint { margin: 4px 0 0; font-size: .8rem; }
 .name-stats .hint { margin: 6px 0 0; font-size: .8rem; }
 .unit-list { list-style: none; padding: 0; margin: 6px 0; font-size: .85rem; }
 .text-unit { padding: 6px 8px; border-left: 2px solid var(--border); overflow-wrap: anywhere; }
 .text-unit + .text-unit { margin-top: 4px; }
+.text-unit.contextual-unit { border-left-color: var(--accent); background: var(--accent-soft); }
 .unit-meta { display: block; color: var(--muted); font-size: .8rem; margin-top: 2px; }
 .unit-parts, .unit-diagnostics { margin-top: 6px; font-size: .8rem; color: var(--muted); }
 .unit-parts summary, .unit-diagnostics summary { cursor: pointer; font-weight: 600; }
@@ -147,11 +157,19 @@ p { margin-top: 0; }
 /* Kolory oznaczają ważność informacji, nie status klasyfikacji. */
 .info-level-0, .info-level-1 { --info-bg: #f1f5f9; --info-border: #d3dce7; --info-label: #526477; }
 .info-level-2 { --info-bg: #fef9e7; --info-border: #eadba4; --info-label: #745900; }
-.info-level-3 { --info-bg: #ffe8da; --info-border: #eac4ac; --info-label: #873f17; }
+.info-level-3 { --info-bg: #fff5f5; --info-border: #e5a8a8; --info-label: #9c2727; }
 .info-level-label { font-size: .77rem; font-weight: 650; color: var(--info-label); }
 .info-messages { margin: 8px 0 0; padding-left: 20px; font-size: .88rem; }
 .info-messages li + li { margin-top: 4px; }
 .info-message-level { display: inline-block; margin-left: .4em; font-size: .75rem; font-weight: 650; color: var(--info-label); background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 4px; padding: 0 .35em; }
+.priority-notes { list-style: none; padding: 0; margin: 6px 0 8px; }
+.high-warning {
+  position: relative; padding: 9px 10px 9px 34px; border: 1px solid #c43b3b;
+  border-left-width: 4px; border-radius: 6px; background: #fff4f4; color: #7f1d1d;
+  font-size: .88rem; font-weight: 600; overflow-wrap: anywhere;
+}
+.high-warning-icon { position: absolute; left: 9px; top: 8px; color: #a52828; font-size: 1.1rem; line-height: 1.3; }
+.high-warning-kind { display: inline-block; margin-left: .4em; font-size: .75rem; font-weight: 600; }
 .info-notes > .pesel-disclaimer { margin-bottom: 0; }
 @media (max-width: 640px) {
   .container { padding: 16px 12px 28px; }
@@ -170,6 +188,8 @@ p { margin-top: 0; }
   .age-options { padding: 10px; }
   .age-table th, .age-table td { padding: 7px 8px; }
   .date-setting .hint { flex-basis: 100%; }
+  .context-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .list-context-report { padding: 10px; }
 }
 
 /* Dokumentacja - klasy ograniczone do podstrony pomoc.html. */

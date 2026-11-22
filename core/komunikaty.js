@@ -105,6 +105,9 @@
       '. Sprawdź poprawność przypisania.',
     ROLA_NAZWISKA_ZE_STATYSTYK: (tekst) => '„' + tekst + '” potraktowano jako nazwisko na podstawie częstości występowania w słownikach. Sprawdź poprawność przypisania.',
     NIEROZSTRZYGNIETA_ROLA: (tekst) => 'Nie ustalono jednoznacznie, czy „' + tekst + '” jest imieniem, czy nazwiskiem. Sprawdź poprawność przypisania.',
+    KONTEKST_KOLEJNOSCI_LISTY: (uklad) => 'Ustalono brakujące role według dominującej kolejności listy (' +
+      (uklad === 'imiona_nazwiska' ? 'imiona przed nazwiskami' : 'nazwiska przed imionami') +
+      '). Sprawdź poprawność przypisania.',
     NAZWISKO_PRZECIWNE_WYNIKOWI: (tekst, zrodlo) => 'Silne wskazanie nazwiska „' + tekst + '” jest przeciwne do płci ustalonej ' +
         (zrodlo === 'pesel' ? 'z poprawnego PESEL.' : 'na podstawie imion.') +
         ' Sprawdź poprawność danych.',

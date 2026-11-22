@@ -1,5 +1,25 @@
 # Historia zmian
 
+## v1.2.5 - Kontekst całej listy uczestników
+
+### Analiza listy i rozpoznawanie danych
+
+- Dodano opcjonalną analizę dominującej kolejności imion i nazwisk, domyślnie wyłączoną. Wymaga minimum 12 wiarygodnych głosów, 85% zgodności układu i 50% pokrycia; duplikaty nie zwiększają liczby głosów.
+- Dodano drugi przebieg ustalający wyłącznie wybrane wcześniej nierozstrzygnięte role członów. Zachowuje wcześniej ustalone role, grupy złożone i kolejność danych. Kontekst nie zmienia wyniku klasyfikacji płci, źródła ani sugestii, PESEL-u i wieku.
+- Rozwiązano problem T-005: zwarte nazwisko złożone rozpoznane po częściach może w określonych warunkach stanowić kontekst zdrobnienia bez polskich znaków, niezależnie od ustawienia kontekstu listy.
+
+### API i interfejs
+
+- Dodano metodę `analizujListe` oraz raport układu listy, metadane rozstrzygnięć ról i uwagę informacyjną o wykorzystaniu kontekstu. Zachowano dotychczasowe sygnatury metod.
+- Dodano przełącznik kontekstu, raport głosowania i prezentację ról ustalonych z listy. Zmiana ustawienia wymaga ponownej analizy.
+- Komunikaty wysokiej ważności wyróżniono obramowaniem, tłem i ikoną bezpośrednio pod nazwą uczestnika, zachowując rozróżnienie uwag informacyjnych i przyczyn wymagających sprawdzenia.
+- Zaktualizowano dokumentację API i stronę pomocy.
+
+### Testy i integralność
+
+- Zestaw testów automatycznych zwiększono z 535 do 572. Niezależna weryfikacja objęła 684 zaliczone testy logiki i przypadków brzegowych, 356 325 porównań regresji oraz 71 249 rekordów w testach kontekstu, bez wykrytych błędów logiki.
+- Słowniki pozostają bez zmian. Dane uczestników nadal są przetwarzane wyłącznie w przeglądarce.
+
 ## v1.2.4 - Imiona i nazwiska złożone
 
 ### Rozpoznawanie danych

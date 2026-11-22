@@ -16,6 +16,11 @@
     : root.KlasyfikatorPesel;
 
   const K = 'Kobieta', M = 'Mężczyzna', W = 'Do weryfikacji';
+  const PROGI_UKLADU_LISTY = Object.freeze({ minGlosow: 12, minUdzial: 0.85, minPokrycie: 0.50 });
+  const ROLA_Z_LISTY = 'KONTEKST_KOLEJNOSCI_LISTY';
+  const PODSTAWY_GLOSU = new Set(['TYLKO_IMIE', 'TYLKO_NAZWISKO', 'PELNE_IMIE_ZLOZONE',
+    'PELNE_NAZWISKO_ZLOZONE', 'PRZEWAGA_IMIENIA_30', 'PRZEWAGA_IMIENIA_50']);
+  const KONFLIKTY_GLOSU = new Set(['SPRZECZNE_IMIONA', 'KONFLIKT_PESEL_IMIONA', 'KONFLIKT_ZDROBNIENIA']);
 
   function maPrzewageRoli(liczba, drugaLiczba) {
     return liczba >= 100 && BigInt(liczba) >= 50n * BigInt(drugaLiczba);
@@ -32,6 +37,7 @@
       const nazwisko = nazwiska.get(klucz);
       let rola = 'nierozstrzygnieta', podstawaRoli = null, statystyki = null;
       let imienneCzesci = false;
+      let kontekstWariantuZdrobnienia = false;
       let analizaPlci = 'pominieta';
       if (nazwisko && !imie) {
         rola = 'nazwisko';
@@ -58,6 +64,8 @@
             czesci.some(c => c.tylkoNazwisko || c.przewagaNazwiska)) {
           rola = 'nazwisko';
           podstawaRoli = 'NAZWISKO_ZLOZONE_Z_CZESCI';
+          // T-005 wymaga zwartego zapisu i przynajmniej jednej części wyłącznie nazwiskowej.
+          kontekstWariantuZdrobnienia = !wymagaPotwierdzenia && czesci.some(c => c.tylkoNazwisko);
         } else {
           imienneCzesci = czesci.every(c => c.imie && !c.przewagaNazwiska);
         }
@@ -66,7 +74,8 @@
       const zakres = [wyrazy[poczatek].index, wyrazy[koniec].index + wyrazy[koniec][0].length];
       return { tekst: wiersz.slice(...zakres), klucz, zakres, pozycja: poczatek,
         pozycje: klucze.map((_, j) => poczatek + j), rola, podstawaRoli, statystyki,
-        dopasowania: { imie: Boolean(imie), nazwisko: Boolean(nazwisko) }, imienneCzesci, wymagaPotwierdzenia, analizaPlci };
+        dopasowania: { imie: Boolean(imie), nazwisko: Boolean(nazwisko) },
+        imienneCzesci, wymagaPotwierdzenia, kontekstWariantuZdrobnienia, analizaPlci };
     }
     function dodajGrupyPoCzesciach(poczatek, koniec, luzneLaczniki) {
       if (poczatek >= koniec) return;
@@ -157,6 +166,106 @@
     if (rola === 'nierozstrzygnieta') return 'nieustalona';
     return ['TYLKO_IMIE', 'TYLKO_NAZWISKO', 'PRZEWAGA_IMIENIA_50', 'PRZEWAGA_NAZWISKA',
       'PRZEWAGA_IMIENIA_30', 'PELNE_NAZWISKO_ZLOZONE', 'PELNE_IMIE_ZLOZONE'].includes(podstawa) ? 'wysoka' : 'srednia';
+  }
+
+  function czyPeselPrzeciwnyImieniu(wynik) {
+    return wynik.zrodlo === 'pesel' && wynik.rozpoznaneImiona.some(i =>
+      i.uwzglednione !== false && !i.plec && i.sugestia && i.sugestia !== wynik.kategoriaAutomatyczna);
+  }
+
+  function maKonfliktDanych(wynik) {
+    return wynik.urodzenie.uwagi.length > 0 || wynik.ostrzezenia.some(kod => KONFLIKTY_GLOSU.has(kod)) ||
+      czyPeselPrzeciwnyImieniu(wynik) || wynik.rozpoznaneZdrobnienia.some(z => z.sprzeczneZPeselem);
+  }
+
+  function wiarygodnaRola(jednostka, liczbaJednostek) {
+    return jednostka.pewnoscRoli === 'wysoka' && (PODSTAWY_GLOSU.has(jednostka.podstawaRoli) ||
+      (liczbaJednostek === 2 && jednostka.podstawaRoli === 'PRZEWAGA_NAZWISKA'));
+  }
+
+  function glosKolejnosci(wynik) {
+    const jednostki = wynik.jednostkiTekstowe;
+    if (maKonfliktDanych(wynik) || !jednostki.every(j => wiarygodnaRola(j, jednostki.length))) return null;
+
+    const pierwszaRola = jednostki[0].rola;
+    const granica = jednostki.findIndex(j => j.rola !== pierwszaRola);
+    if (granica < 0 || jednostki.some((j, i) => i > granica && j.rola === pierwszaRola)) return null;
+    return pierwszaRola === 'imie' ? 'imiona_nazwiska' : 'nazwiska_imiona';
+  }
+
+  function ustalKontekstListy(wyniki, wlaczony, kompletSlownikow) {
+    const glosy = { imiona_nazwiska: 0, nazwiska_imiona: 0 };
+    const kontekst = { uklad: null, status: 'wylaczony', glosy, liczbaRekordowPorownywalnych: 0,
+      udzialDominujacego: null, pokrycie: null, progi: PROGI_UKLADU_LISTY, liczbaZmienionychRekordow: 0 };
+    if (!wlaczony) return kontekst;
+    if (!kompletSlownikow) return { ...kontekst, status: 'brak_slownikow' };
+
+    const glosyRekordow = new Map();
+    for (const wynik of wyniki) {
+      if (wynik.jednostkiTekstowe.length < 2) continue;
+      const klucz = JSON.stringify(wynik.jednostkiTekstowe.map(j => [j.typ, j.klucz]));
+      const glos = glosKolejnosci(wynik);
+      // Rozbieżna lub błędna kopia wyłącza cały klucz z głosowania, niezależnie od kolejności wierszy.
+      if (!glosyRekordow.has(klucz)) glosyRekordow.set(klucz, glos);
+      else if (glosyRekordow.get(klucz) !== glos) glosyRekordow.set(klucz, null);
+    }
+    for (const glos of glosyRekordow.values()) {
+      if (glos) glosy[glos]++;
+    }
+
+    const razem = glosy.imiona_nazwiska + glosy.nazwiska_imiona;
+    const zwyciezca = glosy.imiona_nazwiska >= glosy.nazwiska_imiona ? 'imiona_nazwiska' : 'nazwiska_imiona';
+    const porownywalne = glosyRekordow.size;
+    kontekst.liczbaRekordowPorownywalnych = porownywalne;
+    kontekst.udzialDominujacego = razem ? glosy[zwyciezca] / razem : null;
+    kontekst.pokrycie = porownywalne ? razem / porownywalne : null;
+    if (razem < PROGI_UKLADU_LISTY.minGlosow) kontekst.status = 'za_malo_glosow';
+    else if (razem * 100 < porownywalne * (PROGI_UKLADU_LISTY.minPokrycie * 100)) kontekst.status = 'za_male_pokrycie';
+    else if (glosy[zwyciezca] * 100 < razem * (PROGI_UKLADU_LISTY.minUdzial * 100)) kontekst.status = 'lista_mieszana';
+    else {
+      kontekst.status = 'dominujacy';
+      kontekst.uklad = zwyciezca;
+    }
+    return kontekst;
+  }
+
+  function proponujRoleZListy(wynik, uklad) {
+    const jednostki = wynik.jednostkiTekstowe;
+    if (jednostki.length < 2) return [];
+    const nieustalone = jednostki.filter(j => j.rola === 'nierozstrzygnieta');
+    const para = jednostki.length === 2;
+    if (nieustalone.length !== (para ? 2 : 1) || maKonfliktDanych(wynik)) return [];
+    const dwuznacznePozycje = new Set(wynik.czlonyTekstowe.filter(c =>
+      !c.czescGrupy && c.dopasowania.imie && c.dopasowania.nazwisko).map(c => c.pozycja));
+    if (!nieustalone.every(j => j.typ === 'czlon' && dwuznacznePozycje.has(j.pozycja))) return [];
+
+    const [pierwsza, druga] = uklad === 'imiona_nazwiska' ? ['imie', 'nazwisko'] : ['nazwisko', 'imie'];
+    if (!para && ![pierwsza, druga].every(rola =>
+      jednostki.some(j => j.rola === rola && wiarygodnaRola(j, jednostki.length)))) return [];
+
+    // Przedział możliwych granic wynika z lokalnie rozpoznanych ról.
+    let od = 1, doPozycji = jednostki.length - 1;
+    for (const [i, j] of jednostki.entries()) {
+      if (j.rola === pierwsza) od = Math.max(od, i + 1);
+      if (j.rola === druga) doPozycji = Math.min(doPozycji, i);
+    }
+    if (od !== doPozycji) return [];
+    const pozycjaGranicy = jednostki[od].pozycja;
+    return nieustalone.map(j => ({ pozycje: j.pozycje, rolaPrzed: j.rola,
+      rolaPo: j.pozycja < pozycjaGranicy ? pierwsza : druga, podstawaPrzed: j.podstawaRoli }));
+  }
+
+  function zachowanoKlasyfikacje(wynik, proba) {
+    if (proba.kategoriaAutomatyczna !== wynik.kategoriaAutomatyczna || proba.zrodlo !== wynik.zrodlo ||
+        proba.sugestia !== wynik.sugestia || maKonfliktDanych(proba)) return false;
+    // T-001 i T-005. Przypisanie roli z listy nie zmienia użycia zdrobnień w klasyfikacji.
+    return proba.rozpoznaneZdrobnienia.length === wynik.rozpoznaneZdrobnienia.length &&
+      proba.rozpoznaneZdrobnienia.every((z, i) => {
+        const przed = wynik.rozpoznaneZdrobnienia[i];
+        return z.pozycja === przed.pozycja && z.klucz === przed.klucz && z.kontekst === przed.kontekst &&
+          z.plecZPelnychForm === przed.plecZPelnychForm && z.wykorzystaneDoKlasyfikacji === przed.wykorzystaneDoKlasyfikacji &&
+          z.sprzeczneZPeselem === przed.sprzeczneZPeselem;
+      });
   }
 
   function rozstrzygnijRolePary(czlony, slownikImion, slownikNazwisk) {
@@ -355,6 +464,10 @@
     }
 
     function klasyfikujWiersz(oryginalnyWiersz, numerWiersza = null) {
+      return analizujWiersz(oryginalnyWiersz, numerWiersza);
+    }
+
+    function analizujWiersz(oryginalnyWiersz, numerWiersza, roleZListy) {
       if (typeof oryginalnyWiersz !== 'string') throw new TypeError(formatuj('BLAD_TYPU_WIERSZA'));
       if (/[\r\n]/.test(oryginalnyWiersz)) throw new TypeError(formatuj('BLAD_WIELOWIERSZOWY'));
       if (!oryginalnyWiersz.trim()) return null;
@@ -415,7 +528,7 @@
       if (nowaAnalizaPar) {
         rozstrzygnijRolePary(czlonyAnalizy, slownik, nazwiska);
         if (!zdrobnieniaDoAnalizy.length && czlonyAnalizy.some(c => c.podstawaRoli === 'TYLKO_NAZWISKO' ||
-            c.podstawaRoli === 'PELNE_NAZWISKO_ZLOZONE')) {
+            c.podstawaRoli === 'PELNE_NAZWISKO_ZLOZONE' || c.kontekstWariantuZdrobnienia)) {
           const czlon = czlonyAnalizy.find(c => !c.grupa && c.rolaWstepna === 'nierozpoznana' && /^[A-Za-z]+$/.test(c.tekst));
           const wariant = czlon && wariantyZdrobnien.get(czlon.klucz);
           if (wariant && !slownik.has(wariant)) {
@@ -486,11 +599,22 @@
             czlon.podstawaRoli = 'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM';
           }
         }
+        const rolaZListy = roleZListy?.get(czlon.pozycja);
+        if (rolaZListy && czlon.rola === 'nierozstrzygnieta') {
+          czlon.rola = rolaZListy;
+          czlon.podstawaRoli = ROLA_Z_LISTY;
+        }
         dodajImie(czlon, czlon.rola !== 'nazwisko');
       }
       const aktywneImiona = rozpoznaneImiona.filter(i => i.uwzglednione);
       for (const wpis of [...rozpoznaneNazwiska, ...rozpoznaneZdrobnienia]) {
         wpis.rola = czlonyTekstowe.find(c => c.pozycja === wpis.pozycja).rola;
+      }
+      // Role z listy zachowują statystyki nazwiska wyłącznie w diagnostyce.
+      if (roleZListy) {
+        for (const wpis of rozpoznaneNazwiska) {
+          if (roleZListy.has(wpis.pozycja)) wpis.uwzglednione = false;
+        }
       }
       const silneNazwiska = rozpoznaneNazwiska.filter(n =>
         n.uwzglednione !== false && n.rola === 'nazwisko' && n.statystyki.silneWskazanie);
@@ -624,7 +748,7 @@
       const sugestie = new Set(kierunki);
       if (ostrzezenia.includes('KONFLIKT_ZDROBNIENIA')) sugestie.clear();
       if (poprawnyPesel) sugestie.add(poprawnyPesel.plec);
-      const grupyZlozone = grupy.map(({ imienneCzesci, wymagaPotwierdzenia, ...g }) =>
+      const grupyZlozone = grupy.map(({ imienneCzesci, wymagaPotwierdzenia, kontekstWariantuZdrobnienia, ...g }) =>
         ({ ...g, pewnoscRoli: pewnoscRoli(g.rola, g.podstawaRoli) }));
       const grupaNaPoczatku = new Map(grupyZlozone.map(g => [g.pozycja, g]));
       const jednostkiTekstowe = [];
@@ -654,7 +778,29 @@
       if (typeof tekst !== 'string') throw new TypeError(formatuj('BLAD_TYPU_LISTY'));
       return tekst.split(/\r\n|\n|\r/).map((wiersz, i) => klasyfikujWiersz(wiersz, i + 1)).filter(Boolean);
     }
-    return { klasyfikujWiersz, klasyfikujListe };
+    function analizujListe(tekst, { kontekstKolejnosci = false } = {}) {
+      const wyniki = klasyfikujListe(tekst);
+      const kontekstListy = ustalKontekstListy(wyniki, kontekstKolejnosci === true,
+        nazwiska.size > 0 && zdrobnienia.size > 0);
+      const uklad = kontekstListy.uklad;
+      const wynikListy = wyniki.map(wynik => {
+        const bezZmian = { ...wynik, kontekstKolejnosci: null };
+        if (!uklad) return bezZmian;
+        const zmiany = proponujRoleZListy(wynik, uklad);
+        if (!zmiany.length) return bezZmian;
+        const roleZListy = new Map(zmiany.map(z => [z.pozycje[0], z.rolaPo]));
+        if (wynik.kategoriaAutomatyczna !== W && wynik.rozpoznaneNazwiska.some(n =>
+          roleZListy.get(n.pozycja) === 'nazwisko' && n.statystyki.silneWskazanie &&
+          n.statystyki.plec !== wynik.kategoriaAutomatyczna)) return bezZmian;
+        const proba = analizujWiersz(wynik.oryginalnyWiersz, wynik.numerWiersza, roleZListy);
+        if (!zachowanoKlasyfikacje(wynik, proba) || !zmiany.every(z => proba.jednostkiTekstowe.some(j =>
+          j.pozycja === z.pozycje[0] && j.rola === z.rolaPo && j.podstawaRoli === ROLA_Z_LISTY))) return bezZmian;
+        kontekstListy.liczbaZmienionychRekordow++;
+        return { ...proba, klasyfikacjaReczna: wynik.klasyfikacjaReczna, kontekstKolejnosci: { uklad, zmiany } };
+      });
+      return { wyniki: wynikListy, kontekstListy };
+    }
+    return { klasyfikujWiersz, klasyfikujListe, analizujListe };
   }
 
   function ustawKlasyfikacjeReczna(wynik, kategoria) {
@@ -677,8 +823,12 @@
       if (!reczna) weryfikacjaAutomatyczna = wpis;
     }
     const dodaj = (kod, severity, opis) => informacyjne.push({ obszar: 'plec', kod, severity, opis });
-    if (wynik.zrodlo === 'pesel' &&
-        aktywneImiona.some(i => !i.plec && i.sugestia && i.sugestia !== wynik.kategoriaAutomatyczna)) {
+    if (wynik.kontekstKolejnosci?.zmiany.length) {
+      informacyjne.push({ obszar: 'dane', kod: ROLA_Z_LISTY, severity: 'medium',
+        pozycje: wynik.kontekstKolejnosci.zmiany.flatMap(z => z.pozycje),
+        opis: formatuj(ROLA_Z_LISTY, wynik.kontekstKolejnosci.uklad) });
+    }
+    if (czyPeselPrzeciwnyImieniu(wynik)) {
       dodaj('PESEL_PRZECIWNE_IMIE', 'medium', formatuj('PESEL_PRZECIWNE_IMIE'));
     }
     // Uwagi o rolach i zdrobnieniach nie są zadaniami ręcznej klasyfikacji płci.

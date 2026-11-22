@@ -7,7 +7,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="description" content="Jak działa klasyfikacja uczestników? Instrukcja użytkowania, rozpoznawanie imion, PESEL, daty urodzenia, statystyki wiekowe, weryfikacja wyników i prywatność.">
   <title>Jak działa klasyfikacja uczestników?</title>
-  <link rel="stylesheet" href="./style.css?v=1.2.4">
+  <link rel="stylesheet" href="./style.css?v=1.2.5-ui1">
 </head>
 <body>
   <main class="container help-page">
@@ -17,7 +17,7 @@
     </header>
 
     <section class="panel help-intro" aria-label="Wprowadzenie">
-<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. W wersji 1.2.4 wykorzystuje statystyki imion i nazwisk pochodzące z polskiego rejestru PESEL, słownik zdrobnień oraz opcjonalne daty urodzenia i numery PESEL. Rozpoznaje role imion i nazwisk na podstawie kontekstu, w tym imiona i nazwiska złożone. Szczegóły analizy wyjaśniają, które dopasowania wykorzystano.</p>
+<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. W wersji 1.2.5 wykorzystuje statystyki imion i nazwisk pochodzące z polskiego rejestru PESEL, słownik zdrobnień oraz opcjonalne daty urodzenia i numery PESEL. Rozpoznaje role imion i nazwisk, także złożonych. Opcjonalnie wykorzystuje dominujący układ całej listy do dodatkowego rozstrzygnięcia nieustalonych ról, bez zmiany klasyfikacji płci.</p>
 <p>Klasyfikacja płci i ustalanie wieku odbywają się niezależnie. Program wskazuje problemy wymagające ręcznego sprawdzenia oraz dodatkowe uwagi informacyjne.</p>
 <p>Cała analiza odbywa się lokalnie w przeglądarce użytkownika.</p>
     </section>
@@ -204,6 +204,11 @@ Zofia Nowak
 </ul>
 <p>Przewaga oznacza porównanie łącznej liczby wystąpień członu jako imienia i jako nazwiska, niezależnie od płci. Samodzielne liczby, PESEL i numeryczne fragmenty dat nie zwiększają liczby członów tekstowych, ale dodatkowe napisy, np. „Lp” lub „A123”, już tak.</p>
 <p>Rola jest wynikiem reguł statystycznych lub kontekstowych, nie potwierdzeniem płci, tożsamości ani danych z dokumentu. Dla prawdopodobnego imienia lub nazwiska nie wyznaczamy procentowej pewności roli. Przewaga statystyczna imienia lub nazwiska 50-krotna jest widoczna w szczegółach bez osobnej uwagi. Kontekstowe przypisanie roli daje uwagę o niskiej ważności, a prawdopodobne nazwisko o średniej, gdy jako samodzielne imię jednoznacznie wskazuje płeć przeciwną do wyniku automatycznego. Jeśli konflikt tego członu jest już przyczyną aktywnej weryfikacji płci, program nie powiela uwagi o jego roli. Nierozstrzygnięta kolizja imienia i nazwiska generuje uwagę o średniej ważności niezależnie od długości wpisu. Sama nie przesądza o konieczności weryfikacji płci. Zwykły brak dopasowania członu nie generuje takiej uwagi. Program nie przestawia członów i zachowuje oryginalny zapis.</p>
+<h3 id="kontekst-listy">Kontekst kolejności całej listy (wersja 1.2.5)</h3>
+<p>Opcja „Uwzględnij kolejność imion i nazwisk na liście” jest domyślnie wyłączona. Po jej włączeniu program najpierw analizuje każdy wiersz niezależnie, a następnie ustala, czy dominuje układ imiona - nazwiska lub nazwiska - imiona. Można włączyć albo wyłączyć opcję i ponownie przeanalizować listę.</p>
+<p>Głosowanie wymaga jednocześnie minimum 12 wiarygodnych głosów, 85% zgodności głosów i 50% pokrycia porównywalnych rekordów. Powtórzenia tych samych uporządkowanych jednostek liczą się raz, niezależnie od wielkości liter, numeracji, daty i PESEL-u. Rozbieżne lub błędne kopie nie głosują. Grupy złożone zachowują integralność. Raport wyświetla aktualne progi z logiki i przyczynę niewykorzystania kontekstu, jeżeli warunki nie zostały spełnione.</p>
+<p>Po spełnieniu progów program może przypisać tylko dotąd nierozstrzygnięte role członów występujących w obu słownikach, jeżeli jednocześnie zachowane są pozostałe zabezpieczenia. Nie zgaduje ról słów nieznanych słownikowo, nie nadpisuje wcześniej ustalonych ról i nie zmienia płci, jej źródła, sugestii, PESEL-u, wieku ani użycia zdrobnień. Przykładowo w odpowiednio jednolitej liście Marek Roman może uzyskać role imienia i nazwiska, ale przy konflikcie wskazań program pozostawia dotychczasowy wynik.</p>
+<p>Role ustalone z listy są oznaczone w szczegółach jako mające średnią pewność roli. Jedna uwaga informacyjna o średniej ważności opisuje zmiany dla całego wiersza. Statystyki nazwiska ustalonego z listy nie są nowym wskazaniem płci. Procent zgodności i pokrycie dotyczą układu danych, a nie prawdopodobieństwa poprawnego rozpoznania płci. Liczba rekordów z dodatkowymi rolami obejmuje każdy zmieniony wiersz tylko raz.</p>
 <h3>Kiedy nazwisko pomaga ustalić płeć?</h3>
 <p>Silne wskazanie nazwiska wymaga jednocześnie co najmniej 100 opublikowanych wystąpień i udziału jednej płci minimum 99,90%. Program uwzględnia w tym celu tylko człony o przyjętej roli nazwiska, nie dopasowania o nierozstrzygniętej roli.</p>
 <p>Jeżeli żadne uwzględnione imię nie jest jednoznaczne, ale co najmniej jedno zostało rozpoznane, wszystkie wskazują zgodnie tę samą płeć bez remisu, a silne nazwiska potwierdzają ten sam kierunek, program może ustalić płeć automatycznie. Sprzeczne silne nazwiska blokują takie rozstrzygnięcie. Powstaje uwaga informacyjna o średniej ważności.</p>
@@ -258,8 +263,9 @@ Zofia Nowak
 <p>Gdy oba człony mają wstępną rolę nazwiska, a dokładnie jeden występuje w słowniku zdrobnień, program może ustalić płeć ze zdrobnienia. Każda pełna forma musi osiągać co najmniej 99,90% i wskazywać tę samą płeć. Przewaga przeciwnej płci w statystykach dowolnego samodzielnego imienia (także pominiętego jako nazwisko) lub przeciwne silne wskazanie nazwiska blokuje decyzję. Remis imienia nie wskazuje kierunku. Poprawny pojedynczy PESEL zachowuje pierwszeństwo; błędny lub wielokrotny wymaga weryfikacji.</p>
 <p>Przykłady: <strong>Klimek Witek</strong> i <strong>Witek Nowak</strong> - mężczyzna ze zdrobnienia. Oba człony zachowują rolę nazwiska; wynik nie potwierdza, który człon jest imieniem. <strong>Gala Witek</strong> - do weryfikacji z powodu przeciwnego wskazania imienia Gala; <strong>Witek Kowalska</strong> - do weryfikacji z powodu silnego wskazania nazwiska Kowalska. Dwa zdrobnienia, np. Witek Mirek, nie uruchamiają tej reguły.</p>
 <h3>Zdrobnienia bez polskich znaków</h3>
-<p>Przy dwóch członach jeden musi być dopasowany wyłącznie do nazwisk, a drugi zapisany literami A-Z i nie mieć dokładnego dopasowania w żadnym z trzech słowników. Możliwe jest dopasowanie do jednego zdrobnienia z polskimi znakami (ą, ć, ę, ł, ń, ó, ś, ź, ż), jeśli po uproszczeniu nie istnieje inny klucz w żadnym słowniku. Ten sam klucz może występować również jako nazwisko, lecz nie jako samodzielne imię. Każda pełna forma oraz pozostałe dane nadal podlegają zwykłej ocenie.</p>
+<p>Przy dwóch jednostkach jedna musi zapewniać wymagany kontekst nazwiska (np. samodzielne dopasowanie wyłącznie do nazwisk albo pełne nazwisko złożone), a druga być zapisana literami A-Z i nie mieć dokładnego dopasowania w żadnym z trzech słowników. Możliwe jest dopasowanie do jednego zdrobnienia z polskimi znakami (ą, ć, ę, ł, ń, ó, ś, ź, ż), jeśli po uproszczeniu nie istnieje inny klucz w żadnym słowniku. Ten sam klucz może występować również jako nazwisko, lecz nie jako samodzielne imię. Każda pełna forma oraz pozostałe dane nadal podlegają zwykłej ocenie.</p>
 <p>Przykład: <strong>Pawelek Nowak</strong> - dopasowanie do „Pawełek” pozwala ustalić płeć jako mężczyznę. Obie pisownie są widoczne w szczegółach i uwadze o średniej ważności, ale oryginalny zapis Pawelek Nowak nie zostaje zmieniony. Jest to osobna reguła zdrobnień, nie automatyczna korekta imion.</p>
+<p>Od wersji 1.2.5 kontekst może zapewnić również zwarte nazwisko złożone rozpoznane po częściach, jeżeli co najmniej jedna część występuje wyłącznie w słowniku nazwisk. Przykład: <strong>Pawelek Witek-Nowak</strong> - mężczyzna ze zdrobnienia. Wariant Witek - Nowak ze spacjami wewnątrz grupy nie spełnia tego warunku. Reguła działa niezależnie od opcji kontekstu całej listy.</p>
     </section>
 
     <section class="panel help-section" id="sekcja-4" aria-labelledby="naglowek-4">
@@ -646,9 +652,10 @@ Piotr Wiśniewski 12/5/2008
 <div class="info-notes-list" style="margin-bottom: 14px" aria-label="Poziomy ważności uwag informacyjnych">
 <div class="info-item info-level-1"><strong>Niska ważność - szaroniebieski</strong><p class="reason">Np. jedyne jednoznaczne imię bez niezależnego potwierdzenia ma 50-99 wystąpień, kontekstowe rozstrzygnięcie roli bez przeciwnego jednoznacznego wskazania, starsza reguła przewagi imienia 10-krotnej lub sugestia zapisu imienia z polskimi znakami.</p></div>
 <div class="info-item info-level-2"><strong>Średnia ważność - żółty</strong><p class="reason">Np. PESEL rozstrzyga płeć mimo przeciwnego słabszego wskazania, jedyne jednoznaczne imię bez niezależnego potwierdzenia ma 30-49 wystąpień, nierozstrzygnięta kolizja ról, kontekstowe nazwisko jako imię wskazuje przeciwną płeć, zwykła klasyfikacja ze zdrobnienia, klasyfikacja wsparta nazwiskiem lub błędna data przy ustalonej dacie urodzenia.</p></div>
-<div class="info-item info-level-3"><strong>Wysoka ważność - pomarańczowy</strong><p class="reason">Np. klasyfikacja ze zdrobnienia w kontekście pary nazwisk, rozbieżność zdrobnienia z wynikiem z PESEL-u, silne wskazanie nazwiska przeciwne do wyniku lub problem PESEL-u przy ustalonej dacie, o ile nie został już opisany w aktywnej weryfikacji płci.</p></div>
+<div class="info-item info-level-3"><strong>Wysoka ważność - czerwony</strong><p class="reason">Np. klasyfikacja ze zdrobnienia w kontekście pary nazwisk, rozbieżność zdrobnienia z wynikiem z PESEL-u, silne wskazanie nazwiska przeciwne do wyniku lub problem PESEL-u przy ustalonej dacie, o ile nie został już opisany w aktywnej weryfikacji płci.</p></div>
 </div>
 <p>Rekordy wyświetlane są od najwyższej do najniższej ważności. Jeżeli jeden uczestnik ma kilka uwag, kolor jego rekordu odpowiada najważniejszej z nich. Gdy uwagi mają różną ważność, każda jest dodatkowo oznaczona własnym poziomem.</p>
+<p>Komunikaty wysokiej ważności są dodatkowo wyróżnione czerwonym obramowaniem, jasnoczerwonym tłem i ikoną ostrzegawczą bezpośrednio pod nazwą uczestnika, również na listach wyników. Dotyczy to m.in. sprzeczności płci lub daty urodzenia z poprawnym numerem PESEL. Etykieta przy komunikacie informuje, czy jest to uwaga informacyjna, czy przyczyna wymagająca sprawdzenia.</p>
 <p class="help-note"><strong>Ważne:</strong> kolor i ważność uwagi nie oznaczają konieczności ręcznej klasyfikacji. Decyzja o tym, czy wpis wymaga sprawdzenia, jest niezależna. Ten sam uczestnik może występować zarówno w sekcji uwag informacyjnych, jak i wśród wpisów do sprawdzenia.</p>
 <p>Uwagi dotyczą płci, wieku lub danych (np. roli członu i możliwych zdrobnień). Warto przeczytać je przed wykorzystaniem danych. Nawet brak uwag nie potwierdza rzeczywistej tożsamości uczestnika.</p>
 <p>Od wersji 1.2.3 rutynowe rozstrzygnięcia, m.in. silna przewaga statystyczna roli, osiągnięty przedział progowy imienia, zgodne słabe wskazanie, remis rozstrzygnięty przez PESEL oraz niewykorzystane zdrobnienia, nie tworzą osobnych uwag. Ich dane pozostają dostępne w szczegółach analizy po otwarciu wpisu.</p>
@@ -680,9 +687,9 @@ Piotr Wiśniewski 12/5/2008
 </ul>
 <p>Można edytować również uczestników, którzy zostali już automatycznie lub ręcznie zakwalifikowani jako kobiety lub mężczyźni, klikając ich wpis na liście. Tak samo można zmienić decyzję zapisaną szybkim przyciskiem albo przywrócić klasyfikację automatyczną.</p>
 <p>Po zapisaniu zmiany liczniki, wiek, statystyki i komunikaty aktualizują się automatycznie. Ręczne przypisanie płci nie rozwiązuje problemów związanych z datą urodzenia ani rolą członu. Uwagi informacyjne nadal opisują wynik analizy automatycznej, nie ręcznie przypisaną płeć.</p>
-<p>Zmiana treści pojedynczego wpisu uruchamia jego ponowną klasyfikację i usuwa wcześniejszą decyzję ręczną, chyba że użytkownik wybierze nowe ręczne przypisanie.</p>
+<p>Zmiana treści pojedynczego wpisu uruchamia jego ponowną klasyfikację i usuwa wcześniejszą decyzję ręczną, chyba że użytkownik wybierze nowe ręczne przypisanie. Przy włączonym kontekście kolejności program przelicza również układ całej listy i dodatkowe role, zachowując ręczne decyzje dotyczące pozostałych wpisów.</p>
 <h3 id="ponowna-analiza-caej-listy">Ponowna analiza całej listy</h3>
-<p>Ponowna analiza jest potrzebna po zmianie zawartości głównego pola tekstowego, a nie po zmianie daty wydarzenia lub progów wiekowych.</p>
+<p>Ponowna analiza jest potrzebna po zmianie zawartości głównego pola tekstowego lub ustawienia kontekstu kolejności listy, a nie po zmianie daty wydarzenia lub progów wiekowych. Do ponownej analizy wcześniejsze wyniki są ukryte, aby nie przedstawiać nieaktualnego raportu.</p>
 <p>Przycisk „Wyczyść” usuwa listę i wyniki po potwierdzeniu.</p>
 <p class="help-note"><strong>Uwaga:</strong> ponowna analiza całej listy usuwa wcześniej wprowadzone ręczne przypisania płci. Jeżeli takie przypisania istnieją, program wyświetli ostrzeżenie i poprosi o potwierdzenie.</p>
 <h3 id="przykadowe-dane">Przykładowe dane</h3>
@@ -753,7 +760,7 @@ Piotr Wiśniewski 12/5/2008
 <td>Minimalna łączna liczba wystąpień w słownikach imion i nazwisk</td>
 <td>30</td>
 </tr>
-<tr><td>Liczebność słowników (wersja 1.2.4)</td><td>8 136 imion, 117 159 nazwisk, 1 101 zdrobnień i form potocznych</td></tr>
+<tr><td>Liczebność słowników (wersja 1.2.5)</td><td>8 136 imion, 117 159 nazwisk, 1 101 zdrobnień i form potocznych</td></tr>
 <tr><td>Źródło zdrobnień</td><td>Osobny słownik redakcyjny; uwagi informacyjne i warunkowa klasyfikacja płci</td></tr>
 <tr>
 <td>Próg automatycznej klasyfikacji</td>
@@ -779,7 +786,8 @@ Piotr Wiśniewski 12/5/2008
 <td>Sugestia zapisu imienia z polskimi znakami</td>
 <td>Jeden odpowiednik w słowniku, minimum 10 000 wystąpień i co najmniej 10-krotna przewaga liczebności nad wpisanym imieniem</td>
 </tr>
-<tr><td>Dopasowanie zdrobnienia bez polskich znaków</td><td>Dokładnie dwa człony, osobne nazwisko, brak dokładnego dopasowania formy wejściowej, jeden niekolidujący wariant zdrobnienia bez wpisu samodzielnego imienia (sekcja 3)</td></tr>
+<tr><td>Dopasowanie zdrobnienia bez polskich znaków</td><td>Dokładnie dwie jednostki, wymagany kontekst nazwiska (także zwartego nazwiska złożonego), brak dokładnego dopasowania formy wejściowej, jeden niekolidujący wariant zdrobnienia bez wpisu samodzielnego imienia (sekcja 3)</td></tr>
+<tr><td>Kontekst kolejności listy</td><td>Opcjonalnie: minimum 12 głosów, 85% zgodności, 50% pokrycia; jedynie dodatkowe role, bez zmiany klasyfikacji płci (sekcja 2)</td></tr>
 <tr><td>Klasyfikacja ze zdrobnień</td><td>Każda pełna forma osiąga minimum 99,90% i wskazuje tę samą płeć; wymagany właściwy kontekst i brak blokujących sprzeczności (sekcja 3)</td></tr>
 <tr>
 <td>Metoda analizy</td>
