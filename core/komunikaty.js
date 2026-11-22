@@ -67,6 +67,8 @@
     PESEL_REMIS: 'Płeć ustalono z PESEL mimo remisu w statystykach imienia.',
     PESEL_PRZECIWNE_IMIE: 'Płeć ustalono z PESEL mimo przeciwnego wskazania imienia poniżej progu.',
     PESEL_ZGODNE_SLABE_IMIE: 'Imię poniżej progu jest zgodne z płcią ustaloną z PESEL.',
+    DOPISEK_PRZECIWNE_IMIE_W_NAZWISKU: ' Jako samodzielne imię ten człon jednoznacznie wskazuje płeć przeciwną do wyniku automatycznego.',
+    DOPISEK_BRAK_DATY_Z_PESEL: ' Nie ustalono daty urodzenia. Sprawdź dane potrzebne do obliczenia wieku.',
     RECZNA_WERYFIKACJA: 'Wpis oznaczono ręcznie do weryfikacji.',
     POWOD_PLEC_Z_IMION_I_NAZWISKA: 'Zgodne wskazania niejednoznacznych imion wsparto nazwiskiem o minimum 100 wystąpieniach i udziale płci co najmniej 99,90%.',
     POWOD_PLEC_Z_IMION: 'Co najmniej jedno imię osiąga próg 99,90%, a wszystkie uwzględnione imiona wskazują tę samą płeć.'

@@ -208,7 +208,7 @@ for (const [tekst, oczekiwany, kod] of [
   const komunikaty = API.pobierzKomunikaty(osoba);
   assert.equal(osoba.kategoriaAutomatyczna,oczekiwany);
   assert.equal(komunikaty.doWeryfikacji.length > 0, oczekiwany === W);
-  if (kod) assert.ok(kody(komunikaty.informacyjne).includes(kod));
+  if (kod) assert.deepEqual(kody(komunikaty.informacyjne), kod === 'PESEL_PRZECIWNE_IMIE' ? [kod] : []);
 });
 test('Statystyki każdego dopasowania i dokładny próg', () => {
   const osoba = probka.klasyfikujWiersz('Patryk 18/11/2008 Baran');
@@ -230,7 +230,9 @@ test('Weryfikacja płci i uwaga wieku mogą dotyczyć tej samej osoby', () => {
   const osoba = wiersz('Jan 1234567890 2000-01-15');
   const wynik = API.pobierzKomunikaty(osoba,'2025-01-15');
   assert.deepEqual(wynik.doWeryfikacji.map(m=>m.obszar),['plec']);
-  assert.deepEqual(kody(wynik.informacyjne),['BLEDNY_PESEL']);
+  assert.deepEqual(wynik.informacyjne,[]);
+  assert.equal(wynik.doWeryfikacji[0].powiazane[0].kod,'BLEDNY_PESEL');
+  assert.equal(wynik.doWeryfikacji[0].powiazane[0].wymagaWeryfikacji,false);
   assert.equal(API.obliczWiek(osoba,'2025-01-15').wiek,25);
   assert.equal(API.pobierzKomunikaty(API.ustawKlasyfikacjeReczna(osoba,M)).doWeryfikacji.length,0);
 });
@@ -261,8 +263,7 @@ for (const [dominujace, jednoznaczne, uwaga] of [
     assert.equal(stat.progOsiagniety, jednoznaczne);
     assert.equal(stat.uwagaProgowa, uwaga);
     const komunikaty = API.pobierzKomunikaty(osoba);
-    assert.deepEqual(komunikaty.informacyjne.map(m => [m.kod, m.severity]),
-      uwaga ? [['IMIE_W_PRZEDZIALE_PROGOWYM', 'low']] : []);
+    assert.deepEqual(komunikaty.informacyjne,[]);
     assert.equal(komunikaty.doWeryfikacji.length, jednoznaczne ? 0 : 1);
   }
 });
@@ -273,17 +274,17 @@ test('Nowe jednoznaczne imię uczestniczy w konfliktach z PESEL i słabszym imie
     assert.equal(osoba.kategoriaAutomatyczna,W);
     const komunikaty = API.pobierzKomunikaty(osoba);
     assert.equal(komunikaty.doWeryfikacji[0].severity,'high');
-    assert.equal(komunikaty.informacyjne[0].severity,'low');
+    assert.deepEqual(komunikaty.informacyjne,[]);
   }
   const zgodne = k.klasyfikujWiersz('Artem Artem '+pm);
   assert.equal(zgodne.kategoriaAutomatyczna,M);
-  assert.equal(API.pobierzKomunikaty(zgodne).informacyjne.length,1);
+  assert.equal(API.pobierzKomunikaty(zgodne).informacyjne.length,0);
 });
 test('Ważność komunikatu i konieczność weryfikacji są niezależne', () => {
   for (const [tekst, poziomy] of [
-    ['Nur Marcin', ['low']], [pm+' Jan Nur', ['low']], [pm+' Nur', ['medium']],
-    [pm+' Remis', ['medium']], [pm+' Kim', ['medium']], [pm, ['medium']],
-    [pm+' Jan 31.02.2004', ['high']]
+    ['Nur Marcin', []], [pm+' Jan Nur', []], [pm+' Nur', []],
+    [pm+' Remis', []], [pm+' Kim', ['medium']], [pm, []],
+    [pm+' Jan 31.02.2004', ['medium']]
   ]) {
     const osoba = wiersz(tekst);
     const komunikaty = API.pobierzKomunikaty(osoba,'2026-11-16');
@@ -292,7 +293,8 @@ test('Ważność komunikatu i konieczność weryfikacji są niezależne', () => 
     assert.equal(API.podsumuj([osoba]).doWeryfikacji,0);
   }
   const oba = API.pobierzKomunikaty(wiersz('Jan 1234567890 18/11/2008'));
-  assert.deepEqual(oba.informacyjne.map(m => [m.kod,m.severity]),[['BLEDNY_PESEL','high']]);
+  assert.deepEqual(oba.informacyjne,[]);
+  assert.deepEqual(oba.doWeryfikacji[0].powiazane.map(m => [m.kod,m.severity]),[['BLEDNY_PESEL','high']]);
   assert.deepEqual(oba.doWeryfikacji.map(m => m.severity),['high']);
 });
 
@@ -339,10 +341,10 @@ test('Pomijane imię pozostaje w szczegółach, ale nie w licznikach ani uwagach
   assert.equal(klimek.uwzglednione,false);
   assert.equal(klimek.statystyki.mezczyzni,48);
   assert.equal(osoba.czlonyTekstowe[1].podstawaRoli,'PRZEWAGA_NAZWISKA');
-  assert.deepEqual(info12(osoba).map(i => [i.kod,i.severity]),[['ROLA_NAZWISKA_ZE_STATYSTYK','medium']]);
+  assert.deepEqual(info12(osoba),[]);
   assert.deepEqual(API.pobierzKomunikaty(osoba).doWeryfikacji,[]);
 });
-for (const [liczba,oczekiwana] of [[30,'high'],[49,'high'],[50,'medium'],[99,'medium'],[100,null]]) {
+for (const [liczba,oczekiwana] of [[30,'medium'],[49,'medium'],[50,'low'],[99,'low'],[100,null]]) {
   test('Rzadkość - granica '+liczba, () => {
     const osoba = API.utworzKlasyfikator({imiona:{RZADKIE:[0,liczba]}}).klasyfikujWiersz('Rzadkie');
     assert.equal(osoba.kategoriaAutomatyczna,M);
@@ -423,8 +425,8 @@ test('Rola z kontekstu i pozostałe uwagi pozostają informacyjne', () => {
 
   const kasia = w12('Kasia Kowalska');
   const komunikatyKasi = API.pobierzKomunikaty(kasia);
-  assert.ok(komunikatyKasi.informacyjne.some(u => u.kod === 'ROLA_IMIENIA_Z_KONTEKSTU' && u.severity === 'medium'));
-  assert.ok(kody(komunikatyKasi.informacyjne).includes('MOZLIWE_ZDROBNIENIE'));
+  assert.deepEqual(komunikatyKasi.informacyjne.map(u => [u.kod,u.severity]),[['ROLA_IMIENIA_Z_KONTEKSTU','low']]);
+  assert.equal(kasia.rozpoznaneZdrobnienia[0].odpowiedniki[0].klucz,'KATARZYNA');
   assert.equal(komunikatyKasi.doWeryfikacji.length,0);
   assert.equal(API.podsumuj([kasia]).doWeryfikacji,0);
   assert.equal(kasia.czlonyTekstowe[0].rola,'imie');
@@ -439,22 +441,24 @@ test('Zdrobnienia pobierają liczby dynamicznie, nie dziedziczą płci, brak wpi
   assert.equal(alex.kategoriaAutomatyczna,W);
   assert.equal(alex.rozpoznaneZdrobnienia[0].statystyki,null);
   assert.ok(alex.rozpoznaneZdrobnienia[0].odpowiedniki.every(p=>p.statystyki===null));
-  assert.match(info12(alex).find(u=>u.kod==='MOZLIWE_ZDROBNIENIE').opis,/nie oznacza zera/);
+  assert.ok(!info12(alex).some(u=>u.kod==='MOZLIWE_ZDROBNIENIE'));
   const zmieniony = API.utworzKlasyfikator({imiona:{WITEK:[0,47],WITOLD:[0,777]}},null,zdrobnienia12);
   assert.equal(zmieniony.klasyfikujWiersz('Witek').rozpoznaneZdrobnienia[0].odpowiedniki[0].statystyki.mezczyzni,777);
 });
 test('Zdrobnienie jako nazwisko nie otrzymuje polecenia rozwinięcia imienia', () => {
   const osoba = w12('Anna Witek');
   assert.equal(osoba.kategoriaAutomatyczna,K);
-  const uwaga = info12(osoba).find(u=>u.kod==='MOZLIWE_ZDROBNIENIE');
-  assert.match(uwaga.opis,/potraktowany jako nazwisko/);
-  assert.doesNotMatch(uwaga.opis,/Sprawdź zgodność imienia/);
+  assert.equal(osoba.rozpoznaneZdrobnienia[0].rola,'nazwisko');
+  assert.equal(osoba.rozpoznaneZdrobnienia[0].wykorzystaneDoKlasyfikacji,false);
+  assert.ok(!info12(osoba).some(u=>u.kod==='MOZLIWE_ZDROBNIENIE'));
   assert.ok(!kody(info12(osoba)).includes('RZADKIE_IMIE'));
 });
 test('Powtórzone dopasowania zachowują pozycje i nie powielają komunikatów', () => {
   const osoba = w12('Witek Witek Kowalski');
   assert.equal(osoba.wskazania.mezczyzna,2);
-  for (const kod of ['RZADKIE_IMIE','MOZLIWE_ZDROBNIENIE','NIEROZSTRZYGNIETA_ROLA']) {
+  assert.deepEqual(osoba.rozpoznaneZdrobnienia.map(z=>z.pozycja),[0,1]);
+  assert.ok(!info12(osoba).some(u=>u.kod==='MOZLIWE_ZDROBNIENIE'));
+  for (const kod of ['RZADKIE_IMIE','NIEROZSTRZYGNIETA_ROLA']) {
     const znalezione = info12(osoba).filter(u=>u.kod===kod);
     assert.equal(znalezione.length,1);
     assert.deepEqual(znalezione[0].pozycje,[0,1]);
@@ -582,8 +586,7 @@ test('Kontekst dwóch członów ignoruje datę i cyfry, ale nie dodatkowy człon
     assert.equal(o.oryginalnyWiersz,tekst);
     assert.equal(o.kategoriaAutomatyczna,plec);
     assert.equal(o.zrodlo, tekst.includes(pm) ? 'pesel' : 'zdrobnienia');
-    assert.equal(info12(o).some(u=>u.kod==='ROLA_NAZWISKA_ZE_STATYSTYK' && u.severity==='medium'),
-      o.zrodlo === 'pesel');
+    assert.ok(!info12(o).some(u=>u.kod==='ROLA_NAZWISKA_ZE_STATYSTYK'));
   }
   for(const tekst of ['Lp. Witek Nowak','Witek A123 Nowak','Anna Witek Nowak']){
     const o=w12(tekst);
@@ -619,9 +622,9 @@ for(const [pelne,proste,uwaga] of [[9999,95,false],[10000,95,true],[10001,95,tru
 }
 for(const [proste,pelne,plec,rzadkie] of [
   [[95,0],[10000,0],K,false], [[0,47],[0,10000],M,false],
-  [[95,0],[0,10000],K,true], [[50,45],[10000,0],W,true],
+  [[95,0],[0,10000],K,true], [[50,45],[10000,0],W,false],
   [[95,0],[9990,10],K,false], [[95,0],[9989,11],K,true],
-  [[50,45],[5000,5000],W,true]
+  [[50,45],[5000,5000],W,false]
 ]) test(`Pisownia - niezależność płci: ${proste}/${pelne}`,()=>{
   const o=pisownia({MALGORZATA:proste,MAŁGORZATA:pelne},'Malgorzata');
   assert.equal(o.kategoriaAutomatyczna,plec);
@@ -682,7 +685,8 @@ test('Sugestia nie znosi pozostałych uwag i nie jest prezentowana dla pominięt
   const kontekst = pisownia(imiona,'Malgorzata Nowak',
     {nazwiska: {...nazwiska.nazwiska, MALGORZATA:[100,100]}},zdrobnienia);
   const kodyUwag=kody(info12(kontekst));
-  for(const kod of [kodPisowni,'MOZLIWE_ZDROBNIENIE','ROLA_IMIENIA_Z_KONTEKSTU']) assert.ok(kodyUwag.includes(kod));
+  for(const kod of [kodPisowni,'ROLA_IMIENIA_Z_KONTEKSTU']) assert.ok(kodyUwag.includes(kod));
+  assert.ok(!kodyUwag.includes('MOZLIWE_ZDROBNIENIE'));
   assert.ok(!kodyUwag.includes('RZADKIE_IMIE'));
   const nazwisko=pisownia(imiona,'Jan Malgorzata',nazwiska);
   assert.equal(nazwisko.rozpoznaneImiona[1].uwzglednione,false);
@@ -780,8 +784,11 @@ test('Poprawny PESEL wystarcza jako kontekst, ma pierwszeństwo i scala uwagę o
       assert.equal(z.sprzeczneZPeselem,plec===K);
       assert.equal(z.wykorzystaneDoKlasyfikacji,false);
       const uwagi=info12(o).filter(u=>u.kod==='MOZLIWE_ZDROBNIENIE');
-      assert.equal(uwagi.length,1); assert.equal(uwagi[0].severity,'high');
-      if(plec===K) assert.match(uwagi[0].opis,/PESEL mimo przeciwnego wskazania/);
+      assert.equal(uwagi.length,plec===K?1:0);
+      if(plec===K) {
+        assert.equal(uwagi[0].severity,'high');
+        assert.match(uwagi[0].opis,/PESEL mimo przeciwnego wskazania/);
+      }
       assert.equal(API.pobierzKomunikaty(o).doWeryfikacji.length,0);
     }
   }
@@ -988,7 +995,7 @@ for (const [typ, pierwszy, drugi, plec, role, zrodlo] of [
       assert.equal(o.oryginalnyWiersz, wejscie);
       if (zrodlo === 'zdrobnienia') {
         assert.ok(!o.ostrzezenia.includes('BRAK_ROZPOZNANYCH_IMION'));
-        assert.ok(info12(o).some(u => u.kod === 'MOZLIWE_ZDROBNIENIE' && u.severity === 'high'));
+        assert.ok(info12(o).some(u => u.kod === 'MOZLIWE_ZDROBNIENIE' && u.severity === 'medium'));
       }
     });
   }
@@ -1029,10 +1036,8 @@ for (const [imiona, nazwiska, dominujaca, rozstrzygnieta] of [
   const czlon = o.czlonyTekstowe[0];
   assert.equal(czlon.rolaWstepna, rozstrzygnieta ? dominujaca : 'niejednoznaczna');
   assert.equal(czlon.rola, rozstrzygnieta ? dominujaca : 'nierozstrzygnieta');
-  const [uwaga] = info12(o).filter(u => u.obszar === 'dane');
-  assert.equal(uwaga.severity, 'medium');
-  const kod = dominujaca === 'imie' ? 'ROLA_IMIENIA_ZE_STATYSTYK' : 'ROLA_NAZWISKA_ZE_STATYSTYK';
-  assert.equal(uwaga.kod, rozstrzygnieta ? kod : 'NIEROZSTRZYGNIETA_ROLA');
+  const uwagi = info12(o).filter(u => u.obszar === 'dane');
+  assert.deepEqual(uwagi.map(u=>[u.kod,u.severity]), rozstrzygnieta ? [] : [['NIEROZSTRZYGNIETA_ROLA','medium']]);
 });
 
 for (const [liczby, silne] of [
@@ -1244,7 +1249,8 @@ for (const [pierwszy, drugi, kategoria, zrodlo, sprzeczneImie] of [
       assert.equal(o.kategoriaAutomatyczna, kategoria);
       assert.equal(o.zrodlo, zrodlo);
       if (zrodlo === 'zdrobnienia') {
-        assert.ok(info12(o).some(u => u.kod === 'MOZLIWE_ZDROBNIENIE' && u.severity === 'high'));
+        const severity = o.rozpoznaneZdrobnienia.some(z=>z.kontekst==='para_nazwisk')?'high':'medium';
+        assert.ok(info12(o).some(u => u.kod === 'MOZLIWE_ZDROBNIENIE' && u.severity === severity));
       }
       if (sprzeczneImie) {
         const czlon = o.czlonyTekstowe.find(c => c.tekst === sprzeczneImie);
@@ -1361,4 +1367,96 @@ test('Kolizje po usunięciu polskich znaków blokują tylko przybliżone dopasow
   const dokladneNazwisko = zWariantami({},zdrobnienia,
     {nazwiska:{...nazwiska.nazwiska,ZELEK:[100,100]}}).klasyfikujWiersz('Zelek Nowak');
   assert.equal(dokladneNazwisko.rozpoznaneZdrobnienia.length, 0);
+});
+
+for (const [liczby, oczekiwany] of [
+  [[999,1],'medium'], [[998,2],'low'], [[1,999],'low'], [null,'low']
+]) test('Ważność kontekstowego nazwiska przy wskazaniu imienia: ' + liczby, () => {
+  const k = API.utworzKlasyfikator({imiona:{
+    IMIE:[0,1000], FORMA:[0,1000], ...(liczby && {CZLON:liczby})
+  }}, {nazwiska:{CZLON:[500,500]}}, {zdrobnienia:{CZLON:['FORMA']}});
+  for (const tekst of ['Imie Czlon', 'Czlon Imie']) {
+    const o = k.klasyfikujWiersz(tekst);
+    assert.equal(o.kategoriaAutomatyczna,M);
+    assert.equal(o.czlonyTekstowe.find(c=>c.klucz==='CZLON').podstawaRoli,'KONTEKST_NAZWISKA_DWA_CZLONY');
+    const [uwaga] = info12(o);
+    assert.equal(uwaga.kod,'ROLA_NAZWISKA_Z_KONTEKSTU');
+    assert.equal(uwaga.severity,oczekiwany);
+    assert.equal(/płeć przeciwną/.test(uwaga.opis),oczekiwany==='medium');
+  }
+});
+
+test('T-001 zachowuje przyczynę i rolę bez powtórzenia w informacjach', () => {
+  for (const tekst of ['Magda Piotrek','Piotrek Magda','Agusia Bartek','Bartek Agusia']) {
+    const o = wynik122(tekst);
+    const {doWeryfikacji, informacyjne} = API.pobierzKomunikaty(o);
+    assert.equal(o.kategoriaAutomatyczna,W);
+    assert.ok(o.czlonyTekstowe.some(c=>c.podstawaRoli==='KONTEKST_NAZWISKA_DWA_CZLONY'));
+    assert.ok(o.ostrzezenia.includes('KONFLIKT_ZDROBNIENIA'));
+    assert.deepEqual(doWeryfikacji.map(u=>[u.kod,u.severity]),[['WERYFIKACJA_PLCI','high']]);
+    assert.match(doWeryfikacji[0].opis,/rozpoznano|uznano za nazwisko na podstawie kontekstu/);
+    assert.deepEqual(informacyjne,[]);
+  }
+});
+
+test('Rzadkość zgłasza tylko jedyne jednoznaczne imię bez niezależnego potwierdzenia', () => {
+  const k = API.utworzKlasyfikator({imiona:{RZADKIE:[0,49], CZESTE:[0,10000], REMIS:[24,24], FORMA:[0,1000]}},
+    {nazwiska:{MOCNE:[0,100], SLABE:[0,99], PRZECIWNE:[100,0]}}, {zdrobnienia:{SKROT:['FORMA']}});
+  for (const [tekst, kategoria, rzadkosc] of [
+    ['Rzadkie', M, true], ['Rzadkie Rzadkie', M, true], ['Rzadkie Slabe', M, true],
+    ['Rzadkie Czeste', M, false], ['Rzadkie MOCNE', M, false], ['Rzadkie Skrot', M, false],
+    ['Rzadkie '+pm,M,false], ['Rzadkie '+pk,W,false], ['Remis',W,false],
+    ['Rzadkie Przeciwne',M,true]
+  ]) {
+    const o = k.klasyfikujWiersz(tekst);
+    assert.equal(o.kategoriaAutomatyczna,kategoria,tekst);
+    assert.equal(info12(o).some(u=>u.kod==='RZADKIE_IMIE'),rzadkosc,tekst);
+    assert.ok(o.rozpoznaneImiona.some(i=>i.statystyki.kobiety+i.statystyki.mezczyzni<50),tekst);
+  }
+});
+
+for (const [dopisane, wiek, pozostale, polaczone] of [
+  ['1234567890', null, [], [['BLEDNY_PESEL',true]]],
+  ['1234567890 2000-01-15', 25, [], [['BLEDNY_PESEL',false]]],
+  [pm+' '+pk, null, [], [['KILKA_NUMEROW',true]]],
+  ['12345678901 '+pm, null, [], [['BLEDNY_PESEL',true],['KILKA_NUMEROW',true]]],
+  ['1234567890 '+pm, null, ['KILKA_NUMEROW'], [['BLEDNY_PESEL',true]]],
+  ['1234567890 31.02.2000', null, ['BLEDNA_DATA'], [['BLEDNY_PESEL',true]]],
+  ['1234567890 2030-01-01', null, ['URODZENIE_PO_WYDARZENIU'], [['BLEDNY_PESEL',false]]]
+]) test('Wspólna weryfikacja PESEL-u: ' + dopisane, () => {
+  const o = wiersz('Jan '+dopisane);
+  const {doWeryfikacji, informacyjne} = API.pobierzKomunikaty(o,'2025-01-15');
+  assert.equal(API.pobierzKategorie(o),W);
+  assert.equal(API.obliczWiek(o,'2025-01-15').wiek,wiek);
+  assert.deepEqual(kody(doWeryfikacji),['WERYFIKACJA_PLCI',...pozostale]);
+  assert.deepEqual(informacyjne,[]);
+  const [wspolny] = doWeryfikacji;
+  assert.deepEqual(wspolny.powiazane.map(u=>[u.kod,u.wymagaWeryfikacji]),polaczone);
+  assert.ok(wspolny.powiazane.every(u=>u.obszar==='wiek' && u.severity==='high'));
+  assert.match(wspolny.opis,/PESEL/);
+  assert.match(wspolny.opis,o.urodzenie.data?/Przyjęto poprawną datę/:/Nie ustalono daty urodzenia/);
+  if (dopisane.includes('12345678901')) assert.match(wspolny.opis,/Nieprawidłowa data zakodowana w PESEL/);
+});
+
+test('Ręczna decyzja zachowuje osobną diagnostykę błędnego PESEL-u', () => {
+  const o = wiersz('Jan 1234567890');
+  for (const [kategoria,kodyUwag] of [[M,['BLEDNY_PESEL']],[W,['RECZNA_WERYFIKACJA','BLEDNY_PESEL']]]) {
+    const reczna=API.ustawKlasyfikacjeReczna(o,kategoria);
+    const {doWeryfikacji}=API.pobierzKomunikaty(reczna);
+    assert.deepEqual(kody(doWeryfikacji),kodyUwag);
+    assert.ok(doWeryfikacji.every(u=>u.severity==='high' && !u.powiazane));
+  }
+});
+
+for (const [dopisane, poziom, lista] of [
+  ['', 'high', 'doWeryfikacji'],
+  [' 2010-01-01', 'medium', 'informacyjne'],
+  [' '+pm, 'medium', 'informacyjne']
+]) test('Błędna data zachowuje wymagany poziom na każdym etapie: ' + lista + dopisane, () => {
+  const o = wiersz('Jan 31.02.2020'+dopisane);
+  assert.equal(o.urodzenie.uwagi[0].severity,poziom);
+  assert.equal(API.obliczWiek(o,'2025-01-15').uwagi[0].severity,poziom);
+  const [uwaga]=API.pobierzKomunikaty(o,'2025-01-15')[lista];
+  assert.equal(uwaga.kod,'BLEDNA_DATA');
+  assert.equal(uwaga.severity,poziom);
 });

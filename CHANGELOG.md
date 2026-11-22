@@ -1,5 +1,25 @@
 # Historia zmian
 
+## v1.2.3 - Optymalizacja komunikatów
+
+### Zmiany w komunikatach
+
+- Przeniesiono rutynowe rozstrzygnięcia statystyczne, przedział progowy imienia, zgodne słabe wskazania, remis rozstrzygnięty przez PESEL i niewykorzystane zdrobnienia do szczegółów analizy, bez osobnych uwag.
+- Dostosowano poziomy ważności uwag dotyczących kontekstowego rozpoznawania ról, rzadkich imion, zdrobnień i błędnych dat.
+- Ograniczono uwagi o rzadkości do przypadków, w których rzadkie imię jest jedyną jednoznaczną podstawą wyniku bez niezależnego potwierdzenia.
+- Scalono powtarzające się komunikaty o błędach PESEL-u dotyczące płci i wieku, zachowując wszystkie przyczyny wymagające sprawdzenia. API udostępnia opcjonalne pole `powiazane`.
+
+### Interfejs i testy
+
+- Zaktualizowano prezentację uwag, oznaczenia przedziału progowego, szczegóły weryfikacji oraz stronę pomocy i dokumentację API.
+- Zestaw testów w repozytorium rozszerzono do 465 przypadków. Niezależna weryfikacja objęła 536 zaliczonych testów oraz 352 042 porównania z wersją 1.2.2, bez wykrytych regresji.
+- W niezależnym zbiorze testowym liczba komunikatów zmniejszyła się o 64,6%. Skala redukcji zależy od analizowanych danych.
+
+### Bez zmian
+
+- Zachowano reguły klasyfikacji płci, rozstrzygania ról, walidacji PESEL-u, obliczania wieku i kierowania wpisów do weryfikacji.
+- Słowniki, dane źródłowe i lokalne przetwarzanie danych uczestników pozostają bez zmian.
+
 ## v1.2.2 - Kontekstowe rozpoznawanie imion i nazwisk
 
 ### Zmiany w klasyfikacji

@@ -16,7 +16,7 @@ Projekt powstał z myślą o listach, których dane nie zawsze mają jednolity f
 - Oblicza wiek na wybrany dzień wydarzenia, niezależnie od klasyfikacji płci.
 - Przedstawia statystyki według typowych dla branży turystycznej lub samodzielnie zdefiniowanych progów wiekowych.
 - Wyświetla liczebności i udziały procentowe rozpoznanych imion i nazwisk w danych rejestru PESEL oraz możliwe pełne odpowiedniki zdrobnień.
-- Wskazuje wpisy wymagające weryfikacji oraz prezentuje dodatkowe uwagi informacyjne z trzema poziomami ważności.
+- Wskazuje wpisy wymagające weryfikacji oraz prezentuje dodatkowe uwagi informacyjne z trzema poziomami ważności. Wersja 1.2.3 ogranicza rutynowe uwagi, zachowując szczegóły analizy, i scala powtarzające się komunikaty o błędach PESEL-u.
 
 Priorytetem jest ograniczenie błędnej automatycznej klasyfikacji, a nie przypisanie każdej osoby do określonej kategorii za wszelką cenę. Statystyki imion nie potwierdzają płci konkretnej osoby, a walidacja PESEL nie potwierdza, że numer został jej nadany.
 
@@ -32,7 +32,7 @@ Słowniki imion i nazwisk opierają się na oficjalnych danych Ministerstwa Cyfr
 - [Nazwiska występujące w rejestrze PESEL](https://dane.gov.pl/pl/dataset/1681) - 117 159 nazwisk.
 - Redakcyjnie opracowany słownik zdrobnień i form potocznych - 1 101 pozycji. Nie jest to urzędowy wykaz statystyczny.
 
-Słowniki imion i nazwisk uwzględniają pozycje odnotowane łącznie co najmniej 30 razy. Próg jednoznaczności imienia wynosi 99,90% opublikowanych wystąpień dla jednej płci. W przedziale od 99,90% do poniżej 99,98% aplikacja dodatkowo wyświetla uwagę informacyjną. Procenty opisują dane źródłowe, a nie gwarantowaną skuteczność klasyfikacji. Samo nazwisko nie wystarcza do ustalenia płci.
+Słowniki imion i nazwisk uwzględniają pozycje odnotowane łącznie co najmniej 30 razy. Próg jednoznaczności imienia wynosi 99,90% opublikowanych wystąpień dla jednej płci. Przedział od 99,90% do poniżej 99,98% jest oznaczany w szczegółach statystyk, bez osobnej uwagi informacyjnej. Procenty opisują dane źródłowe, a nie gwarantowaną skuteczność klasyfikacji. Samo nazwisko nie wystarcza do ustalenia płci.
 
 Repozytorium zawiera również dane źródłowe oraz skrypty pozwalające samodzielnie odtworzyć i aktualizować słowniki imion i nazwisk.
 
@@ -40,13 +40,13 @@ Szczegółowe zasady działania i ograniczenia algorytmu opisano w sekcji [Jak d
 
 ## Historia zmian
 
-Aktualna wersja: 1.2.2. Zobacz [historię zmian](CHANGELOG.md).
+Aktualna wersja: 1.2.3 - Optymalizacja komunikatów. Zobacz [historię zmian](CHANGELOG.md).
 
 ## Dokumentacja techniczna i testy
 
-Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Szczegóły integracji, publicznego API i kolejności ładowania modułów opisano w [dokumentacji API 1.2.2](API-1.2.2.md).
+Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Szczegóły integracji, publicznego API i kolejności ładowania modułów opisano w [dokumentacji API 1.2.3](API-1.2.3.md).
 
-Zestaw obejmuje 448 testów automatycznych. Można je uruchomić w Node.js z katalogu głównego projektu:
+Zestaw obejmuje 465 testów automatycznych. Można je uruchomić w Node.js z katalogu głównego projektu:
 
 ```sh
 node --test tests/*.test.js

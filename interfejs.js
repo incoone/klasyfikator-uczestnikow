@@ -13,8 +13,10 @@
   // API ustala ważność; interfejs mapuje ją wyłącznie na kolejność i wygląd.
   const KOLEJNOSC_WAZNOSCI = Object.freeze({ low: 1, medium: 2, high: 3 });
   const ETYKIETY_WAZNOSCI = { 0: 'Nieokreślona ważność', 1: 'Niska ważność', 2: 'Średnia ważność', 3: 'Wysoka ważność' };
-  // API nie eksportuje liczbowego progu. Ta etykieta nie uczestniczy w klasyfikacji.
+  // API nie eksportuje wartości liczbowych progów. Etykiety opisują przedziały
+  // z dokumentacji; status zawsze pochodzi z flag progOsiagniety i uwagaProgowa.
   const ETYKIETA_PROGU = '99,90%';
+  const ETYKIETA_PRZEDZIALU_PROGOWEGO = 'Osiągnięty (' + ETYKIETA_PROGU + ' do poniżej 99,98%)';
   const formatProcentu = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 4 });
   const formatLiczby = new Intl.NumberFormat('pl-PL', { useGrouping: 'always' });
   const ROLE_CZLONOW = { imie: 'Imię', nazwisko: 'Nazwisko', nierozstrzygnieta: 'Nierozstrzygnięta' };
@@ -204,7 +206,7 @@ Kowalski
     }
     if (typeof api.obliczWiek !== 'function' || typeof api.statystykiWiekowe !== 'function' ||
         typeof api.parsujProgi !== 'function' || typeof api.pobierzKomunikaty !== 'function' || !Array.isArray(api.PROGI_TURYSTYCZNE)) {
-      komunikat('Interfejs 1.2.2 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
+      komunikat('Interfejs 1.2.3 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
       return;
     }
     $('tourism-thresholds').textContent = api.PROGI_TURYSTYCZNE.join(', ') + ' lat';
@@ -224,10 +226,12 @@ Kowalski
       }));
       const nowy = api.utworzKlasyfikator(...slowniki);
       // Sprawdź zgodność struktury wyniku z aktualnym API.
-      const kontrola = nowy.klasyfikujWiersz('Test Test');
+      const kontrola = nowy.klasyfikujWiersz('Test Test 1234567890');
+      const kontrolaKomunikatow = api.pobierzKomunikaty(kontrola, null);
       if (!Array.isArray(kontrola.czlonyTekstowe) || !Array.isArray(kontrola.rozpoznaneNazwiska) ||
-          !Array.isArray(kontrola.rozpoznaneZdrobnienia) || !kontrola.czlonyTekstowe.every(c => 'rolaWstepna' in c))
-        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.2.');
+          !Array.isArray(kontrola.rozpoznaneZdrobnienia) || !kontrola.czlonyTekstowe.every(c => 'rolaWstepna' in c) ||
+          !kontrolaKomunikatow.doWeryfikacji.some(u => u.powiazane?.some(p => p.obszar === 'wiek' && p.wymagaWeryfikacji === true)))
+        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.3.');
       klasyfikator = nowy;
       $('analyze-button').disabled = false;
       komunikat('Wczytano słowniki: ' + ['imiona', 'nazwiska', 'zdrobnienia'].map((nazwa, i) =>
@@ -294,36 +298,15 @@ Kowalski
     const imiona = wynik.rozpoznaneImiona.filter(i => i.uwzglednione !== false);
     const nazwyImion = predykat => [...new Set(imiona.filter(predykat).map(i => i.tekst))].join(', ');
     const slabe = i => !i.statystyki.progOsiagniety;
-    const zgodne = i => slabe(i) && i.sugestia === wynik.kategoriaAutomatyczna;
     let opis = doprecyzujPesel(uwaga.opis);
     if (uwaga.kod === 'BLEDNA_DATA') opis = opis.replace(/([^.!?]) Przyjęto /, '$1. Przyjęto ');
-    if (uwaga.kod === 'IMIE_W_PRZEDZIALE_PROGOWYM') {
-      // API zwraca osobny komunikat z nazwą każdego różnego dopasowanego imienia.
-      const imie = imiona.find(i => i.statystyki.uwagaProgowa &&
-        (uwaga.klucz ? i.klucz === uwaga.klucz : uwaga.opis.startsWith('Rozpoznane imię: ' + i.tekst + '.')));
-      if (imie) {
-        const s = imie.statystyki;
-        opis += ' W opublikowanych danych rejestru PESEL imię ' + imie.tekst + ' występuje wśród ' +
-          formatLiczby.format(s.kobiety) + (s.kobiety === 1 ? ' kobiety' : ' kobiet') + ' i ' +
-          formatLiczby.format(s.mezczyzni) + (s.mezczyzni === 1 ? ' mężczyzny' : ' mężczyzn') +
-          ' (' + formatProcentu.format(Math.max(s.procentKobiet, s.procentMezczyzn)) +
-          '% wystąpień dotyczy ' + (imie.plec === K ? 'kobiet' : 'mężczyzn') + ').';
-        if (wynik.klasyfikacjaReczna === null && wynik.kategoriaAutomatyczna !== W) opis += ' Płeć ustalono automatycznie.';
-      }
-    } else if (uwaga.kod === 'ZGODNE_SLABE_IMIE') {
-      const a = nazwyImion(zgodne);
-      const b = nazwyImion(i => i.statystyki.progOsiagniety && i.plec === wynik.kategoriaAutomatyczna);
-      if (a && b) opis += ' Poniżej progu: ' + a + '. Imię jednoznaczne: ' + b + '.';
-    } else if (uwaga.kod === 'PESEL_REMIS') {
-      const a = nazwyImion(i => slabe(i) && i.sugestia === null);
-      if (a) opis = opis.replace('statystykach imienia.', 'statystykach imienia (' + a + ').');
-    } else if (uwaga.kod === 'PESEL_PRZECIWNE_IMIE' || uwaga.kod === 'PESEL_ZGODNE_SLABE_IMIE') {
-      const a = nazwyImion(uwaga.kod === 'PESEL_ZGODNE_SLABE_IMIE' ? zgodne : i => slabe(i) && i.sugestia && i.sugestia !== wynik.kategoriaAutomatyczna);
+    if (uwaga.kod === 'PESEL_PRZECIWNE_IMIE') {
+      const a = nazwyImion(i => slabe(i) && i.sugestia && i.sugestia !== wynik.kategoriaAutomatyczna);
       if (a) opis = opis.replace(/imienia poniżej progu|Imię poniżej progu/, m => m + ' (' + a + ')');
     } else if (uwaga.kod === 'BLEDNY_PESEL') {
       const bledy = wynik.pesel.znalezione.filter(n => n.bledy.length).map(n => '„' + n.numer + '”: ' + n.bledy.join(' '));
       if (bledy.length) opis = opis.replace('Szczegóły w wyniku sprawdzenia numeru.', bledy.join(' '));
-    } else if (['ROLA_NAZWISKA_ZE_STATYSTYK', 'ROLA_IMIENIA_ZE_STATYSTYK', 'ROLA_IMIENIA_Z_KONTEKSTU',
+    } else if (['ROLA_IMIENIA_ZE_STATYSTYK', 'ROLA_IMIENIA_Z_KONTEKSTU',
       'ROLA_NAZWISKA_Z_KONTEKSTU', 'NIEROZSTRZYGNIETA_ROLA'].includes(uwaga.kod)) {
       const i = wynik.rozpoznaneImiona.find(i => i.klucz === uwaga.klucz);
       const n = wynik.rozpoznaneNazwiska.find(n => n.klucz === uwaga.klucz);
@@ -359,6 +342,12 @@ Kowalski
     }));
   }
 
+  // Powiązane powody są częścią jednego komunikatu. Liczymy tylko te, które
+  // nadal wymagają decyzji; nie tworzymy z nich dodatkowych kart ani uwag.
+  function aktywnePrzyczyny(uwaga) {
+    return [uwaga, ...(uwaga.powiazane ?? []).filter(p => p.wymagaWeryfikacji === true)];
+  }
+
   function pokazStatystyki() {
     $('age-stats').hidden = !statystykiWlaczone.checked;
     if (!statystykiWlaczone.checked) return;
@@ -380,7 +369,7 @@ Kowalski
     const ul = element('ul', informacyjne ? 'info-messages' : 'record-notes');
     const rozneWaznosci = informacyjne && new Set(uwagi.map(u => u.severity)).size > 1;
     for (const uwaga of uwagi) {
-      const obszar = OBSZARY_UWAG[uwaga.obszar] ?? uwaga.obszar;
+      const obszar = [...new Set(aktywnePrzyczyny(uwaga).map(p => OBSZARY_UWAG[p.obszar] ?? p.obszar))].join(' i ').replace(' i Wiek', ' i wiek');
       const li = element('li', '', obszar + ': ' + opisKomunikatu(wynik, uwaga));
       if (rozneWaznosci) {
         const ranga = KOLEJNOSC_WAZNOSCI[uwaga.severity] ?? 0;
@@ -419,7 +408,7 @@ Kowalski
       }
       r.append(element('td', '', nazwiska
         ? (s.silneWskazanie ? s.plec : 'Nie')
-        : (s.progOsiagniety ? (s.uwagaProgowa ? 'Osiągnięty z uwagą' : 'Osiągnięty') : s.kobiety === s.mezczyzni ? 'Nie (remis)' : 'Nieosiągnięty')));
+        : (s.progOsiagniety ? (s.uwagaProgowa ? ETYKIETA_PRZEDZIALU_PROGOWEGO : 'Osiągnięty') : s.kobiety === s.mezczyzni ? 'Nie (remis)' : 'Nieosiągnięty')));
       const czlon = czlony.find(c => c.pozycja === wpis.pozycja);
       const etykietaRoli = opisRoli(czlon);
       const rola = nazwiska ? etykietaRoli +
@@ -566,7 +555,16 @@ Kowalski
       const wiek = element('td', 'col-age', m.wiek === null ? '-' : m.wiek);
       if (m.wiek === null) wiek.title = 'Nieustalony wiek';
       const uwagi = element('td', 'col-notes');
-      if (m.doWeryfikacji.length) uwagi.append(element('span', 'note-badge', m.doWeryfikacji.length + (m.doWeryfikacji.length === 1 ? ' uwaga' : m.doWeryfikacji.length >= 2 && m.doWeryfikacji.length <= 4 ? ' uwagi' : ' uwag')));
+      const przyczyny = m.doWeryfikacji.flatMap(aktywnePrzyczyny);
+      if (przyczyny.length) {
+        const liczba = przyczyny.length;
+        const badge = element('span', 'note-badge', liczba + (liczba === 1 ? ' przyczyna' : liczba >= 2 && liczba <= 4 ? ' przyczyny' : ' przyczyn'));
+        badge.title = Object.entries(OBSZARY_UWAG).map(([obszar, etykieta]) => {
+          const n = przyczyny.filter(p => p.obszar === obszar).length;
+          return n ? etykieta + ': ' + n : '';
+        }).filter(Boolean).join('; ');
+        uwagi.append(badge);
+      }
       tr.append(urodzenie, wiek, element('td', 'col-basis', opisPodstawy(wynik)), uwagi);
       tr.addEventListener('click', e => { if (!e.target.closest('button')) otworz(); });
       tbody.append(tr);

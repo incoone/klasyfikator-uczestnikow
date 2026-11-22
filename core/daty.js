@@ -41,6 +41,11 @@
       data = dataPesel;
       zrodlo = 'pesel';
     }
+    if (data) {
+      for (const uwaga of uwagi) {
+        if (uwaga.kod === 'BLEDNA_DATA') uwaga.severity = 'medium';
+      }
+    }
     return { data, zrodlo, wpisane, uwagi };
   }
 

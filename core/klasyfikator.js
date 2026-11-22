@@ -448,39 +448,18 @@
   function pobierzKomunikaty(wynik, dataWydarzenia) {
     const doWeryfikacji = [], informacyjne = [];
     const aktywneImiona = wynik.rozpoznaneImiona.filter(i => i.uwzglednione !== false);
+    let weryfikacjaAutomatyczna = null;
     if (pobierzKategorie(wynik) === W) {
       const reczna = wynik.klasyfikacjaReczna === W;
-      doWeryfikacji.push({ obszar: 'plec', severity: 'high', kod: reczna ? 'RECZNA_WERYFIKACJA' : 'WERYFIKACJA_PLCI',
-        opis: reczna ? formatuj('RECZNA_WERYFIKACJA') : formatuj('WERYFIKACJA_PLCI', wynik.uzasadnienie) });
+      const wpis = { obszar: 'plec', severity: 'high', kod: reczna ? 'RECZNA_WERYFIKACJA' : 'WERYFIKACJA_PLCI',
+        opis: reczna ? formatuj('RECZNA_WERYFIKACJA') : formatuj('WERYFIKACJA_PLCI', wynik.uzasadnienie) };
+      doWeryfikacji.push(wpis);
+      if (!reczna) weryfikacjaAutomatyczna = wpis;
     }
     const dodaj = (kod, severity, opis) => informacyjne.push({ obszar: 'plec', kod, severity, opis });
-    // Jedna uwaga progowa na dany człon słownikowy również przy powtórzeniach.
-    const opisane = new Set();
-    for (const imie of aktywneImiona) {
-      if (imie.statystyki.uwagaProgowa && !opisane.has(imie.klucz)) {
-        opisane.add(imie.klucz);
-        dodaj('IMIE_W_PRZEDZIALE_PROGOWYM', 'low',
-          formatuj('IMIE_W_PRZEDZIALE_PROGOWYM', imie.tekst));
-      }
-    }
-    if (wynik.zrodlo) {
-      const slabe = aktywneImiona.filter(i => !i.plec);
-      if (wynik.zrodlo === 'imiona' && slabe.length) {
-        dodaj('ZGODNE_SLABE_IMIE', 'low', formatuj('ZGODNE_SLABE_IMIE'));
-      }
-      if (wynik.zrodlo === 'pesel') {
-        if (!aktywneImiona.length && !wynik.rozpoznaneZdrobnienia?.some(z => z.kontekst && z.kontekst !== 'para_nazwisk')) {
-          dodaj('PESEL_BEZ_IMIENIA', 'medium', formatuj('PESEL_BEZ_IMIENIA'));
-        }
-        if (slabe.some(i => i.sugestia === null)) dodaj('PESEL_REMIS', 'medium', formatuj('PESEL_REMIS'));
-        if (slabe.some(i => i.sugestia && i.sugestia !== wynik.kategoriaAutomatyczna)) {
-          dodaj('PESEL_PRZECIWNE_IMIE', 'medium', formatuj('PESEL_PRZECIWNE_IMIE'));
-        }
-        if (slabe.some(i => i.sugestia === wynik.kategoriaAutomatyczna)) {
-          const maJednoznaczneImie = aktywneImiona.some(i => i.plec);
-          dodaj('PESEL_ZGODNE_SLABE_IMIE', maJednoznaczneImie ? 'low' : 'medium', formatuj('PESEL_ZGODNE_SLABE_IMIE'));
-        }
-      }
+    if (wynik.zrodlo === 'pesel' &&
+        aktywneImiona.some(i => !i.plec && i.sugestia && i.sugestia !== wynik.kategoriaAutomatyczna)) {
+      dodaj('PESEL_PRZECIWNE_IMIE', 'medium', formatuj('PESEL_PRZECIWNE_IMIE'));
     }
     // Uwagi o rolach i zdrobnieniach nie są zadaniami ręcznej klasyfikacji płci.
     // Jeden komunikat danego rodzaju na klucz; pozycje wskazują wszystkie powtórzenia.
@@ -490,6 +469,12 @@
       if (noweUwagi.has(id)) noweUwagi.get(id).pozycje.push(wpis.pozycja);
       else noweUwagi.set(id, { kod, severity, obszar, klucz: wpis.klucz, pozycje: [wpis.pozycja], opis });
     };
+    // Powtórzenie tego samego imienia nie stanowi niezależnego potwierdzenia.
+    const jednoznaczneImiona = new Set(aktywneImiona.filter(i => i.plec).map(i => i.klucz));
+    const niezalezneWskazanie = wynik.rozpoznaneNazwiska?.some(n =>
+      n.rola === 'nazwisko' && n.statystyki.silneWskazanie && n.statystyki.plec === wynik.kategoriaAutomatyczna) ||
+      wynik.rozpoznaneZdrobnienia?.some(z => z.kontekst && z.plecZPelnychForm === wynik.kategoriaAutomatyczna);
+    const uwagaORzadkosci = wynik.zrodlo === 'imiona' && jednoznaczneImiona.size === 1 && !niezalezneWskazanie;
     for (const imie of aktywneImiona) {
       const razem = imie.statystyki.kobiety + imie.statystyki.mezczyzni;
       const wariant = imie.wariantZPolskimiZnakami;
@@ -499,25 +484,25 @@
         dodajSzczegolowa('MOZLIWY_BRAK_POLSKICH_ZNAKOW', 'low', 'dane', imie,
           formatuj('MOZLIWY_BRAK_POLSKICH_ZNAKOW', imie.tekst, razem, wariant.klucz, razemWariant));
       }
-      if (razem >= 30 && razem < 100 && !zgodneJednoznaczne) {
-        dodajSzczegolowa('RZADKIE_IMIE', razem < 50 ? 'high' : 'medium', 'plec', imie,
+      if (uwagaORzadkosci && imie.plec && razem >= 30 && razem < 100 && !zgodneJednoznaczne) {
+        dodajSzczegolowa('RZADKIE_IMIE', razem < 50 ? 'medium' : 'low', 'plec', imie,
           formatuj('RZADKIE_IMIE', imie.tekst, razem));
       }
     }
-    const zdrobnienieUzyteZParyNazwisk = wynik.rozpoznaneZdrobnienia?.find(z =>
-      z.kontekst === 'para_nazwisk' && z.wykorzystaneDoKlasyfikacji);
     for (const czlon of wynik.czlonyTekstowe ?? []) {
-      // Uwagę o użytym członie łączymy z opisem podstawy klasyfikacji ze zdrobnienia.
-      if (czlon.pozycja === zdrobnienieUzyteZParyNazwisk?.pozycja) continue;
       if (czlon.podstawaRoli === 'KONTEKST_IMIENIA_DWA_CZLONY' ||
           czlon.podstawaRoli === 'KONTEKST_NAZWISKA_DWA_CZLONY') {
+        const nazwisko = czlon.podstawaRoli === 'KONTEKST_NAZWISKA_DWA_CZLONY';
+        // T-001 opisuje rolę tego członu w treści samodzielnej weryfikacji.
+        if (nazwisko && weryfikacjaAutomatyczna && wynik.ostrzezenia.includes('KONFLIKT_ZDROBNIENIA') &&
+            wynik.uzasadnienie.includes(formatuj('POWOD_KONFLIKT_ZDROBNIENIA_IMIE_W_NAZWISKU', czlon.tekst))) continue;
         const drugi = wynik.czlonyTekstowe.find(c => c.pozycja !== czlon.pozycja);
-        const kod = czlon.rola === 'imie' ? 'ROLA_IMIENIA_Z_KONTEKSTU' : 'ROLA_NAZWISKA_Z_KONTEKSTU';
-        dodajSzczegolowa(kod, 'medium', 'dane', czlon,
-          formatuj('ROLA_Z_KONTEKSTU_PARY', czlon.tekst, drugi.tekst, czlon.rola));
-      } else if (czlon.podstawaRoli === 'PRZEWAGA_IMIENIA_50') {
-        dodajSzczegolowa('ROLA_IMIENIA_ZE_STATYSTYK', 'medium', 'dane', czlon,
-          formatuj('ROLA_IMIENIA_ZE_STATYSTYK_50', czlon.tekst));
+        const kod = nazwisko ? 'ROLA_NAZWISKA_Z_KONTEKSTU' : 'ROLA_IMIENIA_Z_KONTEKSTU';
+        const przeciwneImie = nazwisko && wynik.kategoriaAutomatyczna !== W &&
+          wynik.rozpoznaneImiona.some(i => i.pozycja === czlon.pozycja && i.plec && i.plec !== wynik.kategoriaAutomatyczna);
+        let opis = formatuj('ROLA_Z_KONTEKSTU_PARY', czlon.tekst, drugi.tekst, czlon.rola);
+        if (przeciwneImie) opis += formatuj('DOPISEK_PRZECIWNE_IMIE_W_NAZWISKU');
+        dodajSzczegolowa(kod, przeciwneImie ? 'medium' : 'low', 'dane', czlon, opis);
       } else if (czlon.podstawaRoli === 'KONTEKST_DWOCH_CZLONOW') {
         const nazwisko = wynik.czlonyTekstowe.find(c => c.podstawaRoli === 'TYLKO_NAZWISKO');
         dodajSzczegolowa('ROLA_IMIENIA_Z_KONTEKSTU', 'low', 'dane', czlon,
@@ -525,17 +510,16 @@
       } else if (czlon.podstawaRoli === 'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM') {
         dodajSzczegolowa('ROLA_IMIENIA_ZE_STATYSTYK', 'low', 'dane', czlon,
           formatuj('ROLA_IMIENIA_ZE_STATYSTYK', czlon.tekst));
-      } else if (czlon.podstawaRoli === 'PRZEWAGA_NAZWISKA') {
-        dodajSzczegolowa('ROLA_NAZWISKA_ZE_STATYSTYK', 'medium', 'dane', czlon,
-          formatuj('ROLA_NAZWISKA_ZE_STATYSTYK', czlon.tekst));
       } else if (czlon.rola === 'nierozstrzygnieta' && (czlon.rolaWstepna === 'niejednoznaczna' ||
           (czlon.dopasowania.imie && czlon.dopasowania.nazwisko))) {
-        dodajSzczegolowa('NIEROZSTRZYGNIETA_ROLA', czlon.rolaWstepna ? 'medium' : 'high', 'dane', czlon,
+        dodajSzczegolowa('NIEROZSTRZYGNIETA_ROLA', 'medium', 'dane', czlon,
           formatuj('NIEROZSTRZYGNIETA_ROLA', czlon.tekst));
       }
     }
     for (const wpis of wynik.rozpoznaneZdrobnienia ?? []) {
-      dodajSzczegolowa('MOZLIWE_ZDROBNIENIE', 'high', 'dane', wpis,
+      if (!wpis.wykorzystaneDoKlasyfikacji && !wpis.sprzeczneZPeselem) continue;
+      const severity = wpis.sprzeczneZPeselem || wpis.kontekst === 'para_nazwisk' ? 'high' : 'medium';
+      dodajSzczegolowa('MOZLIWE_ZDROBNIENIE', severity, 'dane', wpis,
         formatuj('MOZLIWE_ZDROBNIENIE', wpis));
     }
     if (wynik.zrodlo === 'imiona_i_nazwisko') {
@@ -553,15 +537,29 @@
     }
     informacyjne.push(...noweUwagi.values());
     const ocena = obliczWiek(wynik, dataWydarzenia);
+    const zPesel = wynik.urodzenie.zrodlo === 'pesel';
+    const wspolneProblemyPesel = new Set();
+    if (weryfikacjaAutomatyczna) {
+      if (wynik.uzasadnienie.includes(formatuj('POWOD_FORMAT_PESEL')) ||
+          wynik.uzasadnienie.includes(formatuj('POWOD_WALIDACJA_PESEL'))) wspolneProblemyPesel.add('BLEDNY_PESEL');
+      if (wynik.uzasadnienie.includes(formatuj('POWOD_KILKA_PESEL'))) wspolneProblemyPesel.add('KILKA_NUMEROW');
+    }
     for (const uwaga of ocena.uwagi) {
       const wpis = { obszar: 'wiek', ...uwaga };
-      if (uwaga.kod === 'URODZENIE_PO_WYDARZENIU' || !wynik.urodzenie.data) {
-        doWeryfikacji.push(wpis);
+      const wymagaWeryfikacji = uwaga.kod === 'URODZENIE_PO_WYDARZENIU' || !wynik.urodzenie.data;
+      if (!wymagaWeryfikacji) wpis.opis += formatuj('DOPISEK_ZRODLO_DATY', zPesel);
+      if (wspolneProblemyPesel.has(uwaga.kod)) {
+        (weryfikacjaAutomatyczna.powiazane ??= []).push({ ...wpis, wymagaWeryfikacji });
       } else {
-        const zPesel = wynik.urodzenie.zrodlo === 'pesel';
-        wpis.opis += formatuj('DOPISEK_ZRODLO_DATY', zPesel);
-        informacyjne.push(wpis);
+        (wymagaWeryfikacji ? doWeryfikacji : informacyjne).push(wpis);
       }
+    }
+    if (weryfikacjaAutomatyczna?.powiazane) {
+      const bledyPesel = wynik.pesel.znalezione.filter(n => n.formatPoprawny).flatMap(n => n.bledy);
+      if (bledyPesel.length) weryfikacjaAutomatyczna.opis += ' ' + [...new Set(bledyPesel)].join(' ');
+      weryfikacjaAutomatyczna.opis += wynik.urodzenie.data
+        ? formatuj('DOPISEK_ZRODLO_DATY', zPesel)
+        : formatuj('DOPISEK_BRAK_DATY_Z_PESEL');
     }
     return { doWeryfikacji, informacyjne };
   }
