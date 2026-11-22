@@ -11,6 +11,7 @@ Projekt powstał z myślą o listach, których dane nie zawsze mają jednolity f
 - Klasyfikuje uczestników na podstawie rozpoznanych imion i numerów PESEL, jeśli zostały podane. W określonych przypadkach wykorzystuje także statystyki nazwisk i jednoznaczne zdrobnienia.
 - Rozpoznaje człony występujące zarówno jako imiona, jak i nazwiska, i analizuje ich rolę na podstawie kontekstu oraz statystyk, bez zakładania kolejności danych. W przypadku dokładnie dwóch członów stosuje dodatkowe reguły rozstrzygania ich ról.
 - Rozpoznaje zdrobnienia także w określonych przypadkach kolizji z nazwiskami lub zapisu bez polskich znaków. Nie zmienia oryginalnych danych uczestnika i kieruje sprzeczne wskazania do weryfikacji zgodnie z regułami algorytmu.
+- Rozpoznaje imiona i nazwiska złożone, rozróżnia łączniki od separatorów i nadaje pierwszeństwo pełnym dopasowaniom słownikowym. Pokazuje grupy tekstowe oraz pewność rozpoznania ich ról, zachowując oryginalny zapis i kolejność danych. Przy rozpoznaniu nazwiska po częściach ich statystyki nie stanowią wskazania płci.
 - Dzieli uczestników na trzy kategorie: kobiety, mężczyźni oraz osoby do weryfikacji. Umożliwia szybkie ręczne przypisanie płci i edycję danych uczestnika.
 - Rozpoznaje i sprawdza daty urodzenia w różnych formatach oraz weryfikuje ich zgodność z datami zakodowanymi w numerach PESEL.
 - Oblicza wiek na wybrany dzień wydarzenia, niezależnie od klasyfikacji płci.
@@ -40,13 +41,13 @@ Szczegółowe zasady działania i ograniczenia algorytmu opisano w sekcji [Jak d
 
 ## Historia zmian
 
-Aktualna wersja: 1.2.3 - Optymalizacja komunikatów. Zobacz [historię zmian](CHANGELOG.md).
+Aktualna wersja: 1.2.4 - Imiona i nazwiska złożone. Zobacz [historię zmian](CHANGELOG.md).
 
 ## Dokumentacja techniczna i testy
 
-Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Szczegóły integracji, publicznego API i kolejności ładowania modułów opisano w [dokumentacji API 1.2.3](API-1.2.3.md).
+Logika aplikacji znajduje się w katalogu `core/`. Głównym punktem wejścia jest `core/klasyfikator.js`. Szczegóły integracji, grup tekstowych, rozpoznawania ról i kolejności ładowania modułów opisano w [dokumentacji API 1.2.4](API-1.2.4.md), która uzupełnia [API 1.2.3](API-1.2.3.md).
 
-Zestaw obejmuje 465 testów automatycznych. Można je uruchomić w Node.js z katalogu głównego projektu:
+Zestaw obejmuje 535 testów automatycznych. Można je uruchomić w Node.js z katalogu głównego projektu:
 
 ```sh
 node --test tests/*.test.js

@@ -27,7 +27,7 @@ const przypadki = [
   ['Maciej Marcin', M], ['Monika Marcin', W], ['Monika Nur Marcin', W], ['Nur Marcin', M],
   ['Nur Testowy', W], ['Kim Testowa', W], ['Xyz Testowy', W], ['Xyz Marcin', M],
   ['Monkia Marcin', M], ['Marcin', M], ['Lukasz Testowy', W], ['Łukasz Testowy', M],
-  ['  jAn   tESTOWY  ', M], ['Anna-Maria Testowa', K], ['"Jan", Testowy.', M],
+  ['  jAn   tESTOWY  ', M], ['Anna-Maria Testowa', W], ['"Jan", Testowy.', M],
   ['Jan;Testowy', M], ['Jan\tTestowy', M], ['Jan Jan Testowy', M],
   ['GRANICAK Testowa', K], ['GRANICAM Testowy', M], ['PONIZEJ Testowa', K],
   [pm + ' Jan Testowy', M], ['Jan ' + pm + ' Testowy', M], ['Testowy Jan ' + pm, M],
@@ -1459,4 +1459,421 @@ for (const [dopisane, poziom, lista] of [
   const [uwaga]=API.pobierzKomunikaty(o,'2025-01-15')[lista];
   assert.equal(uwaga.kod,'BLEDNA_DATA');
   assert.equal(uwaga.severity,poziom);
+});
+
+const imionaZlozoneEtap1 = {imiona:{
+  ...dane122Imiona.imiona, DANIEL:[123,171875], WALA:[0,40], JEAN:[59,698], PIERRE:[0,415],
+  'JEAN-PIERRE':[0,69], 'ANNA-MARIA':[241,0], MONIKA:[10000,0]
+}};
+const nazwiskaZlozoneEtap1 = {nazwiska:{
+  ...dane122Nazwiska.nazwiska, DANIEL:[2362,2241], WALA:[1489,1492], JEAN:[18,14], PIERRE:[17,18],
+  'GĄSIENICA-DANIEL':[46,38], 'BACHLEDA-CURUŚ':[18,17], 'BACHLEDA-WALA':[18,17]
+}};
+const zdrobnieniaZlozoneEtap1 = {zdrobnienia:{...dane122Zdrobnienia.zdrobnienia, WALA:['ANNA']}};
+const klasyfikatorZlozen = API.utworzKlasyfikator(imionaZlozoneEtap1, nazwiskaZlozoneEtap1, zdrobnieniaZlozoneEtap1);
+const zlozenie = tekst => klasyfikatorZlozen.klasyfikujWiersz(tekst);
+
+for (const tekst of ['Witek-Nowak','Mirek-Kowalski','Pawełek-Nowak','Witek-Kowalska','Gąsienica-Daniel']) {
+  test('Samo nazwisko złożone nie rozstrzyga płci: '+tekst, () => {
+    const o = zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,W);
+    assert.equal(o.zrodlo,null);
+    assert.equal(o.sugestia,null);
+    assert.deepEqual(o.wskazania,{kobieta:0,mezczyzna:0,niejednoznaczne:0});
+    assert.deepEqual(o.jednostkiTekstowe.map(j=>[j.typ,j.rola]),[['grupa','nazwisko']]);
+    assert.ok(o.rozpoznaneImiona.every(i=>i.uwzglednione===false));
+    assert.ok(o.rozpoznaneZdrobnienia.every(z=>z.kontekst===null && !z.wykorzystaneDoKlasyfikacji));
+    assert.ok(!info12(o).some(u=>u.kod==='MOZLIWE_ZDROBNIENIE'));
+  });
+}
+
+for (const [imie, nazwisko, kategoria, podstawa] of [
+  ['Anna','Witek-Nowak',K,'NAZWISKO_ZLOZONE_Z_CZESCI'],
+  ['Anna','Marek-Nowak',K,'NAZWISKO_ZLOZONE_Z_CZESCI'],
+  ['Anna','Gąsienica-Daniel',K,'PELNE_NAZWISKO_ZLOZONE'],
+  ['Anna','Bachleda-Curuś',K,'PELNE_NAZWISKO_ZLOZONE'],
+  ['Anna','Bachleda-Wala',K,'PELNE_NAZWISKO_ZLOZONE'],
+  ['Anna','Kowalska-Nowak',K,'NAZWISKO_ZLOZONE_Z_CZESCI'],
+  ['Sasha','Kowalska-Nowak',W,'NAZWISKO_ZLOZONE_Z_CZESCI'],
+  ['Piotrek','Kowalska-Nowak',M,'NAZWISKO_ZLOZONE_Z_CZESCI']
+]) test('Nazwisko złożone z osobnym imieniem: '+imie+' '+nazwisko, () => {
+  for (const tekst of [imie+' '+nazwisko,nazwisko+' '+imie]) {
+    const o=zlozenie(tekst);
+    const [grupa]=o.grupyZlozone;
+    assert.equal(o.kategoriaAutomatyczna,kategoria);
+    assert.equal(grupa.tekst,nazwisko);
+    assert.equal(grupa.rola,'nazwisko');
+    assert.equal(grupa.podstawaRoli,podstawa);
+    const dokladne = podstawa==='PELNE_NAZWISKO_ZLOZONE';
+    assert.equal(grupa.pewnoscRoli,dokladne?'wysoka':'srednia');
+    assert.equal(grupa.statystyki!==null,dokladne);
+    assert.equal(o.jednostkiTekstowe.length,2);
+    assert.ok(o.rozpoznaneImiona.filter(i=>i.czescGrupy).every(i=>!i.uwzglednione));
+    assert.ok(o.rozpoznaneNazwiska.filter(n=>n.czescGrupy).every(n=>!n.uwzglednione));
+  }
+});
+
+test('Pełna statystyka nazwiska może pomóc, a statystyki części nigdy jej nie zastępują', () => {
+  const tworz = liczby => API.utworzKlasyfikator(imionaZlozoneEtap1, {nazwiska:{
+    ...nazwiskaZlozoneEtap1.nazwiska, 'WITEK-KOWALSKA':liczby
+  }}, zdrobnieniaZlozoneEtap1);
+  for (const [dane,kategoria] of [[[100,0],K],[[99,0],W],[[999,1],K],[[998,2],W],[[0,100],W]]) {
+    const o = tworz(dane).klasyfikujWiersz('Sasha Witek-Kowalska');
+    assert.equal(o.kategoriaAutomatyczna,kategoria);
+    assert.equal(o.rozpoznaneNazwiska.filter(n=>n.uwzglednione!==false).length,1);
+    assert.equal(o.zrodlo,kategoria===K?'imiona_i_nazwisko':null);
+  }
+  assert.ok(!info12(zlozenie('Jan Kowalska-Nowak')).some(u=>u.kod==='NAZWISKO_PRZECIWNE_WYNIKOWI'));
+});
+
+for (const lacznik of ['-','‐','‑','–','—',' - ','\u00A0‑\u00A0']) {
+  test('Uznany wariant łącznika zachowuje zapis i pozycje: '+JSON.stringify(lacznik), () => {
+    const nazwisko='Witek'+lacznik+'Nowak', tekst='  1. '+nazwisko+' Anna ';
+    const o=zlozenie(tekst);
+    const [g]=o.grupyZlozone;
+    assert.equal(o.kategoriaAutomatyczna,K);
+    assert.equal(o.oryginalnyWiersz,tekst);
+    assert.equal(tekst.slice(...g.zakres),nazwisko);
+    assert.equal(g.klucz,'WITEK-NOWAK');
+    assert.deepEqual(g.pozycje,[1,2]);
+    assert.deepEqual(o.jednostkiTekstowe.map(j=>j.tekst),[nazwisko,'Anna']);
+    assert.equal(o.oczyszczonyWiersz,'1 Witek Nowak Anna');
+  });
+}
+
+test('Separator między imieniem i nazwiskiem zachowuje zwarty człon złożony', () => {
+  for (const tekst of ['Anna - Witek-Nowak','Witek-Nowak - Anna','Anna – Witek-Nowak']) {
+    const o=zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,K,tekst);
+    assert.deepEqual(o.grupyZlozone.map(g=>g.tekst),['Witek-Nowak'],tekst);
+  }
+  for (const tekst of ['Anna - Nowak','Witek – Nowak','Witek -- Nowak','Witek − Nowak','Witek / Nowak']) {
+    assert.deepEqual(zlozenie(tekst).grupyZlozone,[],tekst);
+  }
+});
+
+test('Jedna nierozstrzygnięta grupa nie dostarcza samodzielnych wskazań', () => {
+  for (const [tekst,kategoria] of [['Jan-Nowak',W],['Anna Jan-Nowak',K],['Anna Witek-Nieznany',K]]) {
+    const o=zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,kategoria);
+    const [g]=o.grupyZlozone;
+    assert.equal(g.rola,'nierozstrzygnieta');
+    assert.equal(g.pewnoscRoli,'nieustalona');
+    assert.equal(g.analizaPlci,'pominieta');
+    assert.ok(o.rozpoznaneZdrobnienia.every(z=>!z.wykorzystaneDoKlasyfikacji));
+    const uwagi=API.pobierzKomunikaty(o);
+    assert.ok([...uwagi.informacyjne,...uwagi.doWeryfikacji].some(u=>u.opis.includes(g.tekst)));
+  }
+});
+
+test('Jeśli ten sam pełny zapis występuje w obu słownikach, jego rola pozostaje nieustalona', () => {
+  const k=API.utworzKlasyfikator(imionaZlozoneEtap1,
+    {nazwiska:{...nazwiskaZlozoneEtap1.nazwiska,'ANNA-MARIA':[40000,0]}},zdrobnieniaZlozoneEtap1);
+  const o=k.klasyfikujWiersz('Anna-Maria Nowak');
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.equal(o.grupyZlozone[0].rola,'nierozstrzygnieta');
+  assert.deepEqual(o.grupyZlozone[0].dopasowania,{imie:true,nazwisko:true});
+});
+
+test('Nazwisko trzyczęściowe stanowi jedną grupę', () => {
+  const o=zlozenie('Kowalska-Nowak-Witek Anna');
+  assert.equal(o.kategoriaAutomatyczna,K);
+  assert.equal(o.jednostkiTekstowe.length,2);
+  assert.deepEqual(o.grupyZlozone[0].pozycje,[0,1,2]);
+});
+
+for (const [imie,nazwisko,kategoria] of [
+  ['Jean-Pierre','Nowak',M], ['Anna-Maria','Kowalska',K], ['Anna-Maria','Kowalska-Nowak',K],
+  ['Anna-Maria','',K], ['Jean-Pierre','',M]
+]) test('Pełne imię złożone jest pojedynczym dowodem: '+[imie,nazwisko].join(' ').trim(), () => {
+  for (const tekst of nazwisko ? [imie+' '+nazwisko,nazwisko+' '+imie] : [imie]) {
+    const o = zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,kategoria);
+    const g = o.grupyZlozone.find(x=>x.analizaPlci==='pelne_statystyki_imienia');
+    assert.equal(g.rola,'imie');
+    assert.equal(g.pewnoscRoli,'wysoka');
+    assert.equal(g.podstawaRoli,'PELNE_IMIE_ZLOZONE');
+    assert.deepEqual(o.jednostkiTekstowe.map(j=>j.tekst).join(' '),tekst);
+    assert.deepEqual(o.wskazania,{kobieta:Number(kategoria===K),mezczyzna:Number(kategoria===M),niejednoznaczne:0});
+    const aktywne = o.rozpoznaneImiona.filter(i=>i.uwzglednione);
+    assert.equal(aktywne.length,1);
+    assert.equal(aktywne[0].tekst,imie);
+    assert.deepEqual(aktywne[0].statystyki,g.statystyki);
+    assert.deepEqual(aktywne[0].pozycje,g.pozycje);
+    assert.equal(o.rozpoznaneImiona.filter(i=>i.czescGrupy && g.pozycje.includes(i.pozycja)).length,2);
+  }
+});
+
+test('Pełny wpis ma pierwszeństwo przed przeciwnymi i nieznanymi częściami oraz zachowuje próg 99,90%', () => {
+  for (const [statystyki,kategoria] of [[[999,1],K],[[998,2],W]]) {
+    const k = API.utworzKlasyfikator({imiona:{...imionaZlozoneEtap1.imiona,'PIOTR-QXZ':statystyki}});
+    const o = k.klasyfikujWiersz('Piotr-Qxz');
+    assert.equal(o.kategoriaAutomatyczna,kategoria);
+    assert.equal(o.rozpoznaneImiona.find(i=>i.klucz==='PIOTR').uwzglednione,false);
+    assert.equal(o.rozpoznaneImiona.find(i=>i.klucz==='PIOTR-QXZ').statystyki.kobiety,statystyki[0]);
+    assert.equal(o.wskazania.mezczyzna,0);
+  }
+});
+
+test('Imię złożone bez pełnego wpisu korzysta ze statystyk części przy niezależnym nazwisku', () => {
+  for (const [tekst,grupa] of [
+    ['Anna-Monika Nowak','Anna-Monika'],['Nowak Anna-Monika','Anna-Monika'],
+    ['Anna-Monika-Maria Kowalska-Nowak','Anna-Monika-Maria'],['Klimek Anna-Monika','Anna-Monika']
+  ]) {
+    const o = zlozenie(tekst);
+    const g = o.grupyZlozone.find(j=>j.tekst===grupa);
+    assert.equal(o.kategoriaAutomatyczna,K,tekst);
+    assert.equal(g.rola,'imie');
+    assert.equal(g.pewnoscRoli,'srednia');
+    assert.equal(g.podstawaRoli,'IMIENNE_ROLE_CZESCI');
+    assert.equal(g.analizaPlci,'statystyki_czesci_imienia');
+    assert.equal(g.statystyki,null);
+    assert.equal(o.wskazania.kobieta,g.pozycje.length);
+    assert.ok(o.rozpoznaneImiona.filter(i=>i.uwzglednione).every(i=>i.czescGrupy && g.pozycje.includes(i.pozycja)));
+  }
+});
+
+test('Nieznane części, brak nazwiska i przewaga nazwiskowa wyłączają wskazanie grupy imiennej', () => {
+  for (const tekst of ['Anna-Monika','Anna-Monika Qxz','Anna-Qxz Nowak','Anna-Witek Nowak','Piotrek-Qxz Nowak','Anna-Qxz-Maria Nowak']) {
+    const o = zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,W,tekst);
+    const [g] = o.grupyZlozone;
+    assert.equal(g.rola,'nierozstrzygnieta');
+    assert.equal(g.analizaPlci,'pominieta');
+    assert.ok(o.rozpoznaneImiona.every(i=>!i.uwzglednione));
+    assert.ok(o.rozpoznaneZdrobnienia.every(z=>z.kontekst===null && !z.wykorzystaneDoKlasyfikacji));
+  }
+  assert.equal(zlozenie('Anna-Monika Xyz '+pk).zrodlo,'pesel');
+});
+
+test('Części imienia respektują próg 99,90%, zgodny słaby kierunek, remis i konflikt', () => {
+  const k = API.utworzKlasyfikator({imiona:{...imionaZlozoneEtap1.imiona,
+    GRANICZNA:[999,1], SLABAA:[998,2], SLABAB:[995,5], SLABYM:[490,510], REMIS:[500,500]
+  }},nazwiskaZlozoneEtap1,zdrobnieniaZlozoneEtap1);
+  for (const [grupa,wynik,sprzeczne] of [
+    ['Graniczna-Slabaa',K,false],['Slabaa-Slabab',W,false],['Anna-Slabym',W,true],
+    ['Anna-Remis',W,false],['Anna-Piotr',W,true],['Anna-Maria-Piotr',W,true]
+  ]) {
+    for (const tekst of [grupa+' Kowalska','Kowalska '+grupa]) {
+      const o = k.klasyfikujWiersz(tekst);
+      assert.equal(o.kategoriaAutomatyczna,wynik,tekst);
+      assert.equal(o.grupyZlozone[0].rola,'imie');
+      assert.equal(o.ostrzezenia.includes('SPRZECZNE_IMIONA'),sprzeczne);
+      if (sprzeczne) assert.ok(API.pobierzKomunikaty(o).doWeryfikacji.some(u=>u.severity==='high'));
+    }
+  }
+  assert.ok(k.klasyfikujWiersz('Anna-Remis Nowak').uzasadnienie.some(opis=>/równych/i.test(opis)));
+});
+
+test('Kontekst nazwiska wymaga rzeczywistej przewagi 50× i minimum 100 wpisów', () => {
+  for (const [imie,nazwisko,wynik] of [[2,99,M],[2,100,K],[3,149,M],[3,150,K],[1,99,M],[1,100,K]]) {
+    const k = API.utworzKlasyfikator({imiona:{...imionaZlozoneEtap1.imiona, FIKSON:[0,imie]}},
+      {nazwiska:{...nazwiskaZlozoneEtap1.nazwiska,FIKSON:[0,nazwisko]}},zdrobnieniaZlozoneEtap1);
+    const o = k.klasyfikujWiersz('Anna-Monika Fikson');
+    assert.equal(o.grupyZlozone[0].rola,wynik===K?'imie':'nierozstrzygnieta');
+    assert.equal(o.kategoriaAutomatyczna,wynik);
+  }
+});
+
+for (const lacznik of ['-','‐','‑','–','—',' - ','\u00A0‑\u00A0']) {
+  test('Normalizacja łącznika imiennego z zachowaniem oryginału: '+JSON.stringify(lacznik), () => {
+    for (const [imie,czesci,podstawa] of [
+      ['Anna-Maria',['Anna','Maria'],'PELNE_IMIE_ZLOZONE'],
+      ['Anna-Monika',['Anna','Monika'],'IMIENNE_ROLE_CZESCI']
+    ]) {
+      const grupa = czesci.join(lacznik);
+      const tekst = 'Nowak '+grupa+' 2004-02-29';
+      const o = zlozenie(tekst);
+      const g = o.jednostkiTekstowe[1];
+      assert.equal(o.kategoriaAutomatyczna,K);
+      assert.equal(o.oryginalnyWiersz,tekst);
+      assert.equal(tekst.slice(...g.zakres),grupa);
+      assert.deepEqual(g.pozycje,[1,2]);
+      assert.equal(g.klucz,imie.toUpperCase());
+      assert.equal(g.podstawaRoli,podstawa);
+      assert.equal(o.urodzenie.data,'2004-02-29');
+    }
+  });
+}
+
+test('Separator przy pełnym wpisie pozostawia obie wskazówki imienne', () => {
+  const o = zlozenie('Anna - Jean-Pierre Nowak');
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.deepEqual(o.jednostkiTekstowe.map(j=>j.tekst),['Anna','Jean-Pierre','Nowak']);
+  assert.ok(o.ostrzezenia.includes('SPRZECZNE_IMIONA'));
+});
+
+test('PESEL zachowuje pierwszeństwo i reaguje na sprzeczne jednoznaczne imię złożone', () => {
+  const zlyPesel = pm.slice(0,-1)+(Number(pm.at(-1))+1)%10;
+  for (const [tekst,kategoria,zrodlo,konflikt] of [
+    ['Jean-Pierre Nowak '+pm,M,'pesel',false], ['Jean-Pierre Nowak '+pk,W,null,true],
+    ['Anna-Monika Nowak '+pk,K,'pesel',false], ['Anna-Piotr Nowak '+pk,W,null,true],
+    ['Nowak Anna-Piotr '+pm,W,null,true], ['Anna-Qxz Nowak '+pk,K,'pesel',false],
+    ['Jean-Pierre Nowak '+zlyPesel,W,null,false], ['Jean-Pierre Nowak '+pm+' '+pk,W,null,false]
+  ]) {
+    const o = zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,kategoria,tekst);
+    assert.equal(o.zrodlo,zrodlo);
+    assert.equal(o.ostrzezenia.includes('KONFLIKT_PESEL_IMIONA'),konflikt);
+  }
+  const k = API.utworzKlasyfikator({imiona:{...imionaZlozoneEtap1.imiona,'ANNA-PIOTR':[999,1]}},nazwiskaZlozoneEtap1);
+  assert.equal(k.klasyfikujWiersz('Anna-Piotr Nowak '+pk).zrodlo,'pesel');
+});
+
+test('Pełne imiona działają bez opcjonalnych słowników, a części wymagają dostępnego kontekstu nazwiska', () => {
+  for (const [nazwiska,zdrobnienia] of [[null,null],[null,zdrobnieniaZlozoneEtap1],[nazwiskaZlozoneEtap1,null]]) {
+    const k = API.utworzKlasyfikator(imionaZlozoneEtap1,nazwiska,zdrobnienia);
+    assert.equal(k.klasyfikujWiersz('Jean-Pierre').kategoriaAutomatyczna,M);
+    assert.equal(k.klasyfikujWiersz('Anna-Monika Nowak').kategoriaAutomatyczna,nazwiska ? K : W);
+  }
+});
+
+test('Uwaga o rzadkim pełnym imieniu obejmuje zakres całej grupy', () => {
+  const o = zlozenie('Nowak Jean-Pierre');
+  const uwagi = info12(o);
+  assert.deepEqual(uwagi.map(u=>[u.kod,u.severity,u.pozycje]),[['RZADKIE_IMIE','low',[1,2]]]);
+});
+
+// Liczebności syntetyczne. Każda część tych pełnych imion trafia też do słownika nazwisk.
+const imionaT004 = {imiona:{...imionaZlozoneEtap1.imiona,
+  LUC:[0,100], MICHEL:[0,100], PAUL:[0,100], KARL:[0,100], HEINZ:[0,100],
+  'JEAN-LUC':[0,80], 'JEAN-MICHEL':[0,80], 'JEAN-PAUL':[0,80], 'KARL-HEINZ':[0,80]
+}};
+const nazwiskaT004 = {nazwiska:{...nazwiskaZlozoneEtap1.nazwiska,
+  LUC:[20,20], MICHEL:[20,20], PAUL:[20,20], KARL:[20,20], HEINZ:[20,20]
+}};
+const t004 = API.utworzKlasyfikator(imionaT004,nazwiskaT004,zdrobnieniaZlozoneEtap1).klasyfikujWiersz;
+
+for (const imie of ['Jean-Pierre','Jean-Luc','Jean-Michel','Jean-Paul','Karl-Heinz']) {
+  test('T-004 chroni pełne imię w obu kolejnościach: '+imie, () => {
+    for (const jednostki of [[imie,'Nowak'],['Nowak',imie]]) {
+      const tekst = jednostki.join(' - ');
+      const o = t004(tekst);
+      assert.equal(o.kategoriaAutomatyczna,M,tekst);
+      assert.deepEqual(o.jednostkiTekstowe.map(j=>j.tekst),jednostki);
+      assert.deepEqual(o.grupyZlozone.map(g=>[g.tekst,g.podstawaRoli]),[[imie,'PELNE_IMIE_ZLOZONE']]);
+      assert.deepEqual(o.rozpoznaneImiona.filter(x=>x.uwzglednione).map(x=>x.klucz),[imie.toUpperCase()]);
+    }
+  });
+}
+
+for (const separator of [' - ',' -','- ','\t‐ ','\u00a0‑\u00a0','–','—',' – ',' — ','--','-']) {
+  test('T-004 zachowuje granice grup i zapis separatora '+JSON.stringify(separator), () => {
+    for (const [imie,nazwisko,kategoria] of [['Jean‑Pierre','Kowalska-Nowak',M],['Anna ‐ Maria','Gąsienica-Daniel',K]]) {
+      for (const jednostki of [[imie,nazwisko],[nazwisko,imie]]) {
+        const tekst = jednostki.join(separator);
+        const o = t004(tekst);
+        assert.equal(o.kategoriaAutomatyczna,kategoria,tekst);
+        assert.equal(o.oryginalnyWiersz,tekst);
+        assert.deepEqual(o.jednostkiTekstowe.map(j=>tekst.slice(...j.zakres)),jednostki);
+        assert.deepEqual(o.grupyZlozone.map(g=>g.pozycje),[[0,1],[2,3]]);
+        assert.equal(o.grupyZlozone.find(g=>g.tekst===imie).podstawaRoli,'PELNE_IMIE_ZLOZONE');
+        assert.equal(o.grupyZlozone.find(g=>g.tekst===nazwisko).rola,'nazwisko');
+      }
+    }
+  });
+}
+
+test('T-004 rozpoznaje kilka pełnych grup i imiona wskazujące różną płeć', () => {
+  const tekst = 'Anna-Maria - Gąsienica-Daniel - Jean-Pierre';
+  const o = t004(tekst);
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.ok(o.ostrzezenia.includes('SPRZECZNE_IMIONA'));
+  assert.deepEqual(o.jednostkiTekstowe.map(j=>j.klucz),['ANNA-MARIA','GĄSIENICA-DANIEL','JEAN-PIERRE']);
+});
+
+test('T-004 pełne dopasowanie całej grupy ma pierwszeństwo przed dopasowaniami wewnętrznymi', () => {
+  const formy = [
+    [{imiona:{...imionaT004.imiona,'JEAN-PIERRE-NOWAK':[120,0]}},nazwiskaT004,'PELNE_IMIE_ZLOZONE',K],
+    [imionaT004,{nazwiska:{...nazwiskaT004.nazwiska,'JEAN-PIERRE-NOWAK':[0,120]}},'PELNE_NAZWISKO_ZLOZONE',W]
+  ];
+  for (const [imiona,nazwiska,podstawa,kategoria] of formy) {
+    const k = API.utworzKlasyfikator(imiona,nazwiska,zdrobnieniaZlozoneEtap1);
+    for (const tekst of ['Jean-Pierre-Nowak','Jean-Pierre - Nowak']) {
+      const o = k.klasyfikujWiersz(tekst);
+      assert.equal(o.kategoriaAutomatyczna,kategoria);
+      assert.deepEqual(o.grupyZlozone.map(g=>[g.tekst,g.podstawaRoli]),[[tekst,podstawa]]);
+    }
+  }
+});
+
+test('T-004 przy nakładających się pełnych wpisach wybiera długość, a potem zwartość', () => {
+  const k = API.utworzKlasyfikator({imiona:{...imionaT004.imiona,'PIERRE-NOWAK':[150,0],
+    'PIERRE-NOWAK-TESTOWA':[150,0]}},nazwiskaT004,zdrobnieniaZlozoneEtap1);
+  const analiza = tekst => k.klasyfikujWiersz(tekst).grupyZlozone.map(g=>g.klucz);
+  assert.deepEqual(analiza('Jean-Pierre - Nowak'),['JEAN-PIERRE']);
+  assert.deepEqual(analiza('Jean - Pierre-Nowak'),['PIERRE-NOWAK']);
+  assert.deepEqual(analiza('Jean-Pierre-Nowak'),['JEAN-PIERRE']);
+  assert.deepEqual(analiza('Jean-Pierre - Nowak-Testowa'),['PIERRE-NOWAK-TESTOWA']);
+});
+
+test('T-004 wykrywa konflikt z poprawnym PESEL-em i honoruje zgodny PESEL', () => {
+  for (const tekst of ['Jean-Pierre - Nowak','Nowak - Jean-Pierre','Jean-Pierre - Kowalska-Nowak']) {
+    for (const [pesel,kategoria,zrodlo] of [[pk,W,null],[pm,M,'pesel']]) {
+      const o = t004(tekst+' '+pesel);
+      assert.equal(o.kategoriaAutomatyczna,kategoria,tekst);
+      assert.equal(o.zrodlo,zrodlo);
+      assert.equal(o.ostrzezenia.includes('KONFLIKT_PESEL_IMIONA'),kategoria===W);
+      assert.equal(o.urodzenie.data,'2004-02-29');
+    }
+  }
+});
+
+test('T-004 pozostawia rozpoznanie nazwisk po częściach także w obecności pełnych grup', () => {
+  for (const [tekst,kategoria,grupy] of [
+    ['Witek-Nowak',W,['Witek-Nowak']], ['Anna Witek-Nowak',K,['Witek-Nowak']],
+    ['Anna-Maria - Kowalska-Nowak',K,['Anna-Maria','Kowalska-Nowak']],
+    ['Jean-Pierre - Witek - Nowak',M,['Jean-Pierre','Witek - Nowak']],
+    ['Nowak - Witek - Jean-Pierre',M,['Nowak - Witek','Jean-Pierre']]
+  ]) {
+    const o = t004(tekst);
+    assert.equal(o.kategoriaAutomatyczna,kategoria,tekst);
+    assert.deepEqual(o.grupyZlozone.map(g=>g.tekst),grupy);
+    assert.equal(o.grupyZlozone.find(g=>g.rola==='nazwisko').podstawaRoli,'NAZWISKO_ZLOZONE_Z_CZESCI');
+    assert.ok(o.rozpoznaneZdrobnienia.every(z=>!z.wykorzystaneDoKlasyfikacji));
+  }
+});
+
+test('Złożenie nie zmienia dat, położeń i walidacji numerów PESEL', () => {
+  for (const [tekst,plec,zrodlo] of [
+    [pk+' Witek-Nowak',K,'pesel'],
+    ['Witek-Nowak '+pk+' Anna 2004-02-29',K,'pesel'],
+    ['Anna Witek-Nowak 2004-02-29 '+pm,W,null],
+    ['Anna Witek-Nowak 2004-02-29 1234567890',W,null],
+    ['Anna Witek-Nowak 2004-02-29 '+pm+' '+pk,W,null]
+  ]) {
+    const o=zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,plec);
+    assert.equal(o.zrodlo,zrodlo);
+    assert.equal(o.urodzenie.data,'2004-02-29');
+    assert.equal(API.obliczWiek(o,'2026-03-01').wiek,22);
+    assert.ok(o.pesel.znalezione.every(n=>o.oczyszczonyWiersz.split(' ')[n.pozycja]===n.numer));
+    assert.ok(o.rozpoznaneZdrobnienia.every(z=>!z.sprzeczneZPeselem));
+  }
+});
+
+test('Wiersze bez łącznika zachowują role 1.2.3 oraz udostępniają pierwotną kolejność', () => {
+  for (const [tekst,role,plec] of [
+    ['Anna Kowalska Nowak',['imie','nazwisko','nazwisko'],K],
+    ['Kowalska Nowak Anna',['nazwisko','nazwisko','imie'],K],
+    ['Anna Maria Nowak',['imie','imie','nazwisko'],K],
+    ['Nowak Anna Maria',['nazwisko','imie','imie'],K],
+    ['Anna Marek Nowak',['imie','imie','nazwisko'],W],
+    ['Anna Witek Nowak',['imie','nierozstrzygnieta','nazwisko'],W]
+  ]) {
+    const o=zlozenie(tekst);
+    assert.equal(o.kategoriaAutomatyczna,plec);
+    assert.deepEqual(o.grupyZlozone,[]);
+    assert.deepEqual(o.jednostkiTekstowe.map(j=>j.tekst),tekst.split(' '));
+    assert.deepEqual(o.jednostkiTekstowe.map(j=>j.rola),role);
+    assert.deepEqual(o.czlonyTekstowe.map(j=>j.rola),role);
+  }
+});
+
+test('Złożenie bez opcjonalnego słownika nazwisk nie uruchamia zdrobnienia z części', () => {
+  const k=API.utworzKlasyfikator(imionaZlozoneEtap1,null,zdrobnieniaZlozoneEtap1);
+  const o=k.klasyfikujWiersz('Witek-Nowak');
+  assert.equal(o.kategoriaAutomatyczna,W);
+  assert.equal(o.grupyZlozone[0].rola,'nierozstrzygnieta');
+  assert.equal(o.rozpoznaneZdrobnienia[0].kontekst,null);
 });

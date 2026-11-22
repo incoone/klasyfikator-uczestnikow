@@ -1,5 +1,26 @@
 # Historia zmian
 
+## v1.2.4 - Imiona i nazwiska złożone
+
+### Rozpoznawanie danych
+
+- Dodano rozpoznawanie imion i nazwisk złożonych, z zachowaniem oryginalnego zapisu i kolejności członów.
+- Rozróżniono łączniki i separatory, uwzględniając pełne dopasowania słownikowe oraz wymagane warunki rozpoznawania po częściach.
+- Rozwiązano problem T-002: części nazwiska złożonego nie są traktowane jako niezależne wskazania imienne.
+- Rozwiązano problem T-004: pełne dopasowania złożone wewnątrz dłuższego ciągu mają pierwszeństwo przed rozpoznawaniem po częściach, co pozwala zachować wykrywanie konfliktów imienia z PESEL-em.
+- Pełne dopasowanie imienia złożonego wykorzystuje własne statystyki; imię rozpoznane po częściach wykorzystuje odrębne wskazania, bez sumowania ich statystyk.
+
+### API, interfejs i testy
+
+- Rozszerzono API o jednostki tekstowe, grupy złożone, pewność rozpoznania ról i informacje o uwzględnianiu dopasowań w analizie płci.
+- Dostosowano prezentację rozpoznanych grup i diagnostyki oraz stronę pomocy. Nowe metadane stanowią podstawę przyszłego porządkowania danych; automatycznego zmieniania kolejności danych jeszcze nie wprowadzono.
+- Rozszerzono zestaw testów automatycznych z 465 do 535 przypadków.
+
+### Bez zmian
+
+- Zachowano próg jednoznaczności płci imienia 99,90%, zasady walidacji PESEL-u, dat urodzenia i obliczania wieku.
+- Słowniki, dane źródłowe i lokalne przetwarzanie danych uczestników pozostają bez zmian.
+
 ## v1.2.3 - Optymalizacja komunikatów
 
 ### Zmiany w komunikatach

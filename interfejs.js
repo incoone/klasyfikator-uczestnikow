@@ -32,7 +32,18 @@
     PRZEWAGA_IMIENIA_10_DWA_CZLONY: 'Imię (przewaga w statystykach i kontekst dwóch członów)',
     PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM: 'Imię (przewaga w statystykach i rozpoznane nazwisko)',
     KONTEKST_DWOCH_CZLONOW: 'Prawdopodobne imię (kontekst dwóch członów)',
-    KONTEKST_ZDROBNIENIA: 'Prawdopodobne imię'
+    KONTEKST_ZDROBNIENIA: 'Prawdopodobne imię',
+    PELNE_IMIE_ZLOZONE: 'Imię złożone (pełne dopasowanie do słownika imion)',
+    PELNE_NAZWISKO_ZLOZONE: 'Nazwisko złożone (pełne dopasowanie do słownika nazwisk)',
+    NAZWISKO_ZLOZONE_Z_CZESCI: 'Nazwisko złożone (rozpoznanie po częściach)',
+    IMIENNE_ROLE_CZESCI: 'Imię złożone (rozpoznanie po częściach)'
+  });
+  const PEWNOSC_ROLI = Object.freeze({ wysoka: 'wysoka', srednia: 'średnia', nieustalona: 'nieustalona' });
+  const ANALIZA_GRUPY = Object.freeze({
+    pelne_statystyki_imienia: 'Jedno wskazanie na podstawie statystyk całego imienia.',
+    pelne_statystyki_nazwiska: 'Statystyki całego nazwiska mogą wspierać klasyfikację płci.',
+    statystyki_czesci_imienia: 'Wskazania uwzględnionych części imienia oceniane osobno, bez łączenia statystyk.',
+    pominieta: 'Statystyki grupy i jej części nie są wskazaniami płci.'
   });
   const OBSZARY_UWAG = { plec: 'Płeć', wiek: 'Wiek', dane: 'Dane' };
   const KOMUNIKAT_ANALIZY = 'Analiza zakończona. Możesz przejrzeć wyniki w każdej z trzech kategorii. Zmiana daty wydarzenia lub ustawień progów wiekowych automatycznie aktualizuje wyniki. Ponowna analiza jest potrzebna tylko po zmianie listy uczestników w głównym polu.';
@@ -206,7 +217,7 @@ Kowalski
     }
     if (typeof api.obliczWiek !== 'function' || typeof api.statystykiWiekowe !== 'function' ||
         typeof api.parsujProgi !== 'function' || typeof api.pobierzKomunikaty !== 'function' || !Array.isArray(api.PROGI_TURYSTYCZNE)) {
-      komunikat('Interfejs 1.2.3 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
+      komunikat('Interfejs 1.2.4 wymaga aktualnych modułów klasyfikatora w katalogu core/.', true);
       return;
     }
     $('tourism-thresholds').textContent = api.PROGI_TURYSTYCZNE.join(', ') + ' lat';
@@ -230,8 +241,10 @@ Kowalski
       const kontrolaKomunikatow = api.pobierzKomunikaty(kontrola, null);
       if (!Array.isArray(kontrola.czlonyTekstowe) || !Array.isArray(kontrola.rozpoznaneNazwiska) ||
           !Array.isArray(kontrola.rozpoznaneZdrobnienia) || !kontrola.czlonyTekstowe.every(c => 'rolaWstepna' in c) ||
+          !Array.isArray(kontrola.grupyZlozone) || !Array.isArray(kontrola.jednostkiTekstowe) ||
+          !kontrola.jednostkiTekstowe.every(u => Array.isArray(u.pozycje) && 'pewnoscRoli' in u) ||
           !kontrolaKomunikatow.doWeryfikacji.some(u => u.powiazane?.some(p => p.obszar === 'wiek' && p.wymagaWeryfikacji === true)))
-        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.3.');
+        throw new Error('Wymagana jest logika klasyfikatora w wersji 1.2.4.');
       klasyfikator = nowy;
       $('analyze-button').disabled = false;
       komunikat('Wczytano słowniki: ' + ['imiona', 'nazwiska', 'zdrobnienia'].map((nazwa, i) =>
@@ -265,9 +278,11 @@ Kowalski
     if (wynik.zrodlo === 'imiona_i_nazwisko') return 'Imię i nazwisko';
     if (wynik.zrodlo === 'zdrobnienia') return 'Na podstawie zdrobnienia';
     if (wynik.zrodlo === 'imiona') {
-      const imiona = wynik.rozpoznaneImiona
-        .filter(imie => imie.uwzglednione !== false && imie.plec === wynik.kategoriaAutomatyczna)
-        .map(imie => imie.tekst);
+      const wskazujace = wynik.rozpoznaneImiona
+        .filter(imie => imie.uwzglednione !== false && imie.plec === wynik.kategoriaAutomatyczna);
+      const imiona = wynik.jednostkiTekstowe
+        .filter(u => wskazujace.some(i => u.pozycje.includes(i.pozycja)))
+        .map(u => u.tekst);
       return 'Imię: ' + [...new Set(imiona)].join(', ');
     }
     return 'Wymaga sprawdzenia';
@@ -308,19 +323,22 @@ Kowalski
       if (bledy.length) opis = opis.replace('Szczegóły w wyniku sprawdzenia numeru.', bledy.join(' '));
     } else if (['ROLA_IMIENIA_ZE_STATYSTYK', 'ROLA_IMIENIA_Z_KONTEKSTU',
       'ROLA_NAZWISKA_Z_KONTEKSTU', 'NIEROZSTRZYGNIETA_ROLA'].includes(uwaga.kod)) {
-      const i = wynik.rozpoznaneImiona.find(i => i.klucz === uwaga.klucz);
-      const n = wynik.rozpoznaneNazwiska.find(n => n.klucz === uwaga.klucz);
-      const z = wynik.rozpoznaneZdrobnienia.find(z => z.klucz === uwaga.klucz);
+      const dopasowanie = x => !x.czescGrupy && x.klucz === uwaga.klucz &&
+        (!uwaga.pozycje || uwaga.pozycje.includes(x.pozycja));
+      const i = wynik.rozpoznaneImiona.find(dopasowanie);
+      const n = wynik.rozpoznaneNazwiska.find(dopasowanie);
+      const z = wynik.rozpoznaneZdrobnienia.find(dopasowanie);
       if (i && n) opis += ' W słownikach: imię - ' + liczebnosc(i.statystyki) +
         '; nazwisko - ' + liczebnosc(n.statystyki) + '.';
       else if (z && n) opis += ' W słownikach: brak wpisu samodzielnego imienia; nazwisko - ' + liczebnosc(n.statystyki) +
         '; zdrobnienie - możliwe pełne formy: ' + z.odpowiedniki.map(o => ladnaNazwa(o.klucz)).join(', ') + '.';
     } else if (uwaga.kod === 'KLASYFIKACJA_WSPARTA_NAZWISKIEM') {
-      const nazwiska = wynik.rozpoznaneNazwiska.filter(n => n.rola === 'nazwisko' && n.statystyki.silneWskazanie);
+      const nazwiska = wynik.rozpoznaneNazwiska.filter(n => n.uwzglednione !== false && n.rola === 'nazwisko' && n.statystyki.silneWskazanie);
       opis += ' Rozpoznane imiona: ' + imiona.map(i => i.tekst + ' - ' + liczebnosc(i.statystyki)).join('; ') +
         '. Nazwiska o silnym wskazaniu: ' + nazwiska.map(n => n.tekst + ' - ' + liczebnosc(n.statystyki)).join('; ') + '.';
     } else if (uwaga.kod === 'NAZWISKO_PRZECIWNE_WYNIKOWI') {
-      const n = wynik.rozpoznaneNazwiska.find(n => n.klucz === uwaga.klucz);
+      const n = wynik.rozpoznaneNazwiska.find(n => n.uwzglednione !== false && n.rola === 'nazwisko' &&
+        n.klucz === uwaga.klucz && (!uwaga.pozycje || uwaga.pozycje.includes(n.pozycja)));
       if (n) opis += ' Wystąpienia nazwiska: ' + liczebnosc(n.statystyki) + '.';
     }
     return opis;
@@ -384,7 +402,54 @@ Kowalski
     return PODSTAWY_ROLI[czlon?.podstawaRoli] ?? ROLE_CZLONOW[czlon?.rola] ?? '-';
   }
 
-  function tabelaStatystyk(wpisy, czlony, nazwiska = false) {
+  // Pełny wpis grupy i jej pierwsza część mogą mieć ten sam indeks.
+  // Wpisy części są wskazaniami tylko wtedy, gdy API tak je oznacza.
+  function jednostkaDopasowania(wynik, wpis) {
+    return wynik.jednostkiTekstowe.find(u => u.pozycje.includes(wpis.pozycja));
+  }
+
+  function pominieteDopasowanie(wpis, nazwiska) {
+    return wpis.uwzglednione === false || (nazwiska && wpis.rola !== 'nazwisko');
+  }
+
+  function szczegolyJednostek(wynik) {
+    const sekcja = element('div', 'text-units');
+    sekcja.append(element('h4', 'stats-heading', 'Rozpoznane jednostki tekstowe'));
+    const ul = element('ul', 'unit-list');
+    for (const u of wynik.jednostkiTekstowe) {
+      const li = element('li', 'text-unit');
+      li.append(element('strong', '', u.tekst),
+        element('span', 'unit-meta', opisRoli(u) + ' - pewność roli: ' + (PEWNOSC_ROLI[u.pewnoscRoli] ?? '-')));
+      if (u.typ === 'grupa') {
+        const grupa = wynik.grupyZlozone.find(g => g.pozycja === u.pozycja);
+        if (grupa) {
+          const dopasowaniaGrupy = Object.entries({ imie: 'imię', nazwisko: 'nazwisko' })
+            .filter(([klucz]) => grupa.dopasowania[klucz]).map(([, etykieta]) => etykieta);
+          li.append(element('span', 'unit-meta', 'Dopasowanie całej grupy: ' +
+            (dopasowaniaGrupy.length ? dopasowaniaGrupy.join(', ') : 'brak wpisu w słownikach imion i nazwisk')));
+          const kontekst = grupa.analizaPlci === 'pominieta' && grupa.rola === 'nazwisko'
+            ? ' Grupa może stanowić kontekst nazwiska.' : '';
+          li.append(element('span', 'unit-meta', (ANALIZA_GRUPY[grupa.analizaPlci] ?? '') + kontekst));
+          const czesci = wynik.czlonyTekstowe.filter(c => c.czescGrupy && grupa.pozycje.includes(c.pozycja));
+          const details = element('details', 'unit-parts');
+          details.append(element('summary', '', 'Dopasowania poszczególnych części'));
+          const lista = element('ul');
+          for (const c of czesci) {
+            const dopasowania = Object.entries({ imie: 'imię', nazwisko: 'nazwisko', zdrobnienie: 'zdrobnienie' })
+              .filter(([klucz]) => c.dopasowania[klucz]).map(([, etykieta]) => etykieta);
+            lista.append(element('li', '', c.tekst + ' - ' + (dopasowania.length ? dopasowania.join(', ') : 'brak dopasowań słownikowych')));
+          }
+          details.append(lista);
+          li.append(details);
+        }
+      }
+      ul.append(li);
+    }
+    sekcja.append(wynik.jednostkiTekstowe.length ? ul : element('p', 'hint', 'Brak jednostek tekstowych.'));
+    return sekcja;
+  }
+
+  function tabelaStatystyk(wpisy, wynik, nazwiska = false) {
     const wrap = element('div', 'table-wrap');
     const tabela = element('table', 'results-table name-stats-table');
     tabela.setAttribute('aria-label', nazwiska ? 'Statystyki rozpoznanych nazwisk' : 'Statystyki rozpoznanych imion');
@@ -398,24 +463,28 @@ Kowalski
     const tbody = element('tbody');
     for (const wpis of wpisy) {
       const s = wpis.statystyki;
+      const pominiete = pominieteDopasowanie(wpis, nazwiska);
       const r = element('tr');
       const th = element('th', '', wpis.tekst); th.scope = 'row'; r.append(th);
+      const jednostka = jednostkaDopasowania(wynik, wpis);
+      if (wpis.czescGrupy) th.append(element('span', 'name-count', 'Część grupy: ' + jednostka.tekst));
+      else if (jednostka?.typ === 'grupa') th.append(element('span', 'name-count', 'Pełne dopasowanie słownikowe'));
       for (const [procent, liczba, przewaga] of [[s.procentKobiet, s.kobiety, s.kobiety > s.mezczyzni], [s.procentMezczyzn, s.mezczyzni, s.mezczyzni > s.kobiety]]) {
         const td = element('td');
-        td.append(element('span', przewaga ? 'name-share dominant' : 'name-share', formatProcentu.format(procent) + '%'),
+        td.append(element('span', przewaga && !pominiete ? 'name-share dominant' : 'name-share', formatProcentu.format(procent) + '%'),
           element('span', 'name-count', formatLiczby.format(liczba)));
         r.append(td);
       }
-      r.append(element('td', '', nazwiska
+      const statusProgu = nazwiska
         ? (s.silneWskazanie ? s.plec : 'Nie')
-        : (s.progOsiagniety ? (s.uwagaProgowa ? ETYKIETA_PRZEDZIALU_PROGOWEGO : 'Osiągnięty') : s.kobiety === s.mezczyzni ? 'Nie (remis)' : 'Nieosiągnięty')));
-      const czlon = czlony.find(c => c.pozycja === wpis.pozycja);
-      const etykietaRoli = opisRoli(czlon);
+        : (s.progOsiagniety ? (s.uwagaProgowa ? ETYKIETA_PRZEDZIALU_PROGOWEGO : 'Osiągnięty') : s.kobiety === s.mezczyzni ? 'Nie (remis)' : 'Nieosiągnięty');
+      r.append(element('td', '', pominiete ? 'Statystyka nieużyta: ' + statusProgu : statusProgu));
+      const etykietaRoli = opisRoli(jednostka);
       const rola = nazwiska ? etykietaRoli +
-        (wpis.rola !== 'nazwisko' ? ' - nie użyto jako nazwiska' : '') :
-        (wpis.uwzglednione === false ? etykietaRoli + ' - pominięte jako imię' :
+        (pominiete ? ' - nie użyto jako nazwiska' : '') :
+        (pominiete ? etykietaRoli + ' - pominięte jako imię' :
           etykietaRoli + ' - uwzględnione jako imię');
-      r.append(element('td', '', rola));
+      r.append(element('td', '', rola + (pominiete ? ' (tylko diagnostyka)' : '')));
       tbody.append(r);
     }
     tabela.append(naglowek, tbody); wrap.append(tabela);
@@ -424,17 +493,32 @@ Kowalski
 
   function statystykiRozpoznanych(wynik) {
     const sekcja = element('div', 'name-stats');
-    sekcja.append(element('h4', 'stats-heading', 'Rozpoznane imiona'),
-      wynik.rozpoznaneImiona.length ? tabelaStatystyk(wynik.rozpoznaneImiona, wynik.czlonyTekstowe) : element('p', 'hint', 'Brak dopasowań w słowniku imion.'));
-    sekcja.append(element('h4', 'stats-heading', 'Rozpoznane nazwiska'),
-      wynik.rozpoznaneNazwiska.length ? tabelaStatystyk(wynik.rozpoznaneNazwiska, wynik.czlonyTekstowe, true) : element('p', 'hint', 'Brak dopasowań w słowniku nazwisk.'));
+    sekcja.append(szczegolyJednostek(wynik));
+    for (const [wpisy, naglowek, rodzaj, nazwiska] of [
+      [wynik.rozpoznaneImiona, 'Rozpoznane imiona', 'imion', false],
+      [wynik.rozpoznaneNazwiska, 'Rozpoznane nazwiska', 'nazwisk', true]
+    ]) {
+      const glowne = wpisy.filter(w => !w.czescGrupy || !pominieteDopasowanie(w, nazwiska));
+      const diagnostyczne = wpisy.filter(w => w.czescGrupy && pominieteDopasowanie(w, nazwiska));
+      sekcja.append(element('h4', 'stats-heading', naglowek),
+        glowne.length ? tabelaStatystyk(glowne, wynik, nazwiska) : element('p', 'hint', diagnostyczne.length
+          ? 'Brak odrębnych wskazań ze słownika ' + rodzaj + '. Dopasowania części dostępne poniżej.'
+          : 'Brak dopasowań w słowniku ' + rodzaj + '.'));
+      if (diagnostyczne.length) {
+        const details = element('details', 'unit-diagnostics');
+        details.append(element('summary', '', 'Dopasowania części - tylko diagnostyka (' + diagnostyczne.length + ')'),
+          tabelaStatystyk(diagnostyczne, wynik, nazwiska));
+        sekcja.append(details);
+      }
+    }
     if (wynik.rozpoznaneZdrobnienia.length) {
       sekcja.append(element('h4', 'stats-heading', 'Możliwe zdrobnienia i formy potoczne'));
       const ul = element('ul', 'record-notes');
       for (const z of wynik.rozpoznaneZdrobnienia) {
-        const czlon = wynik.czlonyTekstowe.find(c => c.pozycja === z.pozycja);
+        const czlon = jednostkaDopasowania(wynik, z);
         ul.append(element('li', '', z.tekst +
           (z.wariantZPolskimiZnakami ? ' (dopasowanie do zdrobnienia: ' + ladnaNazwa(z.wariantZPolskimiZnakami) + ')' : '') +
+          (z.czescGrupy ? ' (część grupy: ' + czlon.tekst + '; tylko diagnostyka, niewykorzystane do klasyfikacji)' : '') +
           ' - rola: ' + opisRoli(czlon) + ' - jako samodzielne imię: ' +
           liczebnosc(z.statystyki) + '. Możliwe pełne formy: ' +
           z.odpowiedniki.map(o => ladnaNazwa(o.klucz) + ': ' + liczebnosc(o.statystyki)).join('; ') + '.' +

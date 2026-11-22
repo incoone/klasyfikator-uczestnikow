@@ -17,8 +17,151 @@
 
   const K = 'Kobieta', M = 'Mężczyzna', W = 'Do weryfikacji';
 
+  function maPrzewageRoli(liczba, drugaLiczba) {
+    return liczba >= 100 && BigInt(liczba) >= 50n * BigInt(drugaLiczba);
+  }
+
+  function znajdzGrupyZlozone(wiersz, wyrazy, imiona, nazwiska, zdrobnienia, maksCzesciZlozenia) {
+    const grupy = [];
+    const literowy = /^\p{L}[\p{L}\p{M}]*$/u;
+    function ocenGrupe(poczatek, koniec, wymagaPotwierdzenia) {
+      if (poczatek === koniec) return null;
+      const klucze = wyrazy.slice(poczatek, koniec + 1).map(([tekst]) => tekst.toUpperCase());
+      const klucz = klucze.join('-');
+      const imie = imiona.get(klucz);
+      const nazwisko = nazwiska.get(klucz);
+      let rola = 'nierozstrzygnieta', podstawaRoli = null, statystyki = null;
+      let imienneCzesci = false;
+      let analizaPlci = 'pominieta';
+      if (nazwisko && !imie) {
+        rola = 'nazwisko';
+        podstawaRoli = 'PELNE_NAZWISKO_ZLOZONE';
+        statystyki = nazwisko;
+        analizaPlci = 'pelne_statystyki_nazwiska';
+      } else if (imie && !nazwisko) {
+        rola = 'imie';
+        podstawaRoli = 'PELNE_IMIE_ZLOZONE';
+        statystyki = imie.statystyki;
+        analizaPlci = 'pelne_statystyki_imienia';
+      } else if (!nazwisko && !imie) {
+        const czesci = klucze.map(k => {
+          const stat = imiona.get(k)?.statystyki;
+          const razemNazwisk = nazwiska.get(k)?.razem;
+          const razemImion = stat ? stat.kobiety + stat.mezczyzni : 0;
+          const oba = razemImion > 0 && razemNazwisk !== undefined;
+          return { imie: Boolean(stat), nazwisko: razemNazwisk !== undefined,
+            tylkoNazwisko: razemNazwisk !== undefined && !stat && !zdrobnienia.has(k),
+            przewagaImienia: oba && maPrzewageRoli(razemImion, razemNazwisk),
+            przewagaNazwiska: oba && maPrzewageRoli(razemNazwisk, razemImion) };
+        });
+        if (czesci.every(c => c.nazwisko && !c.przewagaImienia) &&
+            czesci.some(c => c.tylkoNazwisko || c.przewagaNazwiska)) {
+          rola = 'nazwisko';
+          podstawaRoli = 'NAZWISKO_ZLOZONE_Z_CZESCI';
+        } else {
+          imienneCzesci = czesci.every(c => c.imie && !c.przewagaNazwiska);
+        }
+      }
+      if (wymagaPotwierdzenia && rola === 'nierozstrzygnieta' && !imienneCzesci && !(imie && nazwisko)) return null;
+      const zakres = [wyrazy[poczatek].index, wyrazy[koniec].index + wyrazy[koniec][0].length];
+      return { tekst: wiersz.slice(...zakres), klucz, zakres, pozycja: poczatek,
+        pozycje: klucze.map((_, j) => poczatek + j), rola, podstawaRoli, statystyki,
+        dopasowania: { imie: Boolean(imie), nazwisko: Boolean(nazwisko) }, imienneCzesci, wymagaPotwierdzenia, analizaPlci };
+    }
+    function dodajGrupyPoCzesciach(poczatek, koniec, luzneLaczniki) {
+      if (poczatek >= koniec) return;
+      const granice = [];
+      for (let p = poczatek; p < koniec; p++) {
+        if (luzneLaczniki.has(p)) granice.push(p);
+      }
+      const grupa = ocenGrupe(poczatek, koniec, granice.length > 0);
+      const fragmenty = [];
+      if (granice.length && (!grupa || grupa.rola === 'nierozstrzygnieta')) {
+        // Kreska może pełnić funkcję separatora obok zwartej grupy.
+        let od = poczatek;
+        for (const doPozycji of [...granice, koniec]) {
+          const fragment = ocenGrupe(od, doPozycji, false);
+          if (fragment) fragmenty.push(fragment);
+          od = doPozycji + 1;
+        }
+      }
+      if (!grupa || fragmenty.some(f => f.rola === 'nazwisko')) {
+        for (const fragment of fragmenty) grupy.push(fragment);
+      } else {
+        grupy.push(grupa);
+      }
+    }
+
+    for (let i = 0; i < wyrazy.length - 1; i++) {
+      if (!literowy.test(wyrazy[i][0])) continue;
+      const poczatek = i, luzneLaczniki = new Set();
+      while (i + 1 < wyrazy.length && literowy.test(wyrazy[i + 1][0])) {
+        const lacznik = wiersz.slice(wyrazy[i].index + wyrazy[i][0].length, wyrazy[i + 1].index);
+        // Dłuższe kreski ze spacjami i inne separatory zachowują dotychczasową funkcję.
+        if (!/^[\p{Zs}\t]*[-\u2010\u2011][\p{Zs}\t]*$/u.test(lacznik) && !/^[\u2013\u2014]$/u.test(lacznik)) break;
+        if (!/^[-\u2010\u2011]$/u.test(lacznik)) luzneLaczniki.add(i);
+        i++;
+      }
+      if (i === poczatek) continue;
+
+      // Zabezpiecz pełne wpisy, zanim analiza części połączy je z sąsiednimi członami.
+      const dopasowania = [];
+      for (let od = poczatek; od < i; od++) {
+        let klucz = wyrazy[od][0].toUpperCase(), liczbaLuznychLacznikow = 0;
+        for (let doPozycji = od + 1; doPozycji <= i && doPozycji - od < maksCzesciZlozenia; doPozycji++) {
+          klucz += '-' + wyrazy[doPozycji][0].toUpperCase();
+          if (luzneLaczniki.has(doPozycji - 1)) liczbaLuznychLacznikow++;
+          if (imiona.has(klucz) || nazwiska.has(klucz)) dopasowania.push({ od, doPozycji, liczbaLuznychLacznikow });
+        }
+      }
+      // Cały wpis wygrywa długością. Przy remisie pierwszeństwo ma bardziej zwarty zapis.
+      dopasowania.sort((a, b) => (b.doPozycji - b.od) - (a.doPozycji - a.od) ||
+        a.liczbaLuznychLacznikow - b.liczbaLuznychLacznikow || a.od - b.od);
+      const zajete = new Set(), pelneGrupy = [];
+      for (const { od, doPozycji } of dopasowania) {
+        const grupa = ocenGrupe(od, doPozycji, false);
+        if (grupa.pozycje.some(p => zajete.has(p))) continue;
+        pelneGrupy.push(grupa);
+        for (const p of grupa.pozycje) zajete.add(p);
+      }
+      let od = poczatek;
+      for (const grupa of pelneGrupy.sort((a, b) => a.pozycja - b.pozycja)) {
+        dodajGrupyPoCzesciach(od, grupa.pozycja - 1, luzneLaczniki);
+        grupy.push(grupa);
+        od = grupa.pozycja + grupa.pozycje.length;
+      }
+      dodajGrupyPoCzesciach(od, i, luzneLaczniki);
+    }
+    if (!grupy.some(g => g.imienneCzesci)) return grupy;
+
+    // Nazwiska nie wyprowadzamy z części tej samej ani innej nierozstrzygniętej grupy.
+    const pozycjeGrup = new Set(grupy.flatMap(g => g.pozycje));
+    const maNiezalezneNazwisko = grupy.some(g => g.rola === 'nazwisko') ||
+      wyrazy.some(([tekst], pozycja) => {
+        if (pozycjeGrup.has(pozycja)) return false;
+        const klucz = tekst.toUpperCase(), nazwisko = nazwiska.get(klucz), imie = imiona.get(klucz);
+        return nazwisko && (imie
+          ? maPrzewageRoli(nazwisko.razem, imie.statystyki.kobiety + imie.statystyki.mezczyzni)
+          : !zdrobnienia.has(klucz));
+      });
+    for (const grupa of grupy) {
+      if (!grupa.imienneCzesci || !maNiezalezneNazwisko) continue;
+      grupa.rola = 'imie';
+      grupa.podstawaRoli = 'IMIENNE_ROLE_CZESCI';
+      grupa.analizaPlci = 'statystyki_czesci_imienia';
+    }
+    return grupy.filter(g => !g.wymagaPotwierdzenia || !g.imienneCzesci || g.rola === 'imie');
+  }
+
+  function pewnoscRoli(rola, podstawa) {
+    if (rola === 'nierozstrzygnieta') return 'nieustalona';
+    return ['TYLKO_IMIE', 'TYLKO_NAZWISKO', 'PRZEWAGA_IMIENIA_50', 'PRZEWAGA_NAZWISKA',
+      'PRZEWAGA_IMIENIA_30', 'PELNE_NAZWISKO_ZLOZONE', 'PELNE_IMIE_ZLOZONE'].includes(podstawa) ? 'wysoka' : 'srednia';
+  }
+
   function rozstrzygnijRolePary(czlony, slownikImion, slownikNazwisk) {
     for (const czlon of czlony) {
+      if (czlon.grupa) continue;
       const { imie, nazwisko, zdrobnienie } = czlon.dopasowania;
       const maZnaczenieImienne = imie || zdrobnienie;
       if (!nazwisko) {
@@ -31,7 +174,7 @@
         const stat = slownikImion.get(czlon.klucz)?.statystyki;
         const razem = stat ? stat.kobiety + stat.mezczyzni : 0;
         // Brak danych samodzielnego imienia wyklucza porównanie liczebności.
-        if (razem >= 100 && BigInt(razem) >= 50n * BigInt(slownikNazwisk.get(czlon.klucz).razem)) {
+        if (maPrzewageRoli(razem, slownikNazwisk.get(czlon.klucz).razem)) {
           czlon.rolaWstepna = 'imie';
           czlon.podstawaRoli = 'PRZEWAGA_IMIENIA_50';
         } else {
@@ -45,7 +188,7 @@
 
     // Obie role wstępne są już znane. Kolejność wejściowa nie ma wpływu na wynik.
     for (const [pozycja, czlon] of czlony.entries()) {
-      if (czlon.rolaWstepna !== 'niejednoznaczna') continue;
+      if (czlon.grupa || czlon.rolaWstepna !== 'niejednoznaczna') continue;
       const drugaRola = czlony[1 - pozycja].rolaWstepna;
       if (drugaRola === 'imie') {
         czlon.rola = 'nazwisko';
@@ -180,6 +323,12 @@
     }
     if (slownik.size === 0) throw new TypeError(formatuj('PUSTY_SLOWNIK_IMION'));
     const nazwiska = przygotujNazwiska(jsonNazwiska);
+    let maksCzesciZlozenia = 1;
+    for (const mapa of [slownik, nazwiska]) {
+      for (const klucz of mapa.keys()) {
+        if (klucz.includes('-')) maksCzesciZlozenia = Math.max(maksCzesciZlozenia, klucz.split('-').length);
+      }
+    }
     const zdrobnienia = przygotujZdrobnienia(jsonZdrobnienia);
     const wariantyZdrobnien = jsonNazwiska !== null && jsonZdrobnienia !== null
       ? przygotujWariantyZdrobnien(zdrobnienia, slownik, nazwiska) : new Map();
@@ -211,12 +360,14 @@
       if (!oryginalnyWiersz.trim()) return null;
       // Znaki inne niż litery, znaki łączące i liczby stają się separatorami.
       // Nie usuwamy polskich znaków, nie sklejamy cyfr i nie poprawiamy pisowni.
-      const oczyszczonyWiersz = oryginalnyWiersz.replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ').trim();
-      const czlony = oczyszczonyWiersz ? oczyszczonyWiersz.split(/\s+/u) : [];
+      const wyrazy = [...oryginalnyWiersz.matchAll(/[\p{L}\p{M}\p{N}]+/gu)];
+      const oczyszczonyWiersz = wyrazy.map(([tekst]) => tekst).join(' ');
+      const grupy = znajdzGrupyZlozone(oryginalnyWiersz, wyrazy, slownik, nazwiska, zdrobnienia, maksCzesciZlozenia);
+      const grupaNaPozycji = new Map(grupy.flatMap(g => g.pozycje.map(p => [p, g])));
       const wskazania = { kobieta: 0, mezczyzna: 0, niejednoznaczne: 0 };
       const rozpoznaneImiona = [], nierozpoznaneCzlony = [], numery = [], ostrzezenia = [];
-      const czlonyTekstowe = [], rozpoznaneNazwiska = [], rozpoznaneZdrobnienia = [];
-      for (const [pozycja, tekst] of czlony.entries()) {
+      const czlonyTekstowe = [], czlonyAnalizy = [], rozpoznaneNazwiska = [], rozpoznaneZdrobnienia = [];
+      for (const [pozycja, [tekst]] of wyrazy.entries()) {
         if (/^\p{Nd}+$/u.test(tekst)) {
           // Tylko samodzielne ciągi 10-12 cyfr traktujemy jako potencjalny PESEL.
           if (!jestKandydatemNaPesel(tekst)) continue;
@@ -226,42 +377,70 @@
         const klucz = tekst.toUpperCase();
         const imie = slownik.get(klucz);
         const nazwisko = nazwiska.get(klucz);
-        const przewagaNazwiska = Boolean(imie && nazwisko && nazwisko.razem >= 100 &&
-          BigInt(nazwisko.razem) >= 50n * BigInt(imie.statystyki.kobiety + imie.statystyki.mezczyzni));
-        czlonyTekstowe.push({ pozycja, tekst, klucz,
+        const grupa = grupaNaPozycji.get(pozycja);
+        const przewagaNazwiska = Boolean(imie && nazwisko &&
+          maPrzewageRoli(nazwisko.razem, imie.statystyki.kobiety + imie.statystyki.mezczyzni));
+        const czlon = { pozycja, tekst, klucz,
           dopasowania: { imie: Boolean(imie), nazwisko: Boolean(nazwisko), zdrobnienie: zdrobnienia.has(klucz) },
           rola: imie && !nazwisko ? 'imie' : nazwisko && !imie ? 'nazwisko' : 'nierozstrzygnieta',
           podstawaRoli: imie && !nazwisko ? 'TYLKO_IMIE' : nazwisko && !imie ? 'TYLKO_NAZWISKO' : null,
-          przewagaNazwiska });
-        if (nazwisko) rozpoznaneNazwiska.push({ pozycja, tekst, klucz, statystyki: nazwisko });
+          przewagaNazwiska };
+        czlonyTekstowe.push(czlon);
+        if (grupa) {
+          czlon.rola = grupa.rola;
+          czlon.podstawaRoli = grupa.podstawaRoli;
+          czlon.czescGrupy = true;
+          if (grupa.pozycja === pozycja) {
+            czlonyAnalizy.push({ ...grupa, grupa: true,
+              rolaWstepna: grupa.rola === 'nierozstrzygnieta' ? 'nierozpoznana' : grupa.rola });
+            if (grupa.rola === 'nazwisko' && grupa.statystyki) {
+              rozpoznaneNazwiska.push({ pozycja, tekst: grupa.tekst, klucz: grupa.klucz,
+                pozycje: grupa.pozycje, statystyki: grupa.statystyki, rola: 'nazwisko' });
+            }
+          }
+        } else {
+          czlonyAnalizy.push(czlon);
+        }
+        if (nazwisko) rozpoznaneNazwiska.push({ pozycja, tekst, klucz, statystyki: nazwisko,
+          ...(grupa && { uwzglednione: false, czescGrupy: true }) });
         if (zdrobnienia.has(klucz)) rozpoznaneZdrobnienia.push({ pozycja, tekst, klucz,
+          ...(grupa && { czescGrupy: true }),
           statystyki: statystykiImienia(klucz),
           odpowiedniki: zdrobnienia.get(klucz).map(pelne => ({ klucz: pelne, statystyki: statystykiImienia(pelne) })) });
         // Pole historyczne oznacza nadal brak dopasowania do słownika imion.
         if (!imie) nierozpoznaneCzlony.push({ pozycja, tekst });
       }
-      const nowaAnalizaPar = czlonyTekstowe.length === 2 && jsonNazwiska !== null && jsonZdrobnienia !== null;
+      const zdrobnieniaDoAnalizy = rozpoznaneZdrobnienia.filter(z => !z.czescGrupy);
+      const nowaAnalizaPar = czlonyAnalizy.length === 2 && jsonNazwiska !== null && jsonZdrobnienia !== null;
       if (nowaAnalizaPar) {
-        rozstrzygnijRolePary(czlonyTekstowe, slownik, nazwiska);
-        if (!rozpoznaneZdrobnienia.length && czlonyTekstowe.some(c => c.podstawaRoli === 'TYLKO_NAZWISKO')) {
-          const czlon = czlonyTekstowe.find(c => c.rolaWstepna === 'nierozpoznana' && /^[A-Za-z]+$/.test(c.tekst));
+        rozstrzygnijRolePary(czlonyAnalizy, slownik, nazwiska);
+        if (!zdrobnieniaDoAnalizy.length && czlonyAnalizy.some(c => c.podstawaRoli === 'TYLKO_NAZWISKO' ||
+            c.podstawaRoli === 'PELNE_NAZWISKO_ZLOZONE')) {
+          const czlon = czlonyAnalizy.find(c => !c.grupa && c.rolaWstepna === 'nierozpoznana' && /^[A-Za-z]+$/.test(c.tekst));
           const wariant = czlon && wariantyZdrobnien.get(czlon.klucz);
           if (wariant && !slownik.has(wariant)) {
             const { pozycja, tekst, klucz } = czlon;
             czlon.dopasowania.zdrobnienie = true;
             czlon.rola = 'imie';
             czlon.podstawaRoli = 'KONTEKST_ZDROBNIENIA';
-            rozpoznaneZdrobnienia.push({ pozycja, tekst, klucz, statystyki: null, wariantZPolskimiZnakami: wariant,
-              odpowiedniki: zdrobnienia.get(wariant).map(pelne => ({ klucz: pelne, statystyki: statystykiImienia(pelne) })) });
+            const wpis = { pozycja, tekst, klucz, statystyki: null, wariantZPolskimiZnakami: wariant,
+              odpowiedniki: zdrobnienia.get(wariant).map(pelne => ({ klucz: pelne, statystyki: statystykiImienia(pelne) })) };
+            rozpoznaneZdrobnienia.push(wpis);
+            zdrobnieniaDoAnalizy.push(wpis);
           }
         }
       }
 
       // Dotychczasowa heurystyka obsługuje pozostałe wiersze i niepełne słowniki.
-      const maOsobneNazwisko = czlonyTekstowe.some(c => c.podstawaRoli === 'TYLKO_NAZWISKO');
-      const maInneJednoznaczneImie = czlonyTekstowe.some(c =>
-        slownik.get(c.klucz)?.plec && !c.przewagaNazwiska);
-      for (const czlon of czlonyTekstowe) {
+      const maOsobneNazwisko = czlonyAnalizy.some(c => c.podstawaRoli === 'TYLKO_NAZWISKO' || (c.grupa && c.rola === 'nazwisko'));
+      const maInneJednoznaczneImie = czlonyAnalizy.some(c => {
+        if (c.przewagaNazwiska) return false;
+        if (c.analizaPlci === 'statystyki_czesci_imienia') {
+          return c.pozycje.some(p => slownik.get(wyrazy[p][0].toUpperCase())?.plec);
+        }
+        return (!c.grupa || c.analizaPlci === 'pelne_statystyki_imienia') && slownik.get(c.klucz)?.plec;
+      });
+      for (const czlon of czlonyAnalizy) {
         if (!nowaAnalizaPar && czlon.przewagaNazwiska && !maOsobneNazwisko && maInneJednoznaczneImie) {
           czlon.rola = 'nazwisko';
           czlon.podstawaRoli = 'PRZEWAGA_NAZWISKA';
@@ -269,10 +448,28 @@
       }
       // Najpierw kończymy dotychczasową analizę nazwisk, aby kolejność członów
       // nie wpływała na dostępność kontekstu dla reguły 10x.
-      const maRozpoznaneNazwisko = czlonyTekstowe.some(c => c.rola === 'nazwisko');
-      const kontekstDwochCzlonow = czlonyTekstowe.length === 2 && maOsobneNazwisko;
+      const maRozpoznaneNazwisko = czlonyAnalizy.some(c => c.rola === 'nazwisko');
+      const kontekstDwochCzlonow = czlonyAnalizy.length === 2 && maOsobneNazwisko;
+      function dodajImie({ pozycja, tekst, klucz, pozycje, czescGrupy }, uwzglednione) {
+        const imie = slownik.get(klucz);
+        if (!imie) return;
+        rozpoznaneImiona.push({ pozycja, tekst, klucz, plec: imie.plec,
+          statystyki: imie.statystyki, sugestia: imie.plec === null ? imie.sugestia : null,
+          uwzglednione, ...(pozycje && { pozycje }), ...(czescGrupy && { czescGrupy: true }),
+          wariantZPolskimiZnakami: uwzglednione ? (sugestiePisowni.get(klucz) ?? null) : null });
+        if (!uwzglednione) return;
+        wskazania[imie.plec === K ? 'kobieta' : imie.plec === M ? 'mezczyzna' : 'niejednoznaczne']++;
+        if (imie.brakOpublikowanychWystapien && !ostrzezenia.includes('ZERO_W_DANYCH')) ostrzezenia.push('ZERO_W_DANYCH');
+      }
       for (const czlon of czlonyTekstowe) {
-        if (!nowaAnalizaPar && czlon.rola === 'nierozstrzygnieta' && czlon.dopasowania.imie && czlon.dopasowania.nazwisko) {
+        const grupa = grupaNaPozycji.get(czlon.pozycja);
+        if (grupa) {
+          if (grupa.pozycja === czlon.pozycja && grupa.analizaPlci === 'pelne_statystyki_imienia') dodajImie(grupa, true);
+          dodajImie(czlon, grupa.analizaPlci === 'statystyki_czesci_imienia');
+          continue;
+        }
+        if (!nowaAnalizaPar && czlon.rola === 'nierozstrzygnieta' &&
+            czlon.dopasowania.imie && czlon.dopasowania.nazwisko) {
           const stat = slownik.get(czlon.klucz).statystyki;
           const liczbaImion = BigInt(stat.kobiety + stat.mezczyzni);
           const liczbaNazwisk = BigInt(nazwiska.get(czlon.klucz).razem);
@@ -289,36 +486,33 @@
             czlon.podstawaRoli = 'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM';
           }
         }
-        const { pozycja, tekst, klucz } = czlon;
-        const imie = slownik.get(klucz);
-        if (!imie) continue;
-        const uwzglednione = czlon.rola !== 'nazwisko';
-        rozpoznaneImiona.push({ pozycja, tekst, klucz, plec: imie.plec,
-          statystyki: imie.statystyki, sugestia: imie.plec === null ? imie.sugestia : null,
-          uwzglednione, wariantZPolskimiZnakami: uwzglednione ? (sugestiePisowni.get(klucz) ?? null) : null });
-        if (!uwzglednione) continue;
-        wskazania[imie.plec === K ? 'kobieta' : imie.plec === M ? 'mezczyzna' : 'niejednoznaczne']++;
-        if (imie.brakOpublikowanychWystapien && !ostrzezenia.includes('ZERO_W_DANYCH')) ostrzezenia.push('ZERO_W_DANYCH');
+        dodajImie(czlon, czlon.rola !== 'nazwisko');
       }
       const aktywneImiona = rozpoznaneImiona.filter(i => i.uwzglednione);
       for (const wpis of [...rozpoznaneNazwiska, ...rozpoznaneZdrobnienia]) {
         wpis.rola = czlonyTekstowe.find(c => c.pozycja === wpis.pozycja).rola;
       }
-      const silneNazwiska = rozpoznaneNazwiska.filter(n => n.rola === 'nazwisko' && n.statystyki.silneWskazanie);
+      const silneNazwiska = rozpoznaneNazwiska.filter(n =>
+        n.uwzglednione !== false && n.rola === 'nazwisko' && n.statystyki.silneWskazanie);
       const kierunkiNazwisk = new Set(silneNazwiska.map(n => n.statystyki.plec));
       const uzasadnienie = [];
       let kategoria = W, zrodlo = null;
       const poprawnyPesel = wybierzPoprawnyPesel(numery);
       const paraPotencjalnychImion = nowaAnalizaPar && (
-        czlonyTekstowe.every(c => c.rola === 'imie') ||
-        czlonyTekstowe.every(c => c.rola === 'nierozstrzygnieta' && c.rolaWstepna === 'niejednoznaczna')
+        czlonyAnalizy.every(c => c.rola === 'imie') ||
+        czlonyAnalizy.every(c => c.rola === 'nierozstrzygnieta' && c.rolaWstepna === 'niejednoznaczna')
       );
-      const paraNazwiskZeZdrobnieniem = nowaAnalizaPar && rozpoznaneZdrobnienia.length === 1 &&
-        czlonyTekstowe.every(c => c.rolaWstepna === 'nazwisko');
+      const paraNazwiskZeZdrobnieniem = nowaAnalizaPar && zdrobnieniaDoAnalizy.length === 1 &&
+        czlonyAnalizy.every(c => c.rolaWstepna === 'nazwisko');
       // W parze nazwisk sprawdzamy pełne formy jako osobną podstawę decyzji.
       // Zachowujemy role członów i dotychczasowe wskazania samodzielnych imion dla PESEL-u.
       for (const wpis of rozpoznaneZdrobnienia) {
         const czlon = czlonyTekstowe.find(c => c.pozycja === wpis.pozycja);
+        if (wpis.czescGrupy) {
+          wpis.kontekst = wpis.plecZPelnychForm = null;
+          wpis.wykorzystaneDoKlasyfikacji = wpis.sprzeczneZPeselem = false;
+          continue;
+        }
         const maKontekstNazwiska = maRozpoznaneNazwisko && (nowaAnalizaPar
           ? czlon.rola === 'imie' : !czlon.dopasowania.nazwisko);
         const maKontekstPesel = poprawnyPesel && !czlon.dopasowania.nazwisko;
@@ -340,11 +534,13 @@
           czlon.podstawaRoli = 'KONTEKST_ZDROBNIENIA';
         }
       }
-      const zdrobnieniaWKontekscie = rozpoznaneZdrobnienia.filter(z => z.kontekst);
+      const zdrobnieniaWKontekscie = zdrobnieniaDoAnalizy.filter(z => z.kontekst);
       const jednoznaczneZdrobnienia = zdrobnieniaWKontekscie.filter(z => z.plecZPelnychForm);
       const kierunkiZdrobnien = new Set(jednoznaczneZdrobnienia.map(z => z.plecZPelnychForm));
       // W tej parze sprawdzamy też odrzucone dopasowania imion, np. Gala.
-      const imionaDoSprawdzeniaZdrobnien = paraNazwiskZeZdrobnieniem ? rozpoznaneImiona : aktywneImiona;
+      const imionaDoSprawdzeniaZdrobnien = paraNazwiskZeZdrobnieniem
+        ? rozpoznaneImiona.filter(i => !i.czescGrupy)
+        : aktywneImiona;
       const przeciwneImie = imionaDoSprawdzeniaZdrobnien.find(i =>
         (i.plec || i.sugestia) && jednoznaczneZdrobnienia.some(z => (i.plec || i.sugestia) !== z.plecZPelnychForm));
       const konfliktMiedzyZdrobnieniami = kierunkiZdrobnien.size > 1;
@@ -393,10 +589,12 @@
           uzasadnienie.push(formatuj('POWOD_PLEC_ZE_ZDROBNIEN'));
           for (const wpis of jednoznaczneZdrobnienia) wpis.wykorzystaneDoKlasyfikacji = true;
         } else {
+          // Same części imienia bez pełnego wpisu wymagają przynajmniej jednego silnego wskazania.
           const wspomaganie = !wskazania.kobieta && !wskazania.mezczyzna && !remis &&
+            aktywneImiona.some(i => !i.czescGrupy) &&
             kierunki.size === 1 && kierunkiNazwisk.size === 1 && kierunkiNazwisk.has([...kierunki][0]);
           if (!aktywneImiona.length) {
-            uzasadnienie.push(...powodyBrakuDecyzjiZeZdrobnien(rozpoznaneZdrobnienia, paraNazwiskZeZdrobnieniem));
+            uzasadnienie.push(...powodyBrakuDecyzjiZeZdrobnien(zdrobnieniaDoAnalizy, paraNazwiskZeZdrobnieniem));
           }
           else if (!wskazania.kobieta && !wskazania.mezczyzna && !wspomaganie) {
             uzasadnienie.push(formatuj('POWOD_IMIONA_PONIZEJ_PROGU'));
@@ -415,14 +613,36 @@
       if (aktywneImiona.length === 0 && zrodlo !== 'zdrobnienia') {
         ostrzezenia.unshift('BRAK_ROZPOZNANYCH_IMION');
       }
+      if (kategoria === W) {
+        for (const grupa of grupy) {
+          if (grupa.rola === 'nierozstrzygnieta') {
+            uzasadnienie.push(formatuj('NIEROZSTRZYGNIETA_ROLA', grupa.tekst));
+          }
+        }
+      }
       // Sugestia nie zmienia kategorii. Przy konflikcie nie wybieramy zwycięzcy.
       const sugestie = new Set(kierunki);
       if (ostrzezenia.includes('KONFLIKT_ZDROBNIENIA')) sugestie.clear();
       if (poprawnyPesel) sugestie.add(poprawnyPesel.plec);
+      const grupyZlozone = grupy.map(({ imienneCzesci, wymagaPotwierdzenia, ...g }) =>
+        ({ ...g, pewnoscRoli: pewnoscRoli(g.rola, g.podstawaRoli) }));
+      const grupaNaPoczatku = new Map(grupyZlozone.map(g => [g.pozycja, g]));
+      const jednostkiTekstowe = [];
+      for (const czlon of czlonyTekstowe) {
+        const grupa = grupaNaPoczatku.get(czlon.pozycja);
+        if (grupa) {
+          jednostkiTekstowe.push({ typ: 'grupa', ...grupa });
+        } else if (!grupaNaPozycji.has(czlon.pozycja)) {
+          const { pozycja, tekst, klucz, rola, podstawaRoli } = czlon;
+          const poczatek = wyrazy[pozycja].index;
+          jednostkiTekstowe.push({ typ: 'czlon', pozycja, pozycje: [pozycja], tekst, klucz, rola, podstawaRoli,
+            zakres: [poczatek, poczatek + tekst.length], pewnoscRoli: pewnoscRoli(rola, podstawaRoli) });
+        }
+      }
       return {
         urodzenie: ustalUrodzenie(oryginalnyWiersz, numery),
         numerWiersza, oryginalnyWiersz, oczyszczonyWiersz, rozpoznaneImiona,
-        czlonyTekstowe, rozpoznaneNazwiska, rozpoznaneZdrobnienia,
+        czlonyTekstowe, rozpoznaneNazwiska, rozpoznaneZdrobnienia, grupyZlozone, jednostkiTekstowe,
         nierozpoznaneCzlony, wskazania, pesel: { znalezione: numery },
         kategoriaAutomatyczna: kategoria, klasyfikacjaReczna: null, zrodlo,
         uzasadnienie, sugestia: kategoria === W && sugestie.size === 1 ? [...sugestie][0] : null,
@@ -466,13 +686,14 @@
     const noweUwagi = new Map();
     const dodajSzczegolowa = (kod, severity, obszar, wpis, opis) => {
       const id = kod + ':' + wpis.klucz;
-      if (noweUwagi.has(id)) noweUwagi.get(id).pozycje.push(wpis.pozycja);
-      else noweUwagi.set(id, { kod, severity, obszar, klucz: wpis.klucz, pozycje: [wpis.pozycja], opis });
+      const pozycje = wpis.pozycje ?? [wpis.pozycja];
+      if (noweUwagi.has(id)) noweUwagi.get(id).pozycje.push(...pozycje);
+      else noweUwagi.set(id, { kod, severity, obszar, klucz: wpis.klucz, pozycje: [...pozycje], opis });
     };
     // Powtórzenie tego samego imienia nie stanowi niezależnego potwierdzenia.
     const jednoznaczneImiona = new Set(aktywneImiona.filter(i => i.plec).map(i => i.klucz));
     const niezalezneWskazanie = wynik.rozpoznaneNazwiska?.some(n =>
-      n.rola === 'nazwisko' && n.statystyki.silneWskazanie && n.statystyki.plec === wynik.kategoriaAutomatyczna) ||
+      n.uwzglednione !== false && n.rola === 'nazwisko' && n.statystyki.silneWskazanie && n.statystyki.plec === wynik.kategoriaAutomatyczna) ||
       wynik.rozpoznaneZdrobnienia?.some(z => z.kontekst && z.plecZPelnychForm === wynik.kategoriaAutomatyczna);
     const uwagaORzadkosci = wynik.zrodlo === 'imiona' && jednoznaczneImiona.size === 1 && !niezalezneWskazanie;
     for (const imie of aktywneImiona) {
@@ -489,14 +710,18 @@
           formatuj('RZADKIE_IMIE', imie.tekst, razem));
       }
     }
-    for (const czlon of wynik.czlonyTekstowe ?? []) {
+    const grupy = wynik.grupyZlozone ?? [];
+    const czlony = wynik.czlonyTekstowe ?? [];
+    const samodzielneCzlony = czlony.filter(c => !c.czescGrupy);
+    const czlonyKontekstu = [...samodzielneCzlony, ...grupy];
+    for (const czlon of samodzielneCzlony) {
       if (czlon.podstawaRoli === 'KONTEKST_IMIENIA_DWA_CZLONY' ||
           czlon.podstawaRoli === 'KONTEKST_NAZWISKA_DWA_CZLONY') {
         const nazwisko = czlon.podstawaRoli === 'KONTEKST_NAZWISKA_DWA_CZLONY';
         // T-001 opisuje rolę tego członu w treści samodzielnej weryfikacji.
         if (nazwisko && weryfikacjaAutomatyczna && wynik.ostrzezenia.includes('KONFLIKT_ZDROBNIENIA') &&
             wynik.uzasadnienie.includes(formatuj('POWOD_KONFLIKT_ZDROBNIENIA_IMIE_W_NAZWISKU', czlon.tekst))) continue;
-        const drugi = wynik.czlonyTekstowe.find(c => c.pozycja !== czlon.pozycja);
+        const drugi = czlonyKontekstu.find(c => c.pozycja !== czlon.pozycja);
         const kod = nazwisko ? 'ROLA_NAZWISKA_Z_KONTEKSTU' : 'ROLA_IMIENIA_Z_KONTEKSTU';
         const przeciwneImie = nazwisko && wynik.kategoriaAutomatyczna !== W &&
           wynik.rozpoznaneImiona.some(i => i.pozycja === czlon.pozycja && i.plec && i.plec !== wynik.kategoriaAutomatyczna);
@@ -504,7 +729,8 @@
         if (przeciwneImie) opis += formatuj('DOPISEK_PRZECIWNE_IMIE_W_NAZWISKU');
         dodajSzczegolowa(kod, przeciwneImie ? 'medium' : 'low', 'dane', czlon, opis);
       } else if (czlon.podstawaRoli === 'KONTEKST_DWOCH_CZLONOW') {
-        const nazwisko = wynik.czlonyTekstowe.find(c => c.podstawaRoli === 'TYLKO_NAZWISKO');
+        const nazwisko = czlonyKontekstu.find(c => c.podstawaRoli === 'TYLKO_NAZWISKO' ||
+          c.podstawaRoli === 'PELNE_NAZWISKO_ZLOZONE' || c.podstawaRoli === 'NAZWISKO_ZLOZONE_Z_CZESCI');
         dodajSzczegolowa('ROLA_IMIENIA_Z_KONTEKSTU', 'low', 'dane', czlon,
           formatuj('ROLA_IMIENIA_Z_KONTEKSTU', czlon.tekst, nazwisko.tekst));
       } else if (czlon.podstawaRoli === 'PRZEWAGA_IMIENIA_10_Z_NAZWISKIEM') {
@@ -514,6 +740,12 @@
           (czlon.dopasowania.imie && czlon.dopasowania.nazwisko))) {
         dodajSzczegolowa('NIEROZSTRZYGNIETA_ROLA', 'medium', 'dane', czlon,
           formatuj('NIEROZSTRZYGNIETA_ROLA', czlon.tekst));
+      }
+    }
+    for (const grupa of grupy) {
+      if (wynik.zrodlo && grupa.rola === 'nierozstrzygnieta' && grupa.analizaPlci === 'pominieta') {
+        dodajSzczegolowa('NIEROZSTRZYGNIETA_ROLA', 'medium', 'dane', grupa,
+          formatuj('NIEROZSTRZYGNIETA_ROLA', grupa.tekst));
       }
     }
     for (const wpis of wynik.rozpoznaneZdrobnienia ?? []) {
@@ -528,7 +760,7 @@
     }
     if (wynik.zrodlo) {
       for (const wpis of wynik.rozpoznaneNazwiska ?? []) {
-        if (wpis.rola === 'nazwisko' && wpis.statystyki.silneWskazanie &&
+        if (wpis.uwzglednione !== false && wpis.rola === 'nazwisko' && wpis.statystyki.silneWskazanie &&
             wpis.statystyki.plec !== wynik.kategoriaAutomatyczna) {
           dodajSzczegolowa('NAZWISKO_PRZECIWNE_WYNIKOWI', 'high', 'plec', wpis,
             formatuj('NAZWISKO_PRZECIWNE_WYNIKOWI', wpis.tekst, wynik.zrodlo));

@@ -123,6 +123,14 @@ p { margin-top: 0; }
 .stats-heading { margin: 12px 0 6px; font-size: .9rem; }
 .age-auto-hint { margin: 8px 0 0; }
 .name-stats .hint { margin: 6px 0 0; font-size: .8rem; }
+.unit-list { list-style: none; padding: 0; margin: 6px 0; font-size: .85rem; }
+.text-unit { padding: 6px 8px; border-left: 2px solid var(--border); overflow-wrap: anywhere; }
+.text-unit + .text-unit { margin-top: 4px; }
+.unit-meta { display: block; color: var(--muted); font-size: .8rem; margin-top: 2px; }
+.unit-parts, .unit-diagnostics { margin-top: 6px; font-size: .8rem; color: var(--muted); }
+.unit-parts summary, .unit-diagnostics summary { cursor: pointer; font-weight: 600; }
+.unit-parts ul { margin: 4px 0 0; padding-left: 20px; }
+.unit-diagnostics .table-wrap { margin-top: 6px; }
 .name-stats-table { font-size: .84rem; min-width: 520px; font-variant-numeric: tabular-nums; }
 .name-stats-table th, .name-stats-table td { padding: 6px 8px; }
 .name-stats-table tbody th { background: #fff; font-size: inherit; overflow-wrap: anywhere; }

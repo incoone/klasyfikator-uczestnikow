@@ -7,7 +7,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="description" content="Jak działa klasyfikacja uczestników? Instrukcja użytkowania, rozpoznawanie imion, PESEL, daty urodzenia, statystyki wiekowe, weryfikacja wyników i prywatność.">
   <title>Jak działa klasyfikacja uczestników?</title>
-  <link rel="stylesheet" href="./style.css?v=1.2.3">
+  <link rel="stylesheet" href="./style.css?v=1.2.4">
 </head>
 <body>
   <main class="container help-page">
@@ -17,7 +17,7 @@
     </header>
 
     <section class="panel help-intro" aria-label="Wprowadzenie">
-<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. W wersji 1.2.3 wykorzystuje statystyki imion i nazwisk pochodzące z polskiego rejestru PESEL, słownik zdrobnień oraz opcjonalne daty urodzenia i numery PESEL. Rozpoznaje również role imion i nazwisk na podstawie kontekstu dwóch członów tekstowych. Ograniczono liczbę uwag informacyjnych, zachowując szczegóły analizy i dotychczasowe zasady klasyfikacji.</p>
+<p>Aplikacja pomaga policzyć liczbę kobiet i mężczyzn na podstawie listy uczestników oraz ustalić ich wiek na dzień wydarzenia. W wersji 1.2.4 wykorzystuje statystyki imion i nazwisk pochodzące z polskiego rejestru PESEL, słownik zdrobnień oraz opcjonalne daty urodzenia i numery PESEL. Rozpoznaje role imion i nazwisk na podstawie kontekstu, w tym imiona i nazwiska złożone. Szczegóły analizy wyjaśniają, które dopasowania wykorzystano.</p>
 <p>Klasyfikacja płci i ustalanie wieku odbywają się niezależnie. Program wskazuje problemy wymagające ręcznego sprawdzenia oraz dodatkowe uwagi informacyjne.</p>
 <p>Cała analiza odbywa się lokalnie w przeglądarce użytkownika.</p>
     </section>
@@ -85,7 +85,7 @@ Zofia Nowak
     <section class="panel help-section" id="sekcja-2" aria-labelledby="naglowek-2">
 <h2 id="naglowek-2">2. Jak program rozpoznaje imiona i nazwiska?</h2>
 <p>Program wykorzystuje osobne słowniki imion i nazwisk, zawierające statystyki ich występowania wśród kobiet i mężczyzn.</p>
-<p>Każdy wiersz jest analizowany niezależnie. Program dzieli go na poszczególne człony i sprawdza, które z nich występują w słownikach. Dodatkowo wyszukuje możliwe zdrobnienia.</p>
+<p>Każdy wiersz jest analizowany niezależnie. Program rozpoznaje pojedyncze człony oraz grupy połączone łącznikiem i sprawdza ich dopasowania słownikowe. Dodatkowo wyszukuje możliwe zdrobnienia.</p>
 <p>Nie zakłada, że pierwsze słowo jest imieniem, a drugie nazwiskiem.</p>
 <div aria-label="Tabela danych" class="help-table-wrap" role="region" tabindex="0"><table>
 <thead>
@@ -149,7 +149,32 @@ Zofia Nowak
 <p>Oba człony występują również w słowniku nazwisk, ale reguły nie pozwalają tu rozstrzygnąć ich roli. Program uwzględnia dwa przeciwne wskazania imion.</p>
 <p>Moglibyśmy założyć, że pierwsze słowo jest imieniem, a drugie nazwiskiem. Jednak dane często pochodzą z formularzy i różnych systemów, w których kolejność może być odwrócona lub pola mogły zostać błędnie wypełnione.</p>
 <p>Dlatego <strong>wolimy skierować taki wpis do ręcznej weryfikacji, zamiast zgadywać i ryzykować błędne automatyczne przypisanie płci</strong>.</p>
+<h3>Imiona i nazwiska złożone (wersja 1.2.4)</h3>
+<p>Grupa z łącznikiem stanowi jedną jednostkę w analizie kontekstu. Pełne dopasowanie całej grupy ma pierwszeństwo. Jeżeli go nie ma, program chroni pełne dopasowania wewnątrz grupy, a pozostałe części ocenia zgodnie z regułami rozpoznawania grup. Nie zmienia zapisu ani kolejności danych uczestnika.</p>
+<ul>
+<li><strong>Pełne imię złożone</strong> - np. Jean-Pierre lub Anna-Maria. Program korzysta ze statystyk pełnego imienia jako jednego wskazania. Statystyki części i ich zdrobnienia pozostają tylko w diagnostyce.</li>
+<li><strong>Pełne nazwisko złożone</strong> - jego własne statystyki mogą wspierać klasyfikację, jeżeli spełniają warunki silnego wskazania nazwiska (minimum 100 wystąpień, udział co najmniej 99,90%). Samo nazwisko nie rozstrzyga płci.</li>
+<li><strong>Nazwisko rozpoznane po częściach</strong> - np. Kowalska-Nowak lub Witek-Nowak. Może stanowić kontekst nazwiskowy, ale statystyki poszczególnych części nie wskazują płci.</li>
+<li><strong>Imię rozpoznane po częściach</strong> - np. Anna-Monika Nowak. Każda część musi być w słowniku imion, żadna nie może mieć 50-krotnej przewagi nazwiska zgodnie z zasadą przewagi roli, a wpis musi zawierać niezależnie rozpoznane nazwisko. Program ocenia wskazania części osobno, bez sumowania i uśredniania statystyk. Do klasyfikacji na podstawie części konieczne są zgodny kierunek wskazań, brak remisu i co najmniej jedno wskazanie osiągające próg 99,90%.</li>
+<li><strong>Grupa nierozstrzygnięta</strong> - brak wystarczających podstaw do ustalenia roli. Nie dostarcza wskazania płci.</li>
+</ul>
+<p>Program rozpoznaje typowe łączniki, także niektóre warianty ze spacjami. Dla zapisu Jean-Pierre - Nowak zachowuje pełne imię Jean-Pierre i osobne nazwisko Nowak. Przeciwne jednoznaczne wskazanie imienia złożonego i poprawnego numeru PESEL powoduje konieczność ręcznej weryfikacji płci.</p>
+<div aria-label="Przykłady grup złożonych" class="help-table-wrap" role="region" tabindex="0"><table>
+<thead><tr><th scope="col">Wpis</th><th scope="col">Wynik</th><th scope="col">Podstawa</th></tr></thead>
+<tbody>
+<tr><td>Anna Kowalska-Nowak</td><td>Kobieta</td><td>Anna; nazwisko jako grupa</td></tr>
+<tr><td>Witek-Nowak Anna</td><td>Kobieta</td><td>Anna; Witek wewnątrz nazwiska nie daje wskazania</td></tr>
+<tr><td>Witek-Nowak</td><td>Do weryfikacji</td><td>Samo nazwisko</td></tr>
+<tr><td>Jean-Pierre Nowak</td><td>Mężczyzna</td><td>Pełne imię Jean-Pierre</td></tr>
+<tr><td>Jean-Pierre - Nowak</td><td>Mężczyzna</td><td>Pełne imię Jean-Pierre</td></tr>
+<tr><td>Anna-Maria Kowalska-Nowak</td><td>Kobieta</td><td>Pełne imię Anna-Maria</td></tr>
+<tr><td>Anna-Monika Nowak</td><td>Kobieta</td><td>Zgodne wskazania części imienia</td></tr>
+<tr><td>Anna-Piotr Kowalska</td><td>Do weryfikacji</td><td>Sprzeczne wskazania części imienia</td></tr>
+<tr><td>Sasha Kowalska-Nowak</td><td>Do weryfikacji</td><td>Nazwisko rozpoznane po częściach nie rozstrzyga niejednoznacznego imienia</td></tr>
+<tr><td>Kowalska Nowak Anna</td><td>Kobieta</td><td>Trzy osobne jednostki; wskazanie imienia Anna</td></tr>
+</tbody></table></div>
 <h3>Rozstrzyganie roli członu</h3>
+<p>W regułach kontekstu grupa złożona zajmuje jedno miejsce, tak jak samodzielny człon. W szczegółach analiza pokazuje podstawę rozpoznania ról oraz pewność roli: wysoką (np. pełne dopasowanie), średnią (np. rozpoznanie po częściach lub kontekst) albo nieustaloną. Nie jest to procent pewności płci ani weryfikacja tożsamości.</p>
 <h4>Dokładnie dwa człony tekstowe (wersja 1.2.2)</h4>
 <p>Program najpierw rozpoznaje wstępne role obu członów na podstawie trzech słowników. Dopasowanie do imion lub zdrobnień bez dopasowania do nazwisk wskazuje imię, a dopasowanie wyłącznie do nazwisk wskazuje nazwisko. Jeżeli człon występuje jako samodzielne imię i nazwisko, rolę można rozstrzygnąć statystycznie: dominująca rola musi mieć minimum 100 wystąpień i co najmniej 50-krotną przewagę liczebności nad drugą rolą. Obie granice są włączne. Bez takiej przewagi dopasowanie do nazwiska i imienia lub zdrobnienia pozostaje wstępnie niejednoznaczne.</p>
 <p>Następnie program ocenia role w dowolnej kolejności:</p>
@@ -640,7 +665,7 @@ Piotr Wiśniewski 12/5/2008
 <li><strong>Nieustalony wiek</strong> - uczestnicy, których wieku nie udało się obliczyć, także osoby bez danych o urodzeniu.</li>
 </ul>
 <h3 id="osoby-wymagajace-weryfikacji">Osoby wymagające weryfikacji</h3>
-<p>W listach „Płeć do weryfikacji” i „Wpisy wymagające sprawdzenia” każdy wpis zawiera informację o przyczynie problemu. Widoczne są również szczegóły daty urodzenia i wieku, osobne tabele rozpoznanych imion i nazwisk (liczebności, udziały procentowe, status progu lub silnego wskazania, rola członu) oraz ewentualne zdrobnienia z pełnymi odpowiednikami. Dopasowania pominięte przy ocenie imion są oznaczone, ale pozostają widoczne.</p>
+<p>W listach „Płeć do weryfikacji” i „Wpisy wymagające sprawdzenia” każdy wpis zawiera informację o przyczynie problemu. Widoczne są również szczegóły daty urodzenia i wieku, uporządkowany według zapisu wejściowego wykaz jednostek tekstowych z podstawą i pewnością roli, tabele statystyk rozpoznanych imion i nazwisk oraz ewentualne zdrobnienia. Dla grup złożonych można rozwinąć dopasowania poszczególnych części. Pominięte dopasowania części znajdują się w odrębnych sekcjach diagnostycznych i nie stanowią niezależnych wskazań przy ocenie płci.</p>
 <p>W niektórych sytuacjach wyświetlana jest również sugestia klasyfikacji.</p>
 <p>W sekcji „Płeć do weryfikacji” pod sugestią dostępne jest szybkie przypisanie płci: <strong>„Przypisz: Kobieta”</strong> lub <strong>„Przypisz: Mężczyzna”</strong>. Jeżeli program sugeruje płeć, wyróżnia odpowiadający jej przycisk. Bez sugestii oba przyciski mają ten sam wygląd.</p>
 <p>Jedno kliknięcie zapisuje ręczne przypisanie bez dodatkowego potwierdzenia i przenosi uczestnika do odpowiedniej kategorii. Liczniki i statystyki odświeżają się od razu, a lista osób do weryfikacji pozostaje otwarta. Treść wpisu i pozostałe uwagi nie zmieniają się. Problemy z wiekiem nadal mogą wymagać sprawdzenia.</p>
@@ -728,7 +753,7 @@ Piotr Wiśniewski 12/5/2008
 <td>Minimalna łączna liczba wystąpień w słownikach imion i nazwisk</td>
 <td>30</td>
 </tr>
-<tr><td>Liczebność słowników (wersja 1.2.3)</td><td>8 136 imion, 117 159 nazwisk, 1 101 zdrobnień i form potocznych</td></tr>
+<tr><td>Liczebność słowników (wersja 1.2.4)</td><td>8 136 imion, 117 159 nazwisk, 1 101 zdrobnień i form potocznych</td></tr>
 <tr><td>Źródło zdrobnień</td><td>Osobny słownik redakcyjny; uwagi informacyjne i warunkowa klasyfikacja płci</td></tr>
 <tr>
 <td>Próg automatycznej klasyfikacji</td>
